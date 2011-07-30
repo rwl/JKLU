@@ -76,5 +76,5 @@ public class KLU_common {
 
 	NativeLong memusage ;   /* current memory usage, in bytes */
 	NativeLong mempeak ;    /* peak memory usage, in bytes */
-	
+
 }
