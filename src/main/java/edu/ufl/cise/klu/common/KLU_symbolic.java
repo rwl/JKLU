@@ -36,28 +36,23 @@ public class KLU_symbolic
      */
 
     /* only computed if the AMD ordering is chosen: */
-    double symmetry;   /* symmetry of largest block */
-    double est_flops;  /* est. factorization flop count */
-    double lnz, unz;   /* estimated nz in L and U, including diagonals */
-    double[] Lnz;      /* size n, but only Lnz [0..nblocks-1] is used */
+	public double symmetry;   /* symmetry of largest block */
+    public double est_flops;  /* est. factorization flop count */
+    public double lnz, unz;   /* estimated nz in L and U, including diagonals */
+    public double[] Lnz;      /* size n, but only Lnz [0..nblocks-1] is used */
 
     /* computed for all orderings: */
-    int
-        n,              /* input matrix A is n-by-n */
-        nz,             /* # entries in input matrix */
-        nzoff,          /* nz in off-diagonal blocks */
-        nblocks,        /* number of blocks */
-        maxblock,       /* size of largest block */
-        ordering,       /* ordering used (AMD, COLAMD, or GIVEN) */
-        do_btf;         /* whether or not BTF preordering was requested */
+    public int
+        n;         /* whether or not BTF preordering was requested */
+    public int nz, nzoff, nblocks, maxblock, ordering, do_btf;
 
-    int[]
+    public int[]
         P,              /* size n */
         Q,              /* size n */
         R;              /* size n+1, but only R [0..nblocks] is used */
 
     /* only computed if BTF preordering requested */
-    int structural_rank;   /* 0 to n-1 if the matrix is structurally rank
+    public int structural_rank;   /* 0 to n-1 if the matrix is structurally rank
                         * deficient.  -1 if not computed.  n if the matrix has
                         * full structural rank */
 

@@ -24,12 +24,14 @@
 
 package edu.ufl.cise.klu.tdouble;
 
+import edu.ufl.cise.klu.common.KLU_common;
+
 /**
  * Sparse left-looking LU factorization, with partial pivoting.  Based on
  * Gilbert & Peierl's method, with a non-recursive DFS and with Eisenstat &
  * Liu's symmetric pruning.  No user-callable routines are in this file.
  */
-public class Dklu_kernel {
+public class Dklu_kernel extends Dklu_internal {
 
 	/**
 	 * Does a depth-first-search, starting at node j.
@@ -61,19 +63,19 @@ public class Dklu_kernel {
 
 		head = 0;
 		Stack[0] = j;
-		assert (Flag[j] != k);
+		ASSERT (Flag[j] != k);
 
 		while (head >= 0)
 		{
 			j = Stack[head];
 			jnew = Pinv[j];
-			assert (jnew >= 0 && jnew < k);        /* j is pivotal */
+			ASSERT (jnew >= 0 && jnew < k);        /* j is pivotal */
 
 			if (Flag[j] != k)          /* a node is not yet visited */
 			{
 				/* first time that j has been visited */
 				Flag[j] = k;
-				printf("[ start dfs at %d : new %d\n", j, jnew);
+				PRINTF ("[ start dfs at %d : new %d\n", j, jnew);
 				/* set Ap_pos[head] to one past the last entry in col j to scan */
 				Ap_pos[head] =
 					(Lpend[jnew] == EMPTY) ?  Llen[jnew] : Lpend[jnew];
@@ -118,11 +120,11 @@ public class Dklu_kernel {
 				 * recursive stack and push j onto output stack */
 				head--;
 				Stack[--top] = j;
-				printf("  end   dfs at %d ] head : %d\n", j, head);
+				PRINTF ("  end   dfs at %d ] head : %d\n", j, head);
 			}
 		}
 
-		*plength = l_length;
+		plength = l_length;
 		return top;
 	}
 
@@ -175,7 +177,7 @@ public class Dklu_kernel {
 			if (i < 0) continue;   /* skip entry outside the block */
 
 			/* (i,k) is an entry in the block.  start a DFS at node i */
-			printf("\n ===== DFS at node %d in b, inew: %d\n", i, Pinv[i]);
+			PRINTF ("\n ===== DFS at node %d in b, inew: %d\n", i, Pinv[i]);
 			if (Flag[i] != k)
 			{
 				if (Pinv[i] >= 0)
@@ -263,7 +265,7 @@ public class Dklu_kernel {
 				oldrow = Ai[p];
 				i = PSinv[oldrow] - k1;
 				aik = Ax[p];
-				scale_div(aik, Rs[oldrow]);
+				SCALE_DIV (aik, Rs[oldrow]);
 				if (i < 0)
 				{
 					/* this is an entry in the off-diagonal part */
@@ -313,14 +315,14 @@ public class Dklu_kernel {
 			/* forward solve with column j of L */
 			j = Stack[s];
 			jnew = Pinv[j];
-			assert (jnew >= 0);
+			ASSERT (jnew >= 0);
 			xj = X[j];
-			get_pointer(LU, Lip, Llen, Li, Lx, jnew, len);
-			assert (Lip[jnew] <= Lip[jnew+1]);
+			GET_POINTER (LU, Lip, Llen, Li, Lx, jnew, len);
+			ASSERT (Lip[jnew] <= Lip[jnew+1]);
 			for (p = 0; p < len; p++)
 			{
 				/*X[Li[p]] -= Lx[p] * xj; */
-				mult_sub(X[Li[p]], Lx[p], xj);
+				MULT_SUB (X[Li[p]], Lx[p], xj);
 			}
 		}
 	}
@@ -345,7 +347,7 @@ public class Dklu_kernel {
 	 * @param Common
 	 * @return
 	 */
-	public static boolean lpivot(int diagrow, int[] p_pivrow, Entry[] p_pivot,
+	public static int lpivot(int diagrow, int[] p_pivrow, Entry[] p_pivot,
 			double[] p_abs_pivot, double tol, Entry[] X, Unit[] LU, int[] Lip,
 			int[] Llen, int k, int n, int[] Pinv , int[] p_firstrow,
 			KLU_common Common)
@@ -360,40 +362,40 @@ public class Dklu_kernel {
 		if (Llen[k] == 0)
 		{
 			/* matrix is structurally singular */
-			if (Common.halt_if_singular)
+			if (Common.halt_if_singular == 1)
 			{
-				return false;
+				return FALSE;
 			}
 			for (firstrow = p_firstrow; firstrow < n; firstrow++)
 			{
-				printf("check %d\n", firstrow);
+				PRINTF ("check %d\n", firstrow);
 				if (Pinv[firstrow] < 0)
 				{
 					/* found the lowest-numbered non-pivotal row.  Pick it. */
 					pivrow = firstrow;
-					printf("Got pivotal row: %d\n", pivrow);
+					PRINTF ("Got pivotal row: %d\n", pivrow);
 					break;
 				}
 			}
-			assert (pivrow >= 0 && pivrow < n);
-			clear(pivot);
+			ASSERT (pivrow >= 0 && pivrow < n);
+			CLEAR (pivot);
 			p_pivrow = pivrow;
 			p_pivot = pivot;
 			p_abs_pivot = 0;
 			p_firstrow = firstrow;
-			return false;
+			return FALSE;
 		}
 
 		pdiag = EMPTY;
 		ppivrow = EMPTY;
 		abs_pivot = EMPTY;
 		i = Llen[k] - 1;
-		get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+		GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 		last_row_index = Li[i];
 
 		/* decrement the length by 1 */
 		Llen[k] = i;
-		get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+		GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 
 		/* look in Li[0 ..Llen[k] - 1 ] for a pivot row */
 		for (p = 0; p < len; p++)
@@ -401,11 +403,11 @@ public class Dklu_kernel {
 			/* gather the entry from X and store in L */
 			i = Li[p];
 			x = X[i];
-			clear(X[i]);
+			CLEAR (X[i]);
 
 			Lx[p] = x;
-			/* xabs = abs(x); */
-			abs(xabs, x);
+			/* xabs = ABS (x); */
+			ABS (xabs, x);
 
 			/* find the diagonal */
 			if (i == diagrow)
@@ -421,8 +423,8 @@ public class Dklu_kernel {
 			}
 		}
 
-		/* xabs = abs(X[last_row_index]);*/
-		abs(xabs, X[last_row_index]);
+		/* xabs = ABS (X[last_row_index]);*/
+		ABS (xabs, X[last_row_index]);
 		if (xabs > abs_pivot)
 		{
 			abs_pivot = xabs;
@@ -440,8 +442,8 @@ public class Dklu_kernel {
 		}
 		else if (pdiag != EMPTY)
 		{
-			/* xabs = abs(Lx[pdiag]);*/
-			abs(xabs, Lx[pdiag]);
+			/* xabs = ABS (Lx[pdiag]);*/
+			ABS (xabs, Lx[pdiag]);
 			if (xabs >= tol * abs_pivot)
 			{
 				/* the diagonal is large enough */
@@ -463,27 +465,27 @@ public class Dklu_kernel {
 			pivrow = last_row_index;
 			pivot = X[last_row_index];
 		}
-		clear(X[last_row_index]);
+		CLEAR (X[last_row_index]);
 
 		p_pivrow = pivrow;
 		p_pivot = pivot;
 		p_abs_pivot = abs_pivot;
-		assert (pivrow >= 0 && pivrow < n);
+		ASSERT (pivrow >= 0 && pivrow < n);
 
-		if (is_zero(pivot) && Common.halt_if_singular)
+		if (IS_ZERO (pivot) && Common.halt_if_singular)
 		{
 			/* numerically singular case */
-			return false;
+			return FALSE;
 		}
 
 		/* divide L by the pivot value */
 		for (p = 0; p < Llen[k]; p++)
 		{
 			/* Lx[p] /= pivot; */
-			div(Lx[p], Lx[p], pivot);
+			DIV (Lx[p], Lx[p], pivot);
 		}
 
-		return true;
+		return TRUE;
 	}
 
 	/**
@@ -509,29 +511,29 @@ public class Dklu_kernel {
 		int p, i, j, p2, phead, ptail, llen, ulen;
 
 		/* check to see if any column of L can be pruned */
-		get_pointer(LU, Uip, Ulen, Ui, Ux, k, ulen);
+		GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen);
 		for (p = 0; p < ulen; p++)
 		{
 			j = Ui[p];
-			assert (j < k);
-			printf(("%d is pruned: %d. Lpend[j] %d Lip[j+1] %d\n",
-				j, Lpend[j] != EMPTY, Lpend[j], Lip[j+1]));
+			ASSERT (j < k);
+			PRINTF ("%d is pruned: %d. Lpend[j] %d Lip[j+1] %d\n",
+				j, Lpend[j] != EMPTY, Lpend[j], Lip[j+1]);
 			if (Lpend[j] == EMPTY)
 			{
 				/* scan column j of L for the pivot row */
-				get_pointer(LU, Lip, Llen, Li, Lx, j, llen);
+				GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen);
 				for (p2 = 0; p2 < llen; p2++)
 				{
 					if (pivrow == Li[p2])
 					{
 						/* found it!  This column can be pruned */
-						if (debug)
+						if (!NDEBUG)
 						{
-							printf(("==== PRUNE: col j %d of L\n", j));
+							PRINTF ("==== PRUNE: col j %d of L\n", j);
 							int p3;
 							for (p3 = 0; p3 < Llen[j]; p3++)
 							{
-								printf("before: %i  pivotal: %d\n", Li[p3],
+								PRINTF ("before: %i  pivotal: %d\n", Li[p3],
 											Pinv[Li[p3]] >= 0);
 							}
 						}
@@ -568,13 +570,13 @@ public class Dklu_kernel {
 						 * column j as pruned. */
 						Lpend[j] = ptail;
 
-						if (debug)
+						if (!NDEBUG)
 						{
 							int p3;
 							for (p3 = 0; p3 < Llen[j]; p3++)
 							{
-								if (p3 == Lpend[j]) printf("----\n");
-								printf("after: %i  pivotal: %d\n", Li[p3],
+								if (p3 == Lpend[j]) PRINTF ("----\n");
+								PRINTF ("after: %i  pivotal: %d\n", Li[p3],
 											Pinv[Li[p3]] >= 0);
 							}
 						}
@@ -635,25 +637,25 @@ public class Dklu_kernel {
 		int k, p, i, j, pivrow = 0, kbar, diagrow, firstrow, lup, top, scale, len;
 		size_t newlusize;
 
-		if (debug)
+		if (!NDEBUG)
 		{
-			Entry *Lx;
+			Entry Lx;
 		}
 
-		assert (Common != null);
+		ASSERT (Common != null);
 		scale = Common.scale;
 		tol = Common.tol;
 		memgrow = Common.memgrow;
 		lnz = 0;
 		unz = 0;
-		clear(pivot);
+		CLEAR (pivot);
 
 		/* ---------------------------------------------------------------------- */
 		/* get initial Li, Lx, Ui, and Ux */
 		/* ---------------------------------------------------------------------- */
 
-		printf("input: lusize %d \n", lusize);
-		assert (lusize > 0);
+		PRINTF ("input: lusize %d \n", lusize);
+		ASSERT (lusize > 0);
 		LU = p_LU;
 
 		/* ---------------------------------------------------------------------- */
@@ -666,7 +668,7 @@ public class Dklu_kernel {
 		for (k = 0; k < n; k++)
 		{
 			/* X[k] = 0; */
-			clear(X[k]);
+			CLEAR (X[k]);
 			Flag[k] = EMPTY;
 			Lpend[k] = EMPTY;     /* flag k as not pruned */
 		}
@@ -679,21 +681,21 @@ public class Dklu_kernel {
 		for (k = 0; k < n; k++)
 		{
 			P[k] = k;
-			Pinv[k] = flip(k);   /* mark all rows as non-pivotal */
+			Pinv[k] = FLIP (k);   /* mark all rows as non-pivotal */
 		}
 		/* initialize the construction of the off-diagonal matrix */
 		Offp[0] = 0;
 
-		/* P[k] = row means that unflip(Pinv[row]) = k, and visa versa.
+		/* P[k] = row means that UNFLIP (Pinv[row]) = k, and visa versa.
 		 * If row is pivotal, then Pinv[row] >= 0.  A row is initially "flipped"
 		 * (Pinv[k] < EMPTY), and then marked "unflipped" when it becomes
 		 * pivotal. */
 
-		if (debug)
+		if (!NDEBUG)
 		{
 			for (k = 0; k < n; k++)
 			{
-				printf("Initial P[%d] = %d\n", k, P[k]);
+				PRINTF ("Initial P[%d] = %d\n", k, P[k]);
 			}
 		}
 
@@ -704,28 +706,28 @@ public class Dklu_kernel {
 		for (k = 0; k < n; k++)
 		{
 
-			printf("\n\n==================================== k: %d\n", k);
+			PRINTF ("\n\n==================================== k: %d\n", k);
 
 			/* ------------------------------------------------------------------ */
 			/* determine if LU factors have grown too big */
 			/* ------------------------------------------------------------------ */
 
 			/* (n - k) entries for L and k entries for U */
-			nunits = Dunits(Int, n - k) + Dunits(Int, k) +
-					 Dunits(Entry, n - k) + Dunits(Entry, k);
+			nunits = DUNITS (Int, n - k) + DUNITS (Int, k) +
+					 DUNITS (Entry, n - k) + DUNITS (Entry, k);
 
 			/* LU can grow by at most 'nunits' entries if the column is dense */
-			printf("lup %d lusize %g lup+nunits: %g\n", lup, (double) lusize,
+			PRINTF ("lup %d lusize %g lup+nunits: %g\n", lup, (double) lusize,
 				lup+nunits);
 			xsize = ((double) lup) + nunits;
 			if (xsize > (double) lusize)
 			{
 				/* check here how much to grow */
 				xsize = (memgrow * ((double) lusize) + 4*n + 1);
-				if (int_overflow(xsize))
+				if (INT_OVERFLOW (xsize))
 				{
-					printf("Matrix is too large (int overflow)\n");
-					Common.status = KLU_TOO_LARGE;
+					PRINTF ("Matrix is too large (int overflow)\n");
+					Common.status = KLU_common.KLU_TOO_LARGE;
 					return (lusize);
 				}
 				newlusize = memgrow * lusize + 2*n + 1;
@@ -733,13 +735,13 @@ public class Dklu_kernel {
 				LU = Dklu_realloc.klu_realloc(newlusize, lusize, sizeof (Unit), LU, Common);
 				Common.nrealloc++;
 				p_LU = LU;
-				if (Common.status == KLU_OUT_OF_MEMORY)
+				if (Common.status == KLU_common.KLU_OUT_OF_MEMORY)
 				{
-					printf(("Matrix is too large (LU)\n"));
+					PRINTF (("Matrix is too large (LU)\n"));
 					return (lusize);
 				}
 				lusize = newlusize;
-				printf("inc LU to %d done\n", lusize);
+				PRINTF ("inc LU to %d done\n", lusize);
 			}
 
 			/* ------------------------------------------------------------------ */
@@ -752,40 +754,40 @@ public class Dklu_kernel {
 			/* compute the nonzero pattern of the kth column of L and U */
 			/* ------------------------------------------------------------------ */
 
-			if (debug)
+			if (!NDEBUG)
 			{
 				for (i = 0; i < n; i++)
 				{
-					assert (Flag[i] < k);
-					/* assert (X[i] == 0); */
-					assert (is_zero(X[i]));
+					ASSERT (Flag[i] < k);
+					/* ASSERT (X[i] == 0); */
+					ASSERT (IS_ZERO (X[i]));
 				}
 			}
 
-			top = lsolve_symbolic(n, k, Ap, Ai, Q, Pinv, Stack, Flag,
+			top = lsolve_symbolic (n, k, Ap, Ai, Q, Pinv, Stack, Flag,
 						Lpend, Ap_pos, LU, lup, Llen, Lip, k1, PSinv);
 
-			if (debug)
+			if (!NDEBUG)
 			{
-				printf(("--- in U:\n"));
+				PRINTF (("--- in U:\n"));
 				for (p = top; p < n; p++)
 				{
-					printf(("pattern of X for U: %d : %d pivot row: %d\n",
-						p, Stack[p], Pinv[Stack[p]]));
-					assert (Flag[Stack[p]] == k);
+					PRINTF ("pattern of X for U: %d : %d pivot row: %d\n",
+						p, Stack[p], Pinv[Stack[p]]);
+					ASSERT (Flag[Stack[p]] == k);
 				}
-				printf(("--- in L:\n"));
-				Li = (int *) (LU + Lip[k]);
+				PRINTF ("--- in L:\n");
+				Li = (int[]) (LU + Lip[k]);
 				for (p = 0; p < Llen[k]; p++)
 				{
-					printf(("pattern of X in L: %d : %d pivot row: %d\n",
-						p, Li[p], Pinv[Li[p]]));
-					assert (Flag[Li[p]] == k);
+					PRINTF ("pattern of X in L: %d : %d pivot row: %d\n",
+						p, Li[p], Pinv[Li[p]]);
+					ASSERT (Flag[Li[p]] == k);
 				}
 				p = 0;
 				for (i = 0; i < n; i++)
 				{
-					assert (Flag[i] <= k);
+					ASSERT (Flag[i] <= k);
 					if (Flag[i] == k) p++;
 				}
 			}
@@ -794,27 +796,27 @@ public class Dklu_kernel {
 			/* get the column of the matrix to factorize and scatter into X */
 			/* ------------------------------------------------------------------ */
 
-			construct_column(k, Ap, Ai, Ax, Q, X,
+			construct_column (k, Ap, Ai, Ax, Q, X,
 				k1, PSinv, Rs, scale, Offp, Offi, Offx);
 
 			/* ------------------------------------------------------------------ */
 			/* compute the numerical values of the kth column (s = L \ A (:,k)) */
 			/* ------------------------------------------------------------------ */
 
-			lsolve_numeric(Pinv, LU, Stack, Lip, top, n, Llen, X);
+			lsolve_numeric (Pinv, LU, Stack, Lip, top, n, Llen, X);
 
-			if (debug)
+			if (!NDEBUG)
 			{
 				for (p = top; p < n; p++)
 				{
-					printf("X for U %d : ",  Stack[p]);
-					print_entry(X[Stack[p]]);
+					PRINTF ("X for U %d : ",  Stack[p]);
+					PRINT_ENTRY (X[Stack[p]]);
 				}
 				Li = (int[]) (LU + Lip[k]);
 				for (p = 0; p < Llen[k]; p++)
 				{
-					printf("X for L %d : ", Li[p]);
-					print_entry(X[Li[p]]);
+					PRINTF ("X for L %d : ", Li[p]);
+					PRINT_ENTRY (X[Li[p]]);
 				}
 			}
 
@@ -824,21 +826,21 @@ public class Dklu_kernel {
 
 			/* determine what the "diagonal" is */
 			diagrow = P[k];   /* might already be pivotal */
-			printf("k %d, diagrow = %d, unflip(diagrow) = %d\n",
-				k, diagrow, unflip(diagrow));
+			PRINTF ("k %d, diagrow = %d, UNFLIP (diagrow) = %d\n",
+				k, diagrow, UNFLIP (diagrow));
 
 			/* find a pivot and scale the pivot column */
-			if (!lpivot(diagrow, pivrow, pivot, abs_pivot, tol, X, LU, Lip,
+			if (!lpivot (diagrow, pivrow, pivot, abs_pivot, tol, X, LU, Lip,
 						Llen, k, n, Pinv, firstrow, Common))
 			{
 				/* matrix is structurally or numerically singular */
-				Common.status = KLU_SINGULAR;
+				Common.status = KLU_common.KLU_SINGULAR;
 				if (Common.numerical_rank == EMPTY)
 				{
 					Common.numerical_rank = k+k1;
 					Common.singular_col = Q[k+k1];
 				}
-				if (Common.halt_if_singular)
+				if (Common.halt_if_singular == 1)
 				{
 					/* do not continue the factorization */
 					return (lusize);
@@ -847,32 +849,32 @@ public class Dklu_kernel {
 
 			/* we now have a valid pivot row, even if the column has NaN's or
 			 * has no entries on or below the diagonal at all. */
-			printf(("\nk %d : Pivot row %d : ", k, pivrow));
-			print_entry(pivot);
-			assert (pivrow >= 0 && pivrow < n);
-			assert (Pinv[pivrow] < 0);
+			PRINTF ("\nk %d : Pivot row %d : ", k, pivrow);
+			PRINT_ENTRY (pivot);
+			ASSERT (pivrow >= 0 && pivrow < n);
+			ASSERT (Pinv[pivrow] < 0);
 
 			/* set the Uip pointer */
-			Uip[k] = Lip[k] + units(int, Llen[k]) + units(Entry, Llen[k]);
+			Uip[k] = Lip[k] + UNITS (int, Llen[k]) + UNITS (Entry, Llen[k]);
 
 			/* move the lup pointer to the position where indices of U
 			 * should be stored */
-			lup += units(int, Llen[k]) + units(Entry, Llen[k]);
+			lup += UNITS (int, Llen[k]) + UNITS (Entry, Llen[k]);
 
 			Ulen[k] = n - top;
 
 			/* extract Stack[top..n-1] to Ui and the values to Ux and clear X */
-			get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+			GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 			for (p = top, i = 0; p < n; p++, i++)
 			{
 				j = Stack[p];
 				Ui[i] = Pinv[j];
 				Ux[i] = X[j];
-				clear(X[j]);
+				CLEAR (X[j]);
 			}
 
 			/* position the lu index at the starting point for next column */
-			lup += units(int, Ulen[k]) + units(Entry, Ulen[k]);
+			lup += UNITS (int, Ulen[k]) + UNITS (Entry, Ulen[k]);
 
 			/* U(k,k) = pivot */
 			Udiag[k] = pivot;
@@ -881,43 +883,43 @@ public class Dklu_kernel {
 			/* log the pivot permutation */
 			/* ------------------------------------------------------------------ */
 
-			assert (unflip(Pinv[diagrow]) < n);
-			assert (P[unflip(Pinv[diagrow])] == diagrow);
+			ASSERT (UNFLIP (Pinv[diagrow]) < n);
+			ASSERT (P[UNFLIP (Pinv[diagrow])] == diagrow);
 
 			if (pivrow != diagrow)
 			{
 				/* an off-diagonal pivot has been chosen */
 				Common.noffdiag++;
-				printf((">>>>>>>>>>>>>>>>> pivrow %d k %d off-diagonal\n",
-							pivrow, k));
+				PRINTF (">>>>>>>>>>>>>>>>> pivrow %d k %d off-diagonal\n",
+							pivrow, k);
 				if (Pinv[diagrow] < 0)
 				{
 					/* the former diagonal row index, diagrow, has not yet been
 					 * chosen as a pivot row.  Log this diagrow as the "diagonal"
 					 * entry in the column kbar for which the chosen pivot row,
 					 * pivrow, was originally logged as the "diagonal" */
-					kbar = flip(Pinv[pivrow]);
+					kbar = FLIP (Pinv[pivrow]);
 					P[kbar] = diagrow;
-					Pinv[diagrow] = flip(kbar);
+					Pinv[diagrow] = FLIP (kbar);
 				}
 			}
 			P[k] = pivrow;
 			Pinv[pivrow] = k;
 
-			if (debug)
+			if (!NDEBUG)
 			{
-				for (i = 0; i < n; i++) { assert (is_zero(X[i]));}
-				get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+				for (i = 0; i < n; i++) { ASSERT (IS_ZERO (X[i]));}
+				GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 				for (p = 0; p < len; p++)
 				{
-					printf(("Column %d of U: %d : ", k, Ui[p]));
-					print_entry(Ux[p]);
+					PRINTF ("Column %d of U: %d : ", k, Ui[p]);
+					PRINT_ENTRY (Ux[p]);
 				}
-				get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+				GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 				for (p = 0; p < len; p++)
 				{
-					printf(("Column %d of L: %d : ", k, Li[p]));
-					print_entry(Lx[p]);
+					PRINTF ("Column %d of L: %d : ", k, Li[p]);
+					PRINT_ENTRY (Lx[p]);
 				}
 			}
 
@@ -925,7 +927,7 @@ public class Dklu_kernel {
 			/* symmetric pruning */
 			/* ------------------------------------------------------------------ */
 
-			prune(Lpend, Pinv, k, pivrow, LU, Uip, Lip, Ulen, Llen);
+			prune (Lpend, Pinv, k, pivrow, LU, Uip, Lip, Ulen, Llen);
 
 			lnz += Llen[k] + 1; /* 1 added to lnz for diagonal */
 			unz += Ulen[k] + 1; /* 1 added to unz for diagonal */
@@ -937,25 +939,25 @@ public class Dklu_kernel {
 
 		for (p = 0; p < n; p++)
 		{
-			Li = (int *) (LU + Lip[p]);
+			Li = (int[]) (LU + Lip[p]);
 			for (i = 0; i < Llen[p]; i++)
 			{
 				Li[i] = Pinv[Li[i]];
 			}
 		}
 
-		if (debug)
+		if (!NDEBUG)
 		{
 			for (i = 0; i < n; i++)
 			{
-				printf(("P[%d] = %d   Pinv[%d] = %d\n", i, P[i], i, Pinv[i]));
+				PRINTF ("P[%d] = %d   Pinv[%d] = %d\n", i, P[i], i, Pinv[i]);
 			}
 			for (i = 0; i < n; i++)
 			{
-				assert (Pinv[i] >= 0 && Pinv[i] < n);
-				assert (P[i] >= 0 && P[i] < n);
-				assert (P[Pinv[i]] == i);
-				assert (is_zero(X[i]));
+				ASSERT (Pinv[i] >= 0 && Pinv[i] < n);
+				ASSERT (P[i] >= 0 && P[i] < n);
+				ASSERT (P[Pinv[i]] == i);
+				ASSERT (IS_ZERO (X[i]));
 			}
 		}
 
@@ -964,7 +966,7 @@ public class Dklu_kernel {
 		/* ---------------------------------------------------------------------- */
 
 		newlusize = lup;
-		assert ((size_t) newlusize <= lusize);
+		ASSERT ((size_t) newlusize <= lusize);
 
 		/* this cannot fail, since the block is descreasing in size */
 		LU = Dklu_realloc.klu_realloc(newlusize, lusize, sizeof (Unit), LU, Common);

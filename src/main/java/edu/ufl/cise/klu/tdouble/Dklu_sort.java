@@ -24,12 +24,14 @@
 
 package edu.ufl.cise.klu.tdouble;
 
+import edu.ufl.cise.klu.common.KLU_common;
+
 /**
  * Sorts the columns of L and U so that the row indices appear in strictly
  * increasing order.
  *
  */
-public class Dklu_sort {
+public class Dklu_sort extends Dklu_internal {
 
 	/**
 	 * Sort L or U using a double-transpose.
@@ -41,7 +43,7 @@ public class Dklu_sort {
 		Entry Xx;
 		int p, i, j, len, nz, tp, xlen, pend;
 
-		assert Dklu_valid_LU.klu_valid_LU(n, false, Xip, Xlen, LU);
+		ASSERT (Dklu_valid_LU.klu_valid_LU(n, false, Xip, Xlen, LU));
 
 		/* count the number of entries in each row of L or U */
 		for (i = 0; i < n; i++)
@@ -50,7 +52,7 @@ public class Dklu_sort {
 		}
 		for (j = 0; j < n; j++)
 		{
-			get_pointer(LU, Xip, Xlen, Xi, Xx, j, len);
+			GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len);
 			for (p = 0; p < len; p++)
 			{
 				W[Xi[p]]++;
@@ -73,7 +75,7 @@ public class Dklu_sort {
 		/* transpose the matrix into Tp, Ti, Tx */
 		for (j = 0; j < n; j++)
 		{
-			get_pointer(LU, Xip, Xlen, Xi, Xx, j, len);
+			GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len);
 			for (p = 0; p < len; p++)
 			{
 				tp = W[Xi[p]]++;
@@ -93,14 +95,14 @@ public class Dklu_sort {
 			for (p = Tp[i]; p < pend; p++)
 			{
 				j = Tj[p];
-				get_pointer(LU, Xip, Xlen, Xi, Xx, j, len);
+				GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len);
 				xlen = W[j]++;
 				Xi[xlen] = i;
 				Xx[xlen] = Tx[p];
 			}
 		}
 
-		assert Dklu_valid_LU.klu_valid_LU(n, false, Xip, Xlen, LU);
+		ASSERT (Dklu_valid_LU.klu_valid_LU(n, false, Xip, Xlen, LU));
 	}
 
 
@@ -117,7 +119,7 @@ public class Dklu_sort {
 		{
 			return false;
 		}
-		Common.status = KLU_OK;
+		Common.status = KLU_common.KLU_OK;
 
 		n = Symbolic.n;
 		R = Symbolic.R;
@@ -139,9 +141,9 @@ public class Dklu_sort {
 		Ti = Dklu_malloc.klu_malloc(nz, (Int) sizeof, Common);
 		Tx = Dklu_malloc.klu_malloc(nz, (Entry) sizeof, Common);
 
-		printf("\n======================= Start sort:\n");
+		PRINTF ("\n======================= Start sort:\n");
 
-		if (Common.status == KLU_OK)
+		if (Common.status == KLU_common.KLU_OK)
 		{
 			/* sort each block of L and U */
 			for (block = 0; block < nblocks; block++)
@@ -150,14 +152,14 @@ public class Dklu_sort {
 				nk = R[block+1] - k1;
 				if (nk > 1)
 				{
-					printf("\n-------------------block: %d nk %d\n", block, nk);
+					PRINTF ("\n-------------------block: %d nk %d\n", block, nk);
 					sort(nk, Lip + k1, Llen + k1, LUbx[block], Tp, Ti, Tx, W);
 					sort(nk, Uip + k1, Ulen + k1, LUbx[block], Tp, Ti, Tx, W);
 				}
 			}
 		}
 
-		printf("\n======================= sort done.\n");
+		PRINTF ("\n======================= sort done.\n");
 
 		/* free workspace */
 		Dklu_free.klu_free(W, maxblock, (Int) sizeof, Common);
@@ -165,7 +167,7 @@ public class Dklu_sort {
 		Dklu_free.klu_free(Ti, nz, (Int) sizeof, Common);
 		Dklu_free.klu_free(Tx, nz, (Entry) sizeof, Common);
 
-		return Common.status == KLU_OK;
+		return Common.status == KLU_common.KLU_OK;
 	}
 
 }

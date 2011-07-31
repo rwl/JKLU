@@ -128,13 +128,13 @@ public class Dklu extends Dklu_internal {
 		/* get control parameters, or use defaults */
 		/* ------------------------------------------------------------------ */
 
-		n = max(1, n);
+		n = MAX (1, n);
 		anz = Ap[n+k1] - Ap[k1];
 
 		if (Lsize <= 0)
 		{
 			Lsize = -Lsize;
-			Lsize = max(Lsize, 1.0);
+			Lsize = MAX (Lsize, 1.0);
 			lsize = Lsize * anz + n;
 		}
 		else
@@ -144,15 +144,15 @@ public class Dklu extends Dklu_internal {
 
 		usize = lsize;
 
-		lsize  = max(n+1, lsize);
-		usize  = max(n+1, usize);
+		lsize  = MAX (n+1, lsize);
+		usize  = MAX (n+1, usize);
 
 		maxlnz = (((double) n) * ((double) n) + ((double) n)) / 2.;
-		maxlnz = min(maxlnz, ((double) INT_MAX));
-		lsize  = min(maxlnz, lsize);
-		usize  = min(maxlnz, usize);
+		maxlnz = MIN (maxlnz, ((double) INT_MAX));
+		lsize  = MIN (maxlnz, lsize);
+		usize  = MIN (maxlnz, usize);
 
-		printf("Welcome to klu: n %d anz %d k1 %d lsize %d usize %d maxlnz %g\n",
+		PRINTF ("Welcome to klu: n %d anz %d k1 %d lsize %d usize %d maxlnz %g\n",
 			n, anz, k1, lsize, usize, maxlnz);
 
 		/* ------------------------------------------------------------------ */
@@ -170,15 +170,15 @@ public class Dklu extends Dklu_internal {
 		Lpend = (int[]) W;     W += n;
 		Ap_pos = (int[]) W;    W += n;
 
-		dunits= dunits(Int, lsize) + dunits(Entry, lsize) +
-				 dunits(Int, usize) + dunits(Entry, usize);
-		lusize = (size_t) dunits;
-		ok = !int_overflow(dunits);
+		dunits= DUNITS (Int, lsize) + DUNITS (Entry, lsize) +
+				 DUNITS (Int, usize) + DUNITS (Entry, usize);
+		lusize = (size_t) DUNITS ;
+		ok = !INT_OVERFLOW (dunits);
 		LU = ok != 0 ? Dklu_malloc.klu_malloc(lusize, sizeof(Unit), Common) : null;
 		if (LU == null)
 		{
 			/* out of memory, or problem too large */
-			Common.status = KLU_OUT_OF_MEMORY;
+			Common.status = KLU_common.KLU_OUT_OF_MEMORY;
 			lusize = 0;
 			return (lusize);
 		}
@@ -197,13 +197,13 @@ public class Dklu extends Dklu_internal {
 		/* return LU factors, or return nothing if an error occurred */
 		/* ------------------------------------------------------------------ */
 
-		if (Common.status < KLU_OK)
+		if (Common.status < KLU_common.KLU_OK)
 		{
-			LU = Dklu_free.klu_free(LU, lusize, sizeof(Unit), Common);
+			LU = Dklu_free.klu_free(LU, lusize, sizeof (Unit), Common);
 			lusize = 0;
 		}
 		p_LU = LU;
-		printf(" in klu noffdiag %d\n", Common.noffdiag);
+		PRINTF (" in klu noffdiag %d\n", Common.noffdiag);
 		return lusize;
 
 	}
@@ -237,12 +237,12 @@ public class Dklu extends Dklu_internal {
 				for (k = 0; k < n; k++)
 				{
 					x[0] = X[k];
-					get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 					/* unit diagonal of L is not stored*/
 					for (p = 0; p < len; p++)
 					{
 						/* X[Li[p]] -= Lx[p] * x[0]; */
-						mult_sub(X[Li[p]], Lx[p], x[0]);
+						MULT_SUB (X[Li[p]], Lx[p], x[0]);
 					}
 				}
 				break;
@@ -253,13 +253,13 @@ public class Dklu extends Dklu_internal {
 				{
 					x[0] = X[2*k    ];
 					x[1] = X[2*k + 1];
-					get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 					for (p = 0; p < len; p++)
 					{
 						i = Li[p];
 						lik = Lx[p];
-						mult_sub(X[2*i], lik, x[0]);
-						mult_sub(X[2*i + 1], lik, x[1]);
+						MULT_SUB (X[2*i], lik, x[0]);
+						MULT_SUB (X[2*i + 1], lik, x[1]);
 					}
 				}
 				break;
@@ -271,14 +271,14 @@ public class Dklu extends Dklu_internal {
 					x[0] = X[3*k    ];
 					x[1] = X[3*k + 1];
 					x[2] = X[3*k + 2];
-					get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 					for (p = 0; p < len; p++)
 					{
 						i = Li[p];
 						lik = Lx[p];
-						mult_sub(X[3*i], lik, x[0]);
-						mult_sub(X[3*i + 1], lik, x[1]);
-						mult_sub(X[3*i + 2], lik, x[2]);
+						MULT_SUB (X[3*i], lik, x[0]);
+						MULT_SUB (X[3*i + 1], lik, x[1]);
+						MULT_SUB (X[3*i + 2], lik, x[2]);
 					}
 				}
 				break;
@@ -291,15 +291,15 @@ public class Dklu extends Dklu_internal {
 					x[1] = X[4*k + 1];
 					x[2] = X[4*k + 2];
 					x[3] = X[4*k + 3];
-					get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 					for (p = 0; p < len; p++)
 					{
 						i = Li[p];
 						lik = Lx[p];
-						mult_sub(X[4*i], lik, x[0]);
-						mult_sub(X[4*i + 1], lik, x[1]);
-						mult_sub(X[4*i + 2], lik, x[2]);
-						mult_sub(X[4*i + 3], lik, x[3]);
+						MULT_SUB (X[4*i], lik, x[0]);
+						MULT_SUB (X[4*i + 1], lik, x[1]);
+						MULT_SUB (X[4*i + 2], lik, x[2]);
+						MULT_SUB (X[4*i + 3], lik, x[3]);
 					}
 				}
 				break;
@@ -338,14 +338,14 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1; k >= 0; k--)
 				{
-					get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 					/* x[0] = X[k] / Udiag[k]; */
-					div(x[0], X[k], Udiag[k]);
+					DIV (x[0], X[k], Udiag[k]);
 					X[k] = x[0];
 					for (p = 0; p < len; p++)
 					{
 						/* X[Ui[p]] -= Ux[p] * x[0]; */
-						mult_sub(X[Ui[p]], Ux[p], x[0]);
+						MULT_SUB (X[Ui[p]], Ux[p], x[0]);
 
 					}
 				}
@@ -356,12 +356,12 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1; k >= 0; k--)
 				{
-					get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 					ukk = Udiag[k];
 					/* x[0] = X[2*k    ] / ukk;
 					x[1] = X[2*k + 1] / ukk; */
-					div(x[0], X[2*k], ukk);
-					div(x[1], X[2*k + 1], ukk);
+					DIV (x[0], X[2*k], ukk);
+					DIV (x[1], X[2*k + 1], ukk);
 
 					X[2*k    ] = x[0];
 					X[2*k + 1] = x[1];
@@ -371,8 +371,8 @@ public class Dklu extends Dklu_internal {
 						uik = Ux[p];
 						/* X[2*i    ] -= uik * x[0];
 						X[2*i + 1] -= uik * x[1]; */
-						mult_sub(X[2*i], uik, x[0]);
-						mult_sub(X[2*i + 1], uik, x[1]);
+						MULT_SUB (X[2*i], uik, x[0]);
+						MULT_SUB (X[2*i + 1], uik, x[1]);
 					}
 				}
 
@@ -382,12 +382,12 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1; k >= 0; k--)
 				{
-					get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 					ukk = Udiag[k];
 
-					div(x[0], X[3*k], ukk);
-					div(x[1], X[3*k + 1], ukk);
-					div(x[2], X[3*k + 2], ukk);
+					DIV (x[0], X[3*k], ukk);
+					DIV (x[1], X[3*k + 1], ukk);
+					DIV (x[2], X[3*k + 2], ukk);
 
 					X[3*k    ] = x[0];
 					X[3*k + 1] = x[1];
@@ -396,9 +396,9 @@ public class Dklu extends Dklu_internal {
 					{
 						i = Ui[p];
 						uik = Ux[p];
-						mult_sub(X[3*i], uik, x[0]);
-						mult_sub(X[3*i + 1], uik, x[1]);
-						mult_sub(X[3*i + 2], uik, x[2]);
+						MULT_SUB (X[3*i], uik, x[0]);
+						MULT_SUB (X[3*i + 1], uik, x[1]);
+						MULT_SUB (X[3*i + 2], uik, x[2]);
 					}
 				}
 
@@ -408,13 +408,13 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1; k >= 0; k--)
 				{
-					get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 					ukk = Udiag[k];
 
-					div(x[0], X[4*k], ukk);
-					div(x[1], X[4*k + 1], ukk);
-					div(x[2], X[4*k + 2], ukk);
-					div(x[3], X[4*k + 3], ukk);
+					DIV (x[0], X[4*k], ukk);
+					DIV (x[1], X[4*k + 1], ukk);
+					DIV (x[2], X[4*k + 2], ukk);
+					DIV (x[3], X[4*k + 3], ukk);
 
 					X[4*k    ] = x[0];
 					X[4*k + 1] = x[1];
@@ -425,10 +425,10 @@ public class Dklu extends Dklu_internal {
 						i = Ui[p];
 						uik = Ux[p];
 
-						mult_sub(X[4*i], uik, x[0]);
-						mult_sub(X[4*i + 1], uik, x[1]);
-						mult_sub(X[4*i + 2], uik, x[2]);
-						mult_sub(X[4*i + 3], uik, x[3]);
+						MULT_SUB (X[4*i], uik, x[0]);
+						MULT_SUB (X[4*i + 1], uik, x[1]);
+						MULT_SUB (X[4*i + 2], uik, x[2]);
+						MULT_SUB (X[4*i + 3], uik, x[3]);
 					}
 				}
 
@@ -467,12 +467,12 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1; k >= 0; k--)
 				{
-					get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 					x[0] = X[k];
 					for (p = 0; p < len; p++)
 					{
 						/*x[0] -= Lx[p] * X[Li[p]];*/
-						mult_sub(x[0], Lx[p], X[Li[p]]);
+						MULT_SUB (x[0], Lx[p], X[Li[p]]);
 					}
 					X[k] = x[0];
 				}
@@ -484,13 +484,13 @@ public class Dklu extends Dklu_internal {
 				{
 					x[0] = X[2*k    ];
 					x[1] = X[2*k + 1];
-					get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 					for (p = 0; p < len; p++)
 					{
 						i = Li[p];
 						lik = Lx[p];
-						mult_sub(x[0], lik, X[2*i]);
-						mult_sub(x[1], lik, X[2*i + 1]);
+						MULT_SUB (x[0], lik, X[2*i]);
+						MULT_SUB (x[1], lik, X[2*i + 1]);
 					}
 					X[2*k    ] = x[0];
 					X[2*k + 1] = x[1];
@@ -504,14 +504,14 @@ public class Dklu extends Dklu_internal {
 					x[0] = X[3*k    ];
 					x[1] = X[3*k + 1];
 					x[2] = X[3*k + 2];
-					get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 					for (p = 0; p < len; p++)
 					{
 						i = Li[p];
 						lik = Lx[p];
-						mult_sub(x[0], lik, X[3*i]);
-						mult_sub(x[1], lik, X[3*i + 1]);
-						mult_sub(x[2], lik, X[3*i + 2]);
+						MULT_SUB (x[0], lik, X[3*i]);
+						MULT_SUB (x[1], lik, X[3*i + 1]);
+						MULT_SUB (x[2], lik, X[3*i + 2]);
 					}
 					X[3*k    ] = x[0];
 					X[3*k + 1] = x[1];
@@ -527,15 +527,15 @@ public class Dklu extends Dklu_internal {
 					x[1] = X[4*k + 1];
 					x[2] = X[4*k + 2];
 					x[3] = X[4*k + 3];
-					get_pointer(LU, Lip, Llen, Li, Lx, k, len);
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
 					for (p = 0; p < len; p++)
 					{
 						i = Li[p];
 						lik = Lx[p];
-						mult_sub(x[0], lik, X[4*i]);
-						mult_sub(x[1], lik, X[4*i + 1]);
-						mult_sub(x[2], lik, X[4*i + 2]);
-						mult_sub(x[3], lik, X[4*i + 3]);
+						MULT_SUB (x[0], lik, X[4*i]);
+						MULT_SUB (x[1], lik, X[4*i + 1]);
+						MULT_SUB (x[2], lik, X[4*i + 2]);
+						MULT_SUB (x[3], lik, X[4*i + 3]);
 					}
 					X[4*k    ] = x[0];
 					X[4*k + 1] = x[1];
@@ -576,15 +576,15 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0; k < n; k++)
 				{
-					get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 					x[0] = X[k];
 					for (p = 0; p < len; p++)
 					{
 						/* x[0] -= Ux[p] * X[Ui[p]]; */
-						mult_sub(x[0], Ux[p], X[Ui[p]]);
+						MULT_SUB (x[0], Ux[p], X[Ui[p]]);
 					}
 					ukk = Udiag[k];
-					div(X[k], x[0], ukk);
+					DIV (X[k], x[0], ukk);
 				}
 				break;
 
@@ -592,19 +592,19 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0; k < n; k++)
 				{
-					get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 					x[0] = X[2*k    ];
 					x[1] = X[2*k + 1];
 					for (p = 0; p < len; p++)
 					{
 						i = Ui[p];
 						uik = Ux[p];
-						mult_sub(x[0], uik, X[2*i]);
-						mult_sub(x[1], uik, X[2*i + 1]);
+						MULT_SUB (x[0], uik, X[2*i]);
+						MULT_SUB (x[1], uik, X[2*i + 1]);
 					}
 					ukk = Udiag[k];
-					div(X[2*k], x[0], ukk);
-					div(X[2*k + 1], x[1], ukk);
+					DIV (X[2*k], x[0], ukk);
+					DIV (X[2*k + 1], x[1], ukk);
 				}
 				break;
 
@@ -612,7 +612,7 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0; k < n; k++)
 				{
-					get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 					x[0] = X[3*k    ];
 					x[1] = X[3*k + 1];
 					x[2] = X[3*k + 2];
@@ -620,14 +620,14 @@ public class Dklu extends Dklu_internal {
 					{
 						i = Ui[p];
 						uik = Ux[p];
-						mult_sub(x[0], uik, X[3*i]);
-						mult_sub(x[1], uik, X[3*i + 1]);
-						mult_sub(x[2], uik, X[3*i + 2]);
+						MULT_SUB (x[0], uik, X[3*i]);
+						MULT_SUB (x[1], uik, X[3*i + 1]);
+						MULT_SUB (x[2], uik, X[3*i + 2]);
 					}
 					ukk = Udiag[k];
-					div(X[3*k], x[0], ukk);
-					div(X[3*k + 1], x[1], ukk);
-					div(X[3*k + 2], x[2], ukk);
+					DIV (X[3*k], x[0], ukk);
+					DIV (X[3*k + 1], x[1], ukk);
+					DIV (X[3*k + 2], x[2], ukk);
 				}
 				break;
 
@@ -635,7 +635,7 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0; k < n; k++)
 				{
-					get_pointer(LU, Uip, Ulen, Ui, Ux, k, len);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
 					x[0] = X[4*k    ];
 					x[1] = X[4*k + 1];
 					x[2] = X[4*k + 2];
@@ -644,16 +644,16 @@ public class Dklu extends Dklu_internal {
 					{
 						i = Ui[p];
 						uik = Ux[p];
-						mult_sub(x[0], uik, X[4*i]);
-						mult_sub(x[1], uik, X[4*i + 1]);
-						mult_sub(x[2], uik, X[4*i + 2]);
-						mult_sub(x[3], uik, X[4*i + 3]);
+						MULT_SUB (x[0], uik, X[4*i]);
+						MULT_SUB (x[1], uik, X[4*i + 1]);
+						MULT_SUB (x[2], uik, X[4*i + 2]);
+						MULT_SUB (x[3], uik, X[4*i + 3]);
 					}
 					ukk = Udiag[k];
-					div(X[4*k], x[0], ukk);
-					div(X[4*k + 1], x[1], ukk);
-					div(X[4*k + 2], x[2], ukk);
-					div(X[4*k + 3], x[3], ukk);
+					DIV (X[4*k], x[0], ukk);
+					DIV (X[4*k + 1], x[1], ukk);
+					DIV (X[4*k + 2], x[2], ukk);
+					DIV (X[4*k + 3], x[3], ukk);
 				}
 				break;
 		}

@@ -24,6 +24,8 @@
 
 package edu.ufl.cise.klu.tdouble;
 
+import edu.ufl.cise.klu.common.KLU_common;
+
 /**
  * Scale a matrix and check to see if it is valid.  Can be called by the user.
  * This is called by KLU_factor and KLU_refactor.  Returns true if the input
@@ -36,7 +38,7 @@ package edu.ufl.cise.klu.tdouble;
  *      1: the scale factor for row i is sum (abs (A (i,:)))
  *      2 or more: the scale factor for row i is max(abs (A (i,:)))
  */
-public class Dklu_scale {
+public class Dklu_scale extends Dklu_internal {
 
 	/**
 	 *
@@ -50,7 +52,7 @@ public class Dklu_scale {
 	 * @param Common
 	 * @return true if successful, false otherwise
 	 */
-	public static boolean klu_scale(int scale, int n, int[] Ap, int[] Ai,
+	public static int klu_scale(int scale, int n, int[] Ap, int[] Ai,
 		    double[] Ax, double[] Rs, int[] W, KLU_common Common)
 	{
 		double a;
@@ -64,15 +66,15 @@ public class Dklu_scale {
 
 	    if (Common == null)
 	    {
-	        return false;
+	        return FALSE;
 	    }
-	    Common.status = KLU_OK;
+	    Common.status = KLU_common.KLU_OK;
 
 	    if (scale < 0)
 	    {
 	        /* return without checking anything and without computing the
 	         * scale factors */
-	        return true;
+	        return TRUE;
 	    }
 
 	    Az = (Entry[]) Ax;
@@ -81,22 +83,22 @@ public class Dklu_scale {
 	        (scale > 0 && Rs == null))
 	    {
 	        /* Ap, Ai, Ax and Rs must be present, and n must be > 0 */
-	        Common.status = KLU_INVALID;
-	        return false;
+	        Common.status = KLU_common.KLU_INVALID;
+	        return FALSE;
 	    }
 	    if (Ap[0] != 0 || Ap[n] < 0)
 	    {
 	        /* nz = Ap[n] must be >= 0 and Ap[0] must equal zero */
-	        Common.status = KLU_INVALID;
-	        return false;
+	        Common.status = KLU_common.KLU_INVALID;
+	        return FALSE;
 	    }
 	    for (col = 0; col < n; col++)
 	    {
 	        if (Ap[col] > Ap[col+1])
 	        {
 	            /* column pointers must be non-decreasing */
-	            Common.status = KLU_INVALID;
-	            return false;
+	            Common.status = KLU_common.KLU_INVALID;
+	            return FALSE;
 	        }
 	    }
 
@@ -132,16 +134,16 @@ public class Dklu_scale {
 	            if (row < 0 || row >= n)
 	            {
 	                /* row index out of range, or duplicate entry */
-	                Common.status = KLU_INVALID;
-	                return false;
+	                Common.status = KLU_common.KLU_INVALID;
+	                return FALSE;
 	            }
 	            if (check_duplicates)
 	            {
 	                if (W[row] == col)
 	                {
 	                    /* duplicate entry */
-	                    Common.status = KLU_INVALID;
-	                    return false;
+	                    Common.status = KLU_common.KLU_INVALID;
+	                    return FALSE;
 	                }
 	                /* flag row i as appearing in column col */
 	                W[row] = col;
@@ -156,7 +158,7 @@ public class Dklu_scale {
 	            else if (scale > 1)
 	            {
 	                /* find the maxabs. value in the row */
-	                Rs[row] = max(Rs[row], a);
+	                Rs[row] = MAX (Rs[row], a);
 	            }
 	        }
 	    }
@@ -167,17 +169,17 @@ public class Dklu_scale {
 	        for (row = 0; row < n; row++)
 	        {
 	            /* matrix is singular */
-	            printf("Rs[%d] = %g\n", row, Rs[row]);
+	            PRINTF ("Rs[%d] = %g\n", row, Rs[row]);
 
 	            if (Rs[row] == 0.0)
 	            {
-	                printf("Row %d of A is all zero\n", row);
+	            	PRINTF ("Row %d of A is all zero\n", row);
 	                Rs[row] = 1.0;
 	            }
 	        }
 	    }
 
-	    return true;
+	    return TRUE;
 	}
 
 }

@@ -24,13 +24,17 @@
 
 package edu.ufl.cise.klu.tdouble;
 
+import edu.ufl.cise.klu.common.KLU_common;
+import edu.ufl.cise.klu.common.KLU_numeric;
+import edu.ufl.cise.klu.common.KLU_symbolic;
+
 /**
  * Factor the matrix, after ordering and analyzing it with KLU_analyze, and
  * factoring it once with KLU_factor.  This routine cannot do any numerical
  * pivoting.  The pattern of the input matrix (Ap, Ai) must be identical to
  * the pattern given to KLU_factor.
  */
-public class Dklu_refactor {
+public class Dklu_refactor extends Dklu_internal {
 
 	/**
 	 *
@@ -42,7 +46,7 @@ public class Dklu_refactor {
 	 * @param Common
 	 * @return true if successful, false otherwise
 	 */
-	public static boolean klu_refactor(int[] Ap, int[] Ai, double[] Ax,
+	public static int klu_refactor(int[] Ap, int[] Ai, double[] Ax,
 			KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common  Common)
 	{
 		Entry ukk, ujk, s;
@@ -60,15 +64,15 @@ public class Dklu_refactor {
 
 		if (Common == null)
 		{
-			return false;
+			return FALSE;
 		}
-		Common.status = KLU_OK;
+		Common.status = KLU_common.KLU_OK;
 
 		if (Numeric == null)
 		{
 			/* invalid Numeric object */
-			Common.status = KLU_INVALID;
-			return false;
+			Common.status = KLU_common.KLU_INVALID;
+			return FALSE;
 		}
 
 		Common.numerical_rank = EMPTY;
@@ -105,10 +109,10 @@ public class Dklu_refactor {
 			if (Numeric.Rs == null)
 			{
 				Numeric.Rs = KLU_malloc (n, sizeof(Double), Common);
-				if (Common.status < KLU_OK)
+				if (Common.status < KLU_common.KLU_OK)
 				{
-					Common.status = KLU_OUT_OF_MEMORY;
-					return false;
+					Common.status = KLU_common.KLU_OUT_OF_MEMORY;
+					return FALSE;
 				}
 			}
 		}
@@ -116,7 +120,7 @@ public class Dklu_refactor {
 		{
 			/* no scaling for refactorization; ensure Numeric.Rs is freed.  This
 			 * does nothing if Numeric.Rs is already null. */
-			Numeric.Rs = KLU_free (Numeric.Rs, n, sizeof(Double), Common);
+			Numeric.Rs = Dklu_free.klu_free (Numeric.Rs, n, sizeof(Double), Common);
 		}
 		Rs = Numeric.Rs;
 
@@ -134,9 +138,9 @@ public class Dklu_refactor {
 		if (scale >= 0)
 		{
 			/* check for out-of-range indices, but do not check for duplicates */
-			if (!Dklu_scale.klu_scale(scale, n, Ap, Ai, Ax, Rs, null, Common))
+			if (Dklu_scale.klu_scale (scale, n, Ap, Ai, Ax, Rs, null, Common) == 0)
 			{
-				return false;
+				return FALSE;
 			}
 		}
 
@@ -147,7 +151,7 @@ public class Dklu_refactor {
 		for (k = 0; k < maxblock; k++)
 		{
 			/* X[k] = 0 */
-			clear(X[k]);
+			CLEAR (X[k]);
 		}
 
 		poff = 0;
@@ -183,7 +187,7 @@ public class Dklu_refactor {
 
 					oldcol = Q[k1];
 					pend = Ap[oldcol+1];
-					clear(s);
+					CLEAR (s);
 					for (p = Ap[oldcol]; p < pend; p++)
 					{
 						newrow = Pinv[Ai[p]] - k1;
@@ -244,27 +248,27 @@ public class Dklu_refactor {
 						/* compute kth column of U, and update kth column of A */
 						/* -------------------------------------------------- */
 
-						get_pointer(LU, Uip, Ulen, Ui, Ux, k, ulen);
+						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen);
 						for (up = 0; up < ulen; up++)
 						{
 							j = Ui[up];
 							ujk = X[j];
 							/* X[j] = 0 */
-							clear(X[j]);
+							CLEAR (X[j]);
 							Ux[up] = ujk;
-							get_pointer(LU, Lip, Llen, Li, Lx, j, llen);
+							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen);
 							for (p = 0; p < llen; p++)
 							{
 								/* X[Li[p]] -= Lx[p] * ujk */
-								mult_sub(X[Li[p]], Lx[p], ujk);
+								MULT_SUB (X[Li[p]], Lx[p], ujk);
 							}
 						}
 						/* get the diagonal entry of U */
 						ukk = X[k];
 						/* X[k] = 0 */
-						clear(X[k]);
+						CLEAR (X[k]);
 						/* singular case */
-						if (is_zero(ukk))
+						if (IS_ZERO (ukk))
 						{
 							/* matrix is numerically singular */
 							Common.status = KLU_SINGULAR;
@@ -276,17 +280,17 @@ public class Dklu_refactor {
 							if (Common.halt_if_singular)
 							{
 								/* do not continue the factorization */
-								return false;
+								return FALSE;
 							}
 						}
 						Udiag[k+k1] = ukk;
 						/* gather and divide by pivot to get kth column of L */
-						get_pointer(LU, Lip, Llen, Li, Lx, k, llen);
+						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen);
 						for (p = 0; p < llen; p++)
 						{
 							i = Li[p];
-							div(Lx[p], X[i], ukk);
-							clear(X[i]);
+							DIV (Lx[p], X[i], ukk);
+							CLEAR (X[i]);
 						}
 
 					}
@@ -321,7 +325,7 @@ public class Dklu_refactor {
 
 					oldcol = Q[k1];
 					pend = Ap[oldcol+1];
-					clear(s);
+					CLEAR (s);
 					for (p = Ap[oldcol]; p < pend; p++)
 					{
 						oldrow = Ai[p];
@@ -330,14 +334,14 @@ public class Dklu_refactor {
 						{
 							/* entry in off-diagonal block */
 							/* Offx[poff] = Az[p] / Rs[oldrow] */
-							scale_div_assign(Offx[poff], Az[p], Rs[oldrow]);
+							SCALE_DIV_ASSIGN (Offx[poff], Az[p], Rs[oldrow]);
 							poff++;
 						}
 						else
 						{
 							/* singleton */
 							/* s = Az[p] / Rs[oldrow] */
-							scale_div_assign(s, Az[p], Rs[oldrow]);
+							SCALE_DIV_ASSIGN (s, Az[p], Rs[oldrow]);
 						}
 					}
 					Udiag[k1] = s;
@@ -373,14 +377,14 @@ public class Dklu_refactor {
 							{
 								/* entry in off-diagonal part */
 								/* Offx[poff] = Az[p] / Rs[oldrow] */
-								scale_div_assign(Offx[poff], Az[p], Rs[oldrow]);
+								SCALE_DIV_ASSIGN (Offx[poff], Az[p], Rs[oldrow]);
 								poff++;
 							}
 							else
 							{
 								/* (newrow,k) is an entry in the block */
 								/* X[newrow] = Az[p] / Rs[oldrow] */
-								scale_div_assign(X[newrow], Az[p], Rs[oldrow]);
+								SCALE_DIV_ASSIGN (X[newrow], Az[p], Rs[oldrow]);
 							}
 						}
 
@@ -388,49 +392,49 @@ public class Dklu_refactor {
 						/* compute kth column of U, and update kth column of A */
 						/* -------------------------------------------------- */
 
-						get_pointer(LU, Uip, Ulen, Ui, Ux, k, ulen);
+						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen);
 						for (up = 0; up < ulen; up++)
 						{
 							j = Ui[up];
 							ujk = X[j];
 							/* X[j] = 0 */
-							clear(X[j]);
+							CLEAR (X[j]);
 							Ux[up] = ujk;
-							get_pointer(LU, Lip, Llen, Li, Lx, j, llen);
+							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen);
 							for (p = 0; p < llen; p++)
 							{
 								/* X[Li[p]] -= Lx[p] * ujk */
-								mult_sub(X[Li[p]], Lx[p], ujk);
+								MULT_SUB (X[Li[p]], Lx[p], ujk);
 							}
 						}
 						/* get the diagonal entry of U */
 						ukk = X[k];
 						/* X[k] = 0 */
-						clear(X[k]);
+						CLEAR (X[k]);
 						/* singular case */
 						if (is_zero(ukk))
 						{
 							/* matrix is numerically singular */
-							Common.status = KLU_SINGULAR;
+							Common.status = KLU_common.KLU_SINGULAR;
 							if (Common.numerical_rank == EMPTY)
 							{
 								Common.numerical_rank = k+k1;
 								Common.singular_col = Q[k+k1];
 							}
-							if (Common.halt_if_singular)
+							if (Common.halt_if_singular == 1)
 							{
 								/* do not continue the factorization */
-								return false;
+								return FALSE;
 							}
 						}
 						Udiag[k+k1] = ukk;
 						/* gather and divide by pivot to get kth column of L */
-						get_pointer(LU, Lip, Llen, Li, Lx, k, llen);
+						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen);
 						for (p = 0; p < llen; p++)
 						{
 							i = Li[p];
-							div(Lx[p], X[i], ukk);
-							clear(X[i]);
+							DIV (Lx[p], X[i], ukk);
+							CLEAR (X[i]);
 						}
 					}
 				}
@@ -445,53 +449,53 @@ public class Dklu_refactor {
 		{
 			for (k = 0; k < n; k++)
 			{
-				real(X[k]) = Rs[Pnum[k]];
+				REAL (X[k]) = Rs[Pnum[k]];
 			}
 			for (k = 0; k < n; k++)
 			{
-				Rs[k] = real(X[k]);
+				Rs[k] = REAL (X[k]);
 			}
 		}
 
 		if (false) {
-			assert (Offp[n] == poff);
-			assert (Symbolic.nzoff == poff);
-			printf("\n------------------- Off diagonal entries, new:\n");
-			assert Dklu_valid.klu_valid(n, Offp, Offi, Offx);
-			if (Common.status == KLU_OK)
+			ASSERT (Offp[n] == poff);
+			ASSERT (Symbolic.nzoff == poff);
+			PRINTF ("\n------------------- Off diagonal entries, new:\n");
+			ASSERT (Dklu_valid.klu_valid(n, Offp, Offi, Offx));
+			if (Common.status == KLU_common.KLU_OK)
 			{
-				printf("\n ########### KLU_BTF_REFACTOR done, nblocks %d\n",
+				PRINTF ("\n ########### KLU_BTF_REFACTOR done, nblocks %d\n",
 						nblocks);
 				for (block = 0; block < nblocks; block++)
 				{
 					k1 = R[block];
 					k2 = R[block+1];
 					nk = k2 - k1;
-					printf(
+					PRINTF (
 						"\n================KLU_refactor output: k1 %d k2 %d nk %d\n",
 						k1, k2, nk);
 					if (nk == 1)
 					{
-						printf("singleton  ");
-						print_entry(Udiag[k1]);
+						PRINTF ("singleton  ");
+						PRINT_ENTRY (Udiag[k1]);
 					}
 					else
 					{
 						Lip = Numeric.Lip + k1;
 						Llen = Numeric.Llen + k1;
 						LU = (Unit[]) Numeric.LUbx[block];
-						printf("\n---- L block %d\n", block);
-						assert (Dklu_valid_LU.klu_valid_LU(nk, true, Lip, Llen, LU));
+						PRINTF ("\n---- L block %d\n", block);
+						ASSERT (Dklu_valid_LU.klu_valid_LU(nk, true, Lip, Llen, LU));
 						Uip = Numeric.Uip + k1;
 						Ulen = Numeric.Ulen + k1;
-						printf("\n---- U block %d\n", block);
-						assert (Dklu_valid_LU.klu_valid_LU(nk, false, Uip, Ulen, LU));
+						PRINTF ("\n---- U block %d\n", block);
+						ASSERT (Dklu_valid_LU.klu_valid_LU(nk, false, Uip, Ulen, LU));
 					}
 				}
 			}
 		}
 
-		return true;
+		return TRUE;
 	}
 
 }

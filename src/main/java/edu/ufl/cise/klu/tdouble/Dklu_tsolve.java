@@ -24,6 +24,8 @@
 
 package edu.ufl.cise.klu.tdouble;
 
+import edu.ufl.cise.klu.common.KLU_common;
+
 /**
  * Solve A'x=b using the symbolic and numeric objects from KLU_analyze
  * (or KLU_analyze_given) and KLU_factor.  Note that no iterative refinement is
@@ -31,7 +33,7 @@ package edu.ufl.cise.klu.tdouble;
  * of size 4n Entry's (note that columns 2 to 4 of Xwork overlap with
  * Numeric.Iwork).
  */
-public class Dklu_tsolve {
+public class Dklu_tsolve extends Dklu_internal {
 
 	/**
 	 *
@@ -43,7 +45,7 @@ public class Dklu_tsolve {
 	 * output. Size n*nrhs, in column-oriented form, with leading dimension d.
 	 * @return
 	 */
-	public static boolean klu_tsolve(KLU_symbolic Symbolic,
+	public static int klu_tsolve(KLU_symbolic Symbolic,
 			KLU_numeric Numeric, int d, int nrhs, double[] B,
 			KLU_common Common)
 	{
@@ -62,15 +64,15 @@ public class Dklu_tsolve {
 
 		if (Common == null)
 		{
-			return (false);
+			return (FALSE);
 		}
 		if (Numeric == null || Symbolic == null || d < Symbolic.n || nrhs < 0 ||
 			B == null)
 		{
-			Common.status = KLU_INVALID;
-			return false;
+			Common.status = KLU_common.KLU_INVALID;
+			return (FALSE);
 		}
-		Common.status = KLU_OK;
+		Common.status = KLU_common.KLU_OK;
 
 		/* ------------------------------------------------------------------ */
 		/* get the contents of the Symbolic object */
@@ -86,7 +88,7 @@ public class Dklu_tsolve {
 		/* get the contents of the Numeric object */
 		/* ------------------------------------------------------------------ */
 
-		assert (nblocks == Numeric.nblocks);
+		ASSERT (nblocks == Numeric.nblocks);
 		Pnum = Numeric.Pnum;
 		Offp = Numeric.Offp;
 		Offi = Numeric.Offi;
@@ -101,7 +103,7 @@ public class Dklu_tsolve {
 
 		Rs = Numeric.Rs;
 		X = (Entry) Numeric.Xwork;
-		assert Dklu_valid.klu_valid(n, Offp, Offi, Offx);
+		ASSERT (Dklu_valid.klu_valid(n, Offp, Offi, Offx));
 
 		/* ------------------------------------------------------------------ */
 		/* solve in chunks of 4 columns at a time */
@@ -114,7 +116,7 @@ public class Dklu_tsolve {
 			/* get the size of the current chunk */
 			/* -------------------------------------------------------------- */
 
-			nr = min(nrhs - chunk, 4);
+			nr = MIN (nrhs - chunk, 4);
 
 			/* -------------------------------------------------------------- */
 			/* permute the right hand side, X = Q'*B */
@@ -180,7 +182,7 @@ public class Dklu_tsolve {
 				k1 = R[block];
 				k2 = R[block+1];
 				nk = k2 - k1;
-				printf("tsolve %d, k1 %d k2-1 %d nk %d\n", block, k1, k2-1, nk);
+				PRINTF ("tsolve %d, k1 %d k2-1 %d nk %d\n", block, k1, k2-1, nk);
 
 				/* ---------------------------------------------------------- */
 				/* block back-substitution for the off-diagonal-block entries */
@@ -198,7 +200,7 @@ public class Dklu_tsolve {
 								pend = Offp[k+1];
 								for (p = Offp[k]; p < pend; p++)
 								{
-									mult_sub(X[k], Offx[p], X[Offi[p]]);
+									MULT_SUB (X[k], Offx[p], X[Offi[p]]);
 								}
 							}
 							break;
@@ -214,8 +216,8 @@ public class Dklu_tsolve {
 								{
 									i = Offi[p];
 									offik = Offx[p];
-									mult_sub(x[0], offik, X[2*i]);
-									mult_sub(x[1], offik, X[2*i + 1]);
+									MULT_SUB (x[0], offik, X[2*i]);
+									MULT_SUB (x[1], offik, X[2*i + 1]);
 								}
 								X[2*k    ] = x[0];
 								X[2*k + 1] = x[1];
@@ -236,9 +238,9 @@ public class Dklu_tsolve {
 									{
 										offik = Offx[p];
 									}
-									mult_sub(x[0], offik, X[3*i]);
-									mult_sub(x[1], offik, X[3*i + 1]);
-									mult_sub(x[2], offik, X[3*i + 2]);
+									MULT_SUB (x[0], offik, X[3*i]);
+									MULT_SUB (x[1], offik, X[3*i + 1]);
+									MULT_SUB (x[2], offik, X[3*i + 2]);
 								}
 								X[3*k    ] = x[0];
 								X[3*k + 1] = x[1];
@@ -259,10 +261,10 @@ public class Dklu_tsolve {
 								{
 									i = Offi[p];
 									offik = Offx[p];
-									mult_sub(x[0], offik, X[4*i]);
-									mult_sub(x[1], offik, X[4*i + 1]);
-									mult_sub(x[2], offik, X[4*i + 2]);
-									mult_sub(x[3], offik, X[4*i + 3]);
+									MULT_SUB (x[0], offik, X[4*i]);
+									MULT_SUB (x[1], offik, X[4*i + 1]);
+									MULT_SUB (x[2], offik, X[4*i + 2]);
+									MULT_SUB (x[3], offik, X[4*i + 3]);
 								}
 								X[4*k    ] = x[0];
 								X[4*k + 1] = x[1];
@@ -284,35 +286,37 @@ public class Dklu_tsolve {
 					{
 
 						case 1:
-							div(X[k1], X[k1], s);
+							DIV (X[k1], X[k1], s);
 							break;
 
 						case 2:
-							div(X[2*k1], X[2*k1], s);
-							div(X[2*k1 + 1], X[2*k1 + 1], s);
+							DIV (X[2*k1], X[2*k1], s);
+							DIV (X[2*k1 + 1], X[2*k1 + 1], s);
 							break;
 
 						case 3:
-							div(X[3*k1], X[3*k1], s);
-							div(X[3*k1 + 1], X[3*k1 + 1], s);
-							div(X[3*k1 + 2], X[3*k1 + 2], s);
+							DIV (X[3*k1], X[3*k1], s);
+							DIV (X[3*k1 + 1], X[3*k1 + 1], s);
+							DIV (X[3*k1 + 2], X[3*k1 + 2], s);
 							break;
 
 						case 4:
-							div(X[4*k1], X[4*k1], s);
-							div(X[4*k1 + 1], X[4*k1 + 1], s);
-							div(X[4*k1 + 2], X[4*k1 + 2], s);
-							div(X[4*k1 + 3], X[4*k1 + 3], s);
+							DIV (X[4*k1], X[4*k1], s);
+							DIV (X[4*k1 + 1], X[4*k1 + 1], s);
+							DIV (X[4*k1 + 2], X[4*k1 + 2], s);
+							DIV (X[4*k1 + 3], X[4*k1 + 3], s);
 							break;
 
 					}
 				}
 				else
 				{
-					KLU_utsolve (nk, Uip + k1, Ulen + k1, LUbx[block],
+					Dklu_utsolve.klu_utsolve (nk, Uip + k1, Ulen + k1,
+							LUbx[block],
 							Udiag + k1, nr,
 							X + nr*k1);
-					KLU_ltsolve (nk, Lip + k1, Llen + k1, LUbx[block], nr,
+					Dklu_ltsolve.klu_ltsolve (nk, Lip + k1, Llen + k1,
+							LUbx[block], nr,
 							X + nr*k1);
 				}
 			}
@@ -381,7 +385,7 @@ public class Dklu_tsolve {
 
 						for (k = 0; k < n; k++)
 						{
-							scale_div_assign(Bz[Pnum[k]], X[k], Rs[k]);
+							SCALE_DIV_ASSIGN (Bz[Pnum[k]], X[k], Rs[k]);
 						}
 						break;
 
@@ -391,8 +395,8 @@ public class Dklu_tsolve {
 						{
 							i = Pnum[k];
 							rs = Rs[k];
-							scale_div_assign(Bz[i], X[2*k], rs);
-							scale_div_assign(Bz[i + d], X[2*k + 1], rs);
+							SCALE_DIV_ASSIGN (Bz[i], X[2*k], rs);
+							SCALE_DIV_ASSIGN (Bz[i + d], X[2*k + 1], rs);
 						}
 						break;
 
@@ -402,9 +406,9 @@ public class Dklu_tsolve {
 						{
 							i = Pnum[k];
 							rs = Rs[k];
-							scale_div_assign(Bz[i], X[3*k], rs);
-							scale_div_assign(Bz[i + d], X[3*k + 1], rs);
-							scale_div_assign(Bz[i + d*2], X[3*k + 2], rs);
+							SCALE_DIV_ASSIGN (Bz[i], X[3*k], rs);
+							SCALE_DIV_ASSIGN (Bz[i + d], X[3*k + 1], rs);
+							SCALE_DIV_ASSIGN (Bz[i + d*2], X[3*k + 2], rs);
 						}
 						break;
 
@@ -414,10 +418,10 @@ public class Dklu_tsolve {
 						{
 							i = Pnum[k];
 							rs = Rs[k];
-							scale_div_assign(Bz[i], X[4*k], rs);
-							scale_div_assign(Bz[i + d], X[4*k + 1], rs);
-							scale_div_assign(Bz[i + d*2], X[4*k + 2], rs);
-							scale_div_assign(Bz[i + d*3], X[4*k + 3], rs);
+							SCALE_DIV_ASSIGN (Bz[i], X[4*k], rs);
+							SCALE_DIV_ASSIGN (Bz[i + d], X[4*k + 1], rs);
+							SCALE_DIV_ASSIGN (Bz[i + d*2], X[4*k + 2], rs);
+							SCALE_DIV_ASSIGN (Bz[i + d*3], X[4*k + 3], rs);
 						}
 						break;
 				}
@@ -429,7 +433,7 @@ public class Dklu_tsolve {
 
 			Bz  += d*4;
 		}
-		return true;
+		return (TRUE);
 	}
 
 }

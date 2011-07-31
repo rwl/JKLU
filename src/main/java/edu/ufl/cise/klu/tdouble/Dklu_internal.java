@@ -29,13 +29,13 @@ public abstract class Dklu_internal extends Dklu_version {
 	/**
 	 * enable debugging and assertions
 	 */
-	static boolean NDEBUG = true;
+	protected static boolean NDEBUG = true ;
 
-	static void ASSERT (boolean a)
+	protected static void ASSERT (boolean a)
 	{
 		if (!NDEBUG)
 		{
-			assert a;
+			assert a ;
 		}
 	}
 
@@ -43,39 +43,39 @@ public abstract class Dklu_internal extends Dklu_version {
 	 * @return true if an integer (stored in double x) would overflow (or if
 	 * x is NaN)
 	 */
-	static boolean INT_OVERFLOW (double x)
+	protected static boolean INT_OVERFLOW (double x)
 	{
 		return ((!(x * (1.0+1e-8) <= (double) INT_MAX))
-	                        || SCALAR_IS_NAN (x));
+	                        || SCALAR_IS_NAN (x)) ;
 	}
 
-	static final int TRUE = 1;
-	static final int FALSE = 0;
+	protected static final int TRUE = 1 ;
+	protected static final int FALSE = 0 ;
 
-	static double MAX (double a, double b)
+	protected static double MAX (double a, double b)
 	{
-		return a > b ?  a : b;
+		return a > b ?  a : b ;
 	}
 
-	static double MIN (double a, double b)
+	protected static double MIN (double a, double b)
 	{
-		return a < b ?  a : b;
+		return a < b ?  a : b ;
 	}
 
 	/* FLIP is a "negation about -1", and is used to mark an integer i that is
 	 * normally non-negative.  FLIP (EMPTY) is EMPTY.  FLIP of a number > EMPTY
 	 * is negative, and FLIP of a number < EMTPY is positive.  FLIP (FLIP (i)) = i
 	 * for all integers i.  UNFLIP (i) is >= EMPTY. */
-	static final int EMPTY = -1;
+	protected static final int EMPTY = -1 ;
 
-	static double FLIP (double i)
+	protected static double FLIP (double i)
 	{
-		return -i - 2;
+		return -i - 2 ;
 	}
 
-	static double UNFLIP (double i)
+	protected static double UNFLIP (double i)
 	{
-		return (i < EMPTY) ? FLIP (i) : i;
+		return (i < EMPTY) ? FLIP (i) : i ;
 	}
 
 }
