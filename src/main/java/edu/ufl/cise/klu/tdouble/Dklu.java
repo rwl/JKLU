@@ -24,6 +24,8 @@
 
 package edu.ufl.cise.klu.tdouble;
 
+import edu.ufl.cise.klu.common.KLU_common;
+
 /**
  * KLU: factorizes P*A into L*U, using the Gilbert-Peierls algorithm[1], with
  * optional symmetric pruning by Eisenstat and Liu[2].  The code is by Tim
@@ -78,7 +80,7 @@ package edu.ufl.cise.klu.tdouble;
  *      Unsymmetric Sparse Symbolic Factorization," SIAM J. Matrix Analysis &
  *      Applic., vol 13, pp.  202-211, 1992.
  */
-public class Dklu {
+public class Dklu extends Dklu_internal {
 
 	/**
 	 *
@@ -120,7 +122,7 @@ public class Dklu {
 		int[] Pinv, Lpend, Stack, Flag, Ap_pos, W;
 		int lsize, usize, anz, ok;
 		size_t lusize;
-		assert (Common != null);
+		ASSERT (Common != null);
 
 		/* ------------------------------------------------------------------ */
 		/* get control parameters, or use defaults */
