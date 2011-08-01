@@ -28,6 +28,8 @@ import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
 /**
+ * Orders and analyzes a matrix.
+ *
  * Order the matrix using BTF (or not), and then AMD, COLAMD, the natural
  * ordering, or the user-provided-function on the blocks.  Does not support
  * using a given ordering (use klu_analyze_given for that case).
@@ -463,6 +465,8 @@ public class Dklu_analyze extends Dklu_internal
 	}
 
 	/**
+	 * Order the matrix with BTF (or not), then order each block with AMD,
+	 * COLAMD, a natural ordering, or with a user-provided ordering function.
 	 *
 	 * @param n A is n-by-n
 	 * @param Ap size n+1, column pointers

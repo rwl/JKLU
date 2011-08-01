@@ -33,15 +33,15 @@ package edu.ufl.cise.klu.common;
 public class KLU_version
 {
 
-	public static String KLU_DATE = "Mar 24, 2009";
-	public static int KLU_VERSION_CODE(int main, int sub)
+	public static String KLU_DATE = "Mar 24, 2009" ;
+	public static int KLU_VERSION_CODE (int main, int sub)
 	{
-		return main * 1000 + sub;
+		return main * 1000 + sub ;
 	}
-	public static int KLU_MAIN_VERSION = 1;
-	public static int KLU_SUB_VERSION = 1;
-	public static int KLU_SUBSUB_VERSION = 0;
-	public static int KLU_VERSION = KLU_VERSION_CODE(KLU_MAIN_VERSION,
-			KLU_SUB_VERSION);
+	public static int KLU_MAIN_VERSION = 1 ;
+	public static int KLU_SUB_VERSION = 1 ;
+	public static int KLU_SUBSUB_VERSION = 0 ;
+	public static int KLU_VERSION = KLU_VERSION_CODE (KLU_MAIN_VERSION,
+			KLU_SUB_VERSION) ;
 
 }

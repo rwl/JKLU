@@ -28,6 +28,8 @@ import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
 /**
+ * Analyzes a matrix using given P and Q.
+ *
  * Given an input permutation P and Q, create the Symbolic object.  BTF can
  * be done to modify the user's P and Q (does not perform the max transversal;
  * just finds the strongly-connected components).
@@ -153,6 +155,9 @@ public class Dklu_analyze_given extends Dklu_internal
 	}
 
 	/**
+	 * Order the matrix with BTF (or not), then use natural or given ordering
+	 * P and Q on the blocks.  P and Q are interpreted as identity
+	 * if NULL.
 	 *
 	 * @param n A is n-by-n
 	 * @param Ap size n+1, column pointers
