@@ -59,205 +59,205 @@ public class Dklu_extract extends Dklu_internal
 	 * @return
 	 */
 	public static int klu_extract(KLU_numeric Numeric, KLU_symbolic Symbolic,
-		    int[] Lp, int[] Li, double[] Lx, int[] Up, int[] Ui, double[] Ux,
-		    int[] Fp, int[] Fi, double[] Fx, int[] P, int[] Q, double[] Rs,
-		    int[] R, KLU_common Common)
+			int[] Lp, int[] Li, double[] Lx, int[] Up, int[] Ui, double[] Ux,
+			int[] Fp, int[] Fi, double[] Fx, int[] P, int[] Q, double[] Rs,
+			int[] R, KLU_common Common)
 	{
 		int[] Lip, Llen, Uip, Ulen, Li2, Ui2 ;
-	    Unit[] LU ;
-	    Entry[] Lx2, Ux2, Ukk ;
-	    int i, k, block, nblocks, n, nz, k1, k2, nk, len, kk, p ;
+		double[] LU ;
+		double[] Lx2, Ux2, Ukk ;
+		int i, k, block, nblocks, n, nz, k1, k2, nk, len, kk, p ;
 
-	    if (Common == null)
-	    {
-	        return (FALSE) ;
-	    }
+		if (Common == null)
+		{
+			return (FALSE) ;
+		}
 
-	    if (Symbolic == null || Numeric == null)
-	    {
-	        Common.status = KLU_common.KLU_INVALID ;
-	        return (FALSE) ;
-	    }
+		if (Symbolic == null || Numeric == null)
+		{
+			Common.status = KLU_INVALID ;
+			return (FALSE) ;
+		}
 
-	    Common.status = KLU_common.KLU_OK ;
-	    n = Symbolic.n ;
-	    nblocks = Symbolic.nblocks ;
+		Common.status = KLU_OK ;
+		n = Symbolic.n ;
+		nblocks = Symbolic.nblocks ;
 
-	    /* ---------------------------------------------------------------------- */
-	    /* extract scale factors */
-	    /* ---------------------------------------------------------------------- */
+		/* ---------------------------------------------------------------------- */
+		/* extract scale factors */
+		/* ---------------------------------------------------------------------- */
 
-	    if (Rs != null)
-	    {
-	        if (Numeric.Rs != null)
-	        {
-	            for (i = 0 ; i < n ; i++)
-	            {
-	                Rs [i] = Numeric.Rs [i] ;
-	            }
-	        }
-	        else
-	        {
-	            /* no scaling */
-	            for (i = 0 ; i < n ; i++)
-	            {
-	                Rs [i] = 1 ;
-	            }
-	        }
-	    }
+		if (Rs != null)
+		{
+			if (Numeric.Rs != null)
+			{
+				for (i = 0 ; i < n ; i++)
+				{
+					Rs [i] = Numeric.Rs [i] ;
+				}
+			}
+			else
+			{
+				/* no scaling */
+				for (i = 0 ; i < n ; i++)
+				{
+					Rs [i] = 1 ;
+				}
+			}
+		}
 
-	    /* ---------------------------------------------------------------------- */
-	    /* extract block boundaries */
-	    /* ---------------------------------------------------------------------- */
+		/* ---------------------------------------------------------------------- */
+		/* extract block boundaries */
+		/* ---------------------------------------------------------------------- */
 
-	    if (R != null)
-	    {
-	        for (block = 0 ; block <= nblocks ; block++)
-	        {
-	            R [block] = Symbolic.R [block] ;
-	        }
-	    }
+		if (R != null)
+		{
+			for (block = 0 ; block <= nblocks ; block++)
+			{
+				R [block] = Symbolic.R [block] ;
+			}
+		}
 
-	    /* ---------------------------------------------------------------------- */
-	    /* extract final row permutation */
-	    /* ---------------------------------------------------------------------- */
+		/* ---------------------------------------------------------------------- */
+		/* extract final row permutation */
+		/* ---------------------------------------------------------------------- */
 
-	    if (P != null)
-	    {
-	        for (k = 0 ; k < n ; k++)
-	        {
-	            P [k] = Numeric.Pnum [k] ;
-	        }
-	    }
+		if (P != null)
+		{
+			for (k = 0 ; k < n ; k++)
+			{
+				P [k] = Numeric.Pnum [k] ;
+			}
+		}
 
-	    /* ---------------------------------------------------------------------- */
-	    /* extract column permutation */
-	    /* ---------------------------------------------------------------------- */
+		/* ---------------------------------------------------------------------- */
+		/* extract column permutation */
+		/* ---------------------------------------------------------------------- */
 
-	    if (Q != null)
-	    {
-	        for (k = 0 ; k < n ; k++)
-	        {
-	            Q [k] = Symbolic.Q [k] ;
-	        }
-	    }
+		if (Q != null)
+		{
+			for (k = 0 ; k < n ; k++)
+			{
+				Q [k] = Symbolic.Q [k] ;
+			}
+		}
 
-	    /* ---------------------------------------------------------------------- */
-	    /* extract each block of L */
-	    /* ---------------------------------------------------------------------- */
+		/* ---------------------------------------------------------------------- */
+		/* extract each block of L */
+		/* ---------------------------------------------------------------------- */
 
-	    if (Lp != null && Li != null && Lx != null)
-	    {
-	        nz = 0 ;
-	        for (block = 0 ; block < nblocks ; block++)
-	        {
-	            k1 = Symbolic.R [block] ;
-	            k2 = Symbolic.R [block+1] ;
-	            nk = k2 - k1 ;
-	            if (nk == 1)
-	            {
-	                /* singleton block */
-	                Lp [k1] = nz ;
-	                Li [nz] = k1 ;
-	                Lx [nz] = 1 ;
-	                nz++ ;
-	            }
-	            else
-	            {
-	                /* non-singleton block */
-	                LU = Numeric.LUbx [block] ;
-	                Lip = Numeric.Lip + k1 ;
-	                Llen = Numeric.Llen + k1 ;
-	                for (kk = 0 ; kk < nk ; kk++)
-	                {
-	                    Lp [k1+kk] = nz ;
-	                    /* add the unit diagonal entry */
-	                    Li [nz] = k1 + kk ;
-	                    Lx [nz] = 1 ;
-	                    nz++ ;
-	                    GET_POINTER (LU, Lip, Llen, Li2, Lx2, kk, len) ;
-	                    for (p = 0 ; p < len ; p++)
-	                    {
-	                        Li [nz] = k1 + Li2 [p] ;
-	                        Lx [nz] = REAL (Lx2 [p]) ;
-	                        nz++ ;
-	                    }
-	                }
-	            }
-	        }
-	        Lp [n] = nz ;
-	        ASSERT (nz == Numeric.lnz) ;
-	    }
+		if (Lp != null && Li != null && Lx != null)
+		{
+			nz = 0 ;
+			for (block = 0 ; block < nblocks ; block++)
+			{
+				k1 = Symbolic.R [block] ;
+				k2 = Symbolic.R [block+1] ;
+				nk = k2 - k1 ;
+				if (nk == 1)
+				{
+					/* singleton block */
+					Lp [k1] = nz ;
+					Li [nz] = k1 ;
+					Lx [nz] = 1 ;
+					nz++ ;
+				}
+				else
+				{
+					/* non-singleton block */
+					LU = Numeric.LUbx [block] ;
+					Lip = Numeric.Lip + k1 ;
+					Llen = Numeric.Llen + k1 ;
+					for (kk = 0 ; kk < nk ; kk++)
+					{
+						Lp [k1+kk] = nz ;
+						/* add the unit diagonal entry */
+						Li [nz] = k1 + kk ;
+						Lx [nz] = 1 ;
+						nz++ ;
+						GET_POINTER (LU, Lip, Llen, Li2, Lx2, kk, len) ;
+						for (p = 0 ; p < len ; p++)
+						{
+							Li [nz] = k1 + Li2 [p] ;
+							Lx [nz] = REAL (Lx2 [p]) ;
+							nz++ ;
+						}
+					}
+				}
+			}
+			Lp [n] = nz ;
+			ASSERT (nz == Numeric.lnz) ;
+		}
 
-	    /* ---------------------------------------------------------------------- */
-	    /* extract each block of U */
-	    /* ---------------------------------------------------------------------- */
+		/* ---------------------------------------------------------------------- */
+		/* extract each block of U */
+		/* ---------------------------------------------------------------------- */
 
-	    if (Up != null && Ui != null && Ux != null)
-	    {
-	        nz = 0 ;
-	        for (block = 0 ; block < nblocks ; block++)
-	        {
-	            k1 = Symbolic.R [block] ;
-	            k2 = Symbolic.R [block+1] ;
-	            nk = k2 - k1 ;
-	            Ukk = ((Entry[]) Numeric.Udiag) + k1 ;
-	            if (nk == 1)
-	            {
-	                /* singleton block */
-	                Up [k1] = nz ;
-	                Ui [nz] = k1 ;
-	                Ux [nz] = REAL (Ukk [0]) ;
-	                nz++ ;
-	            }
-	            else
-	            {
-	                /* non-singleton block */
-	                LU = Numeric.LUbx [block] ;
-	                Uip = Numeric.Uip + k1 ;
-	                Ulen = Numeric.Ulen + k1 ;
-	                for (kk = 0 ; kk < nk ; kk++)
-	                {
-	                    Up [k1+kk] = nz ;
-	                    GET_POINTER (LU, Uip, Ulen, Ui2, Ux2, kk, len) ;
-	                    for (p = 0 ; p < len ; p++)
-	                    {
-	                        Ui [nz] = k1 + Ui2 [p] ;
-	                        Ux [nz] = REAL (Ux2 [p]) ;
-	                        nz++ ;
-	                    }
-	                    /* add the diagonal entry */
-	                    Ui [nz] = k1 + kk ;
-	                    Ux [nz] = REAL (Ukk [kk]) ;
-	                    nz++ ;
-	                }
-	            }
-	        }
-	        Up [n] = nz ;
-	        ASSERT (nz == Numeric.unz) ;
-	    }
+		if (Up != null && Ui != null && Ux != null)
+		{
+			nz = 0 ;
+			for (block = 0 ; block < nblocks ; block++)
+			{
+				k1 = Symbolic.R [block] ;
+				k2 = Symbolic.R [block+1] ;
+				nk = k2 - k1 ;
+				Ukk = ((double[]) Numeric.Udiag) + k1 ;
+				if (nk == 1)
+				{
+					/* singleton block */
+					Up [k1] = nz ;
+					Ui [nz] = k1 ;
+					Ux [nz] = REAL (Ukk [0]) ;
+					nz++ ;
+				}
+				else
+				{
+					/* non-singleton block */
+					LU = Numeric.LUbx [block] ;
+					Uip = Numeric.Uip + k1 ;
+					Ulen = Numeric.Ulen + k1 ;
+					for (kk = 0 ; kk < nk ; kk++)
+					{
+						Up [k1+kk] = nz ;
+						GET_POINTER (LU, Uip, Ulen, Ui2, Ux2, kk, len) ;
+						for (p = 0 ; p < len ; p++)
+						{
+							Ui [nz] = k1 + Ui2 [p] ;
+							Ux [nz] = REAL (Ux2 [p]) ;
+							nz++ ;
+						}
+						/* add the diagonal entry */
+						Ui [nz] = k1 + kk ;
+						Ux [nz] = REAL (Ukk [kk]) ;
+						nz++ ;
+					}
+				}
+			}
+			Up [n] = nz ;
+			ASSERT (nz == Numeric.unz) ;
+		}
 
-	    /* ---------------------------------------------------------------------- */
-	    /* extract the off-diagonal blocks, F */
-	    /* ---------------------------------------------------------------------- */
+		/* ---------------------------------------------------------------------- */
+		/* extract the off-diagonal blocks, F */
+		/* ---------------------------------------------------------------------- */
 
-	    if (Fp != null && Fi != null && Fx != null)
-	    {
-	        for (k = 0 ; k <= n ; k++)
-	        {
-	            Fp [k] = Numeric.Offp [k] ;
-	        }
-	        nz = Fp [n] ;
-	        for (k = 0 ; k < nz ; k++)
-	        {
-	            Fi [k] = Numeric.Offi [k] ;
-	        }
-	        for (k = 0 ; k < nz ; k++)
-	        {
-	            Fx [k] = REAL (((Entry[]) Numeric.Offx) [k]) ;
-	        }
-	    }
+		if (Fp != null && Fi != null && Fx != null)
+		{
+			for (k = 0 ; k <= n ; k++)
+			{
+				Fp [k] = Numeric.Offp [k] ;
+			}
+			nz = Fp [n] ;
+			for (k = 0 ; k < nz ; k++)
+			{
+				Fi [k] = Numeric.Offi [k] ;
+			}
+			for (k = 0 ; k < nz ; k++)
+			{
+				Fx [k] = REAL (((double[]) Numeric.Offx) [k]) ;
+			}
+		}
 
-	    return (TRUE) ;
+		return (TRUE) ;
 	}
 }

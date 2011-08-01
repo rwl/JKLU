@@ -47,23 +47,23 @@ public class KLU_numeric
     public int[] Uip;         /* size n. pointers into LUbx[block] for U */
     public int[] Llen;        /* size n. Llen [k] = # of entries in kth column of L */
     public int[] Ulen;        /* size n. Ulen [k] = # of entries in kth column of U */
-    public void[][] LUbx;     /* L and U indices and entries (excl. diagonal of U) */
-    public size_t[] LUsize;   /* size of each LUbx [block], in sizeof (Unit) */
-    public void[] Udiag;      /* diagonal of U */
+    public double[][] LUbx;     /* L and U indices and entries (excl. diagonal of U) */
+    public int[] LUsize;   /* size of each LUbx [block], in sizeof (Unit) */
+    public double[] Udiag;      /* diagonal of U */
 
     /* scale factors; can be NULL if no scaling */
     public double[] Rs;       /* size n. Rs [i] is scale factor for row i */
 
     /* permanent workspace for factorization and solve */
-    public size_t[] worksize; /* size (in bytes) of Work */
-    public void[] Work;       /* workspace */
-    public void[] Xwork;      /* alias into Numeric->Work */
+    public int[] worksize; /* size (in bytes) of Work */
+    public double[] Work;       /* workspace */
+    public double[] Xwork;      /* alias into Numeric->Work */
     public int[] Iwork;       /* alias into Numeric->Work */
 
     /* off-diagonal entries in a conventional compressed-column sparse matrix */
     public int[] Offp;        /* size n+1, column pointers */
     public int[] Offi;        /* size nzoff, row indices */
-    public void[] Offx;       /* size nzoff, numerical values */
+    public double[] Offx;       /* size nzoff, numerical values */
     public int nzoff;
 
 }

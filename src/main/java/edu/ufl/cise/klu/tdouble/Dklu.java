@@ -110,102 +110,101 @@ public class Dklu extends Dklu_internal {
 	 * @param Common
 	 * @return
 	 */
-	public static size_t klu_kernel_factor(int n, int[] Ap, int[] Ai,
-			Entry[] Ax, int[] Q, double Lsize,
-			Unit[] p_LU, Entry[] Udiag, int[] Llen, int[] Ulen, int[] Lip,
+	public static int klu_kernel_factor(int n, int[] Ap, int[] Ai,
+			double[] Ax, int[] Q, double Lsize,
+			double[] p_LU, double[] Udiag, int[] Llen, int[] Ulen, int[] Lip,
 			int[] Uip, int P[], int[] lnz, int[] unz,
-			Entry[] X, int[] Work, int k1, int[] PSinv, double[] Rs,
-			int[] Offp, int[] Offi, Entry[] Offx, KLU_common Common)
+			double[] X, int[] Work, int k1, int[] PSinv, double[] Rs,
+			int[] Offp, int[] Offi, double[] Offx, KLU_common Common)
 	{
-		double maxlnz, dunits;
-		Unit[] LU;
-		int[] Pinv, Lpend, Stack, Flag, Ap_pos, W;
-		int lsize, usize, anz, ok;
-		size_t lusize;
-		ASSERT (Common != null);
+		double maxlnz, dunits ;
+		double[] LU ;
+		int[] Pinv, Lpend, Stack, Flag, Ap_pos, W ;
+		int lsize, usize, anz, ok ;
+		int lusize ;
+		ASSERT (Common != null) ;
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* get control parameters, or use defaults */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
-		n = MAX (1, n);
-		anz = Ap[n+k1] - Ap[k1];
+		n = MAX (1, n) ;
+		anz = Ap [n+k1] - Ap [k1] ;
 
 		if (Lsize <= 0)
 		{
-			Lsize = -Lsize;
-			Lsize = MAX (Lsize, 1.0);
-			lsize = Lsize * anz + n;
+			Lsize = -Lsize ;
+			Lsize = MAX (Lsize, 1.0) ;
+			lsize = Lsize * anz + n ;
 		}
 		else
 		{
-			lsize = Lsize;
+			lsize = Lsize ;
 		}
 
-		usize = lsize;
+		usize = lsize ;
 
-		lsize  = MAX (n+1, lsize);
-		usize  = MAX (n+1, usize);
+		lsize  = MAX (n+1, lsize) ;
+		usize  = MAX (n+1, usize) ;
 
-		maxlnz = (((double) n) * ((double) n) + ((double) n)) / 2.;
-		maxlnz = MIN (maxlnz, ((double) INT_MAX));
-		lsize  = MIN (maxlnz, lsize);
-		usize  = MIN (maxlnz, usize);
+		maxlnz = (((double) n) * ((double) n) + ((double) n)) / 2. ;
+		maxlnz = MIN (maxlnz, ((double) INT_MAX)) ;
+		lsize  = MIN (maxlnz, lsize) ;
+		usize  = MIN (maxlnz, usize) ;
 
 		PRINTF ("Welcome to klu: n %d anz %d k1 %d lsize %d usize %d maxlnz %g\n",
-			n, anz, k1, lsize, usize, maxlnz);
+			n, anz, k1, lsize, usize, maxlnz) ;
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* allocate workspace and outputs */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
 		/* return arguments are not yet assigned */
-		p_LU = null;
+		p_LU = null ;
 
-		/* these computations are safe from size_t overflow */
-		W = Work;
-		Pinv = (int[]) W;      W += n;
-		Stack = (int[]) W;     W += n;
-		Flag = (int[]) W;      W += n;
-		Lpend = (int[]) W;     W += n;
-		Ap_pos = (int[]) W;    W += n;
+		/* these computations are safe from int overflow */
+		W = Work ;
+		Pinv = (int []) W ;      W += n ;
+		Stack = (int []) W ;     W += n ;
+		Flag = (int []) W ;      W += n ;
+		Lpend = (int []) W ;     W += n ;
+		Ap_pos = (int []) W ;    W += n ;
 
-		dunits= DUNITS (Int, lsize) + DUNITS (Entry, lsize) +
-				 DUNITS (Int, usize) + DUNITS (Entry, usize);
-		lusize = (size_t) DUNITS ;
-		ok = !INT_OVERFLOW (dunits);
-		LU = ok != 0 ? Dklu_malloc.klu_malloc(lusize, sizeof(Unit), Common) : null;
+		dunits = DUNITS (Integer, lsize) + DUNITS (Double, lsize) +
+				 DUNITS (Integer, usize) + DUNITS (Double, usize) ;
+		lusize = (int) dunits ;
+		ok = INT_OVERFLOW (dunits) ? FALSE : TRUE ;
+		LU = ok != 0 ? KLU_malloc (lusize, sizeof (Double), Common) : null ;
 		if (LU == null)
 		{
 			/* out of memory, or problem too large */
-			Common.status = KLU_common.KLU_OUT_OF_MEMORY;
-			lusize = 0;
-			return (lusize);
+			Common.status = KLU_OUT_OF_MEMORY ;
+			lusize = 0 ;
+			return (lusize) ;
 		}
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* factorize */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
 		/* with pruning, and non-recursive depth-first-search */
-		lusize = Dklu_kernel.klu_kernel(n, Ap, Ai, Ax, Q, lusize,
-				Pinv, P, LU, Udiag, Llen, Ulen, Lip, Uip, lnz, unz,
+		lusize = Dklu_kernel.klu_kernel (n, Ap, Ai, Ax, Q, lusize,
+				Pinv, P, &LU, Udiag, Llen, Ulen, Lip, Uip, lnz, unz,
 				X, Stack, Flag, Ap_pos, Lpend,
-				k1, PSinv, Rs, Offp, Offi, Offx, Common);
+				k1, PSinv, Rs, Offp, Offi, Offx, Common) ;
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* return LU factors, or return nothing if an error occurred */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
-		if (Common.status < KLU_common.KLU_OK)
+		if (Common.status < KLU_OK)
 		{
-			LU = Dklu_free.klu_free(LU, lusize, sizeof (Unit), Common);
-			lusize = 0;
+			LU = KLU_free (LU, lusize, sizeof (double), Common) ;
+			lusize = 0 ;
 		}
-		p_LU = LU;
-		PRINTF (" in klu noffdiag %d\n", Common.noffdiag);
-		return lusize;
-
+		p_LU = LU ;
+		PRINTF (" in klu noffdiag %d\n", Common.noffdiag) ;
+		return (lusize) ;
 	}
 
 	/**
@@ -221,91 +220,90 @@ public class Dklu extends Dklu_internal {
 	 * @param nrhs
 	 * @param X right-hand-side on input, solution to Lx=b on output
 	 */
-	public static void klu_lsolve(int n, int[] Lip, int Llen, Unit[] LU,
-			int nrhs, Entry[] X)
+	public static void klu_lsolve(int n, int[] Lip, int Llen, double[] LU,
+			int nrhs, double[] X)
 	{
-		Entry[] x = new Entry[4];
-		Entry lik;
-		int[] Li;
-		Entry[] Lx;
-		int k, p, len, i;
+		double[] x = new double[4] ;
+		double lik ;
+		int[] Li ;
+		double[] Lx ;
+		int k, p, len, i ;
 
 		switch (nrhs)
 		{
 
 			case 1:
-				for (k = 0; k < n; k++)
+				for (k = 0 ; k < n ; k++)
 				{
-					x[0] = X[k];
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
+					x [0] = X [k] ;
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
 					/* unit diagonal of L is not stored*/
-					for (p = 0; p < len; p++)
+					for (p = 0 ; p < len ; p++)
 					{
-						/* X[Li[p]] -= Lx[p] * x[0]; */
-						MULT_SUB (X[Li[p]], Lx[p], x[0]);
+						/* X [Li [p]] -= Lx [p] * x [0] ; */
+						MULT_SUB (X [Li [p]], Lx [p], x [0]) ;
 					}
 				}
-				break;
+				break ;
 
 			case 2:
 
-				for (k = 0; k < n; k++)
+				for (k = 0 ; k < n ; k++)
 				{
-					x[0] = X[2*k    ];
-					x[1] = X[2*k + 1];
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
-					for (p = 0; p < len; p++)
+					x [0] = X [2*k    ] ;
+					x [1] = X [2*k + 1] ;
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Li[p];
-						lik = Lx[p];
-						MULT_SUB (X[2*i], lik, x[0]);
-						MULT_SUB (X[2*i + 1], lik, x[1]);
+						i = Li [p] ;
+						lik = Lx [p] ;
+						MULT_SUB (X [2*i], lik, x [0]) ;
+						MULT_SUB (X [2*i + 1], lik, x [1]) ;
 					}
 				}
-				break;
+				break ;
 
 			case 3:
 
-				for (k = 0; k < n; k++)
+				for (k = 0 ; k < n ; k++)
 				{
-					x[0] = X[3*k    ];
-					x[1] = X[3*k + 1];
-					x[2] = X[3*k + 2];
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
-					for (p = 0; p < len; p++)
+					x [0] = X [3*k    ] ;
+					x [1] = X [3*k + 1] ;
+					x [2] = X [3*k + 2] ;
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Li[p];
-						lik = Lx[p];
-						MULT_SUB (X[3*i], lik, x[0]);
-						MULT_SUB (X[3*i + 1], lik, x[1]);
-						MULT_SUB (X[3*i + 2], lik, x[2]);
+						i = Li [p] ;
+						lik = Lx [p] ;
+						MULT_SUB (X [3*i], lik, x [0]) ;
+						MULT_SUB (X [3*i + 1], lik, x [1]) ;
+						MULT_SUB (X [3*i + 2], lik, x [2]) ;
 					}
 				}
-				break;
+				break ;
 
 			case 4:
 
-				for (k = 0; k < n; k++)
+				for (k = 0 ; k < n ; k++)
 				{
-					x[0] = X[4*k    ];
-					x[1] = X[4*k + 1];
-					x[2] = X[4*k + 2];
-					x[3] = X[4*k + 3];
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
-					for (p = 0; p < len; p++)
+					x [0] = X [4*k    ] ;
+					x [1] = X [4*k + 1] ;
+					x [2] = X [4*k + 2] ;
+					x [3] = X [4*k + 3] ;
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Li[p];
-						lik = Lx[p];
-						MULT_SUB (X[4*i], lik, x[0]);
-						MULT_SUB (X[4*i + 1], lik, x[1]);
-						MULT_SUB (X[4*i + 2], lik, x[2]);
-						MULT_SUB (X[4*i + 3], lik, x[3]);
+						i = Li [p] ;
+						lik = Lx [p] ;
+						MULT_SUB (X [4*i], lik, x [0]) ;
+						MULT_SUB (X [4*i + 1], lik, x [1]) ;
+						MULT_SUB (X [4*i + 2], lik, x [2]) ;
+						MULT_SUB (X [4*i + 3], lik, x [3]) ;
 					}
 				}
-				break;
+				break ;
 
 		}
-
 	}
 
 	/**
@@ -322,120 +320,119 @@ public class Dklu extends Dklu_internal {
 	 * @param nrhs
 	 * @param X right-hand-side on input, solution to Ux=b on output
 	 */
-	public static void klu_usolve(int n, int[] Uip, int[] Ulen, Unit[] LU,
-			Entry[] Udiag, int nrhs, Entry[] X)
+	public static void klu_usolve(int n, int[] Uip, int[] Ulen, double[] LU,
+			double[] Udiag, int nrhs, double[] X)
 	{
-		Entry[] x = new Entry[4];
-		Entry uik, ukk;
-		int[] Ui;
-		Entry[] Ux;
-		int k, p, len, i;
+		double[] x = new double[4] ;
+		double uik, ukk ;
+		int[] Ui ;
+		double[] Ux ;
+		int k, p, len, i ;
 
 		switch (nrhs)
 		{
 
 			case 1:
 
-				for (k = n-1; k >= 0; k--)
+				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
-					/* x[0] = X[k] / Udiag[k]; */
-					DIV (x[0], X[k], Udiag[k]);
-					X[k] = x[0];
-					for (p = 0; p < len; p++)
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
+					/* x [0] = X [k] / Udiag [k] ; */
+					DIV (x [0], X [k], Udiag [k]) ;
+					X [k] = x [0] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						/* X[Ui[p]] -= Ux[p] * x[0]; */
-						MULT_SUB (X[Ui[p]], Ux[p], x[0]);
+						/* X [Ui [p]] -= Ux [p] * x [0] ; */
+						MULT_SUB (X [Ui [p]], Ux [p], x [0]) ;
 
 					}
 				}
 
-				break;
+				break ;
 
 			case 2:
 
-				for (k = n-1; k >= 0; k--)
+				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
-					ukk = Udiag[k];
-					/* x[0] = X[2*k    ] / ukk;
-					x[1] = X[2*k + 1] / ukk; */
-					DIV (x[0], X[2*k], ukk);
-					DIV (x[1], X[2*k + 1], ukk);
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
+					ukk = Udiag [k] ;
+					/* x [0] = X [2*k    ] / ukk ;
+					x [1] = X [2*k + 1] / ukk ; */
+					DIV (x [0], X [2*k], ukk) ;
+					DIV (x [1], X [2*k + 1], ukk) ;
 
-					X[2*k    ] = x[0];
-					X[2*k + 1] = x[1];
-					for (p = 0; p < len; p++)
+					X [2*k    ] = x [0] ;
+					X [2*k + 1] = x [1] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Ui[p];
-						uik = Ux[p];
-						/* X[2*i    ] -= uik * x[0];
-						X[2*i + 1] -= uik * x[1]; */
-						MULT_SUB (X[2*i], uik, x[0]);
-						MULT_SUB (X[2*i + 1], uik, x[1]);
+						i = Ui [p] ;
+						uik = Ux [p] ;
+						/* X [2*i    ] -= uik * x [0] ;
+						X [2*i + 1] -= uik * x [1] ; */
+						MULT_SUB (X [2*i], uik, x [0]) ;
+						MULT_SUB (X [2*i + 1], uik, x [1]) ;
 					}
 				}
 
-				break;
+				break ;
 
 			case 3:
 
-				for (k = n-1; k >= 0; k--)
+				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
-					ukk = Udiag[k];
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
+					ukk = Udiag [k] ;
 
-					DIV (x[0], X[3*k], ukk);
-					DIV (x[1], X[3*k + 1], ukk);
-					DIV (x[2], X[3*k + 2], ukk);
+					DIV (x [0], X [3*k], ukk) ;
+					DIV (x [1], X [3*k + 1], ukk) ;
+					DIV (x [2], X [3*k + 2], ukk) ;
 
-					X[3*k    ] = x[0];
-					X[3*k + 1] = x[1];
-					X[3*k + 2] = x[2];
-					for (p = 0; p < len; p++)
+					X [3*k    ] = x [0] ;
+					X [3*k + 1] = x [1] ;
+					X [3*k + 2] = x [2] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Ui[p];
-						uik = Ux[p];
-						MULT_SUB (X[3*i], uik, x[0]);
-						MULT_SUB (X[3*i + 1], uik, x[1]);
-						MULT_SUB (X[3*i + 2], uik, x[2]);
+						i = Ui [p] ;
+						uik = Ux [p] ;
+						MULT_SUB (X [3*i], uik, x [0]) ;
+						MULT_SUB (X [3*i + 1], uik, x [1]) ;
+						MULT_SUB (X [3*i + 2], uik, x [2]) ;
 					}
 				}
 
-				break;
+				break ;
 
 			case 4:
 
-				for (k = n-1; k >= 0; k--)
+				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
-					ukk = Udiag[k];
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
+					ukk = Udiag [k] ;
 
-					DIV (x[0], X[4*k], ukk);
-					DIV (x[1], X[4*k + 1], ukk);
-					DIV (x[2], X[4*k + 2], ukk);
-					DIV (x[3], X[4*k + 3], ukk);
+					DIV (x [0], X [4*k], ukk) ;
+					DIV (x [1], X [4*k + 1], ukk) ;
+					DIV (x [2], X [4*k + 2], ukk) ;
+					DIV (x [3], X [4*k + 3], ukk) ;
 
-					X[4*k    ] = x[0];
-					X[4*k + 1] = x[1];
-					X[4*k + 2] = x[2];
-					X[4*k + 3] = x[3];
-					for (p = 0; p < len; p++)
+					X [4*k    ] = x [0] ;
+					X [4*k + 1] = x [1] ;
+					X [4*k + 2] = x [2] ;
+					X [4*k + 3] = x [3] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Ui[p];
-						uik = Ux[p];
+						i = Ui [p] ;
+						uik = Ux [p] ;
 
-						MULT_SUB (X[4*i], uik, x[0]);
-						MULT_SUB (X[4*i + 1], uik, x[1]);
-						MULT_SUB (X[4*i + 2], uik, x[2]);
-						MULT_SUB (X[4*i + 3], uik, x[3]);
+						MULT_SUB (X [4*i], uik, x [0]) ;
+						MULT_SUB (X [4*i + 1], uik, x [1]) ;
+						MULT_SUB (X [4*i + 2], uik, x [2]) ;
+						MULT_SUB (X [4*i + 3], uik, x [3]) ;
 					}
 				}
 
-				break;
+				break ;
 
 		}
-
 	}
 
 	/**
@@ -451,98 +448,106 @@ public class Dklu extends Dklu_internal {
 	 * @param nrhs
 	 * @param X right-hand-side on input, solution to L'x=b on output
 	 */
-	public static void klu_ltsolve(int n, int[] Lip, int[] Llen, Unit[] LU,
-			int nrhs, Entry[] X)
+	public static void klu_ltsolve(int n, int[] Lip, int[] Llen, double[] LU,
+			int nrhs, double[] X)
 	{
-		Entry[] x = Entry[4];
-		Entry lik;
-		int[] Li;
-		Entry[] Lx;
-		int k, p, len, i;
+		double[] x = new double[4] ;
+		double lik ;
+		int[] Li ;
+		double[] Lx ;
+		int k, p, len, i ;
 
 		switch (nrhs)
 		{
 
 			case 1:
 
-				for (k = n-1; k >= 0; k--)
+				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
-					x[0] = X[k];
-					for (p = 0; p < len; p++)
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
+					x [0] = X [k] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						/*x[0] -= Lx[p] * X[Li[p]];*/
-						MULT_SUB (x[0], Lx[p], X[Li[p]]);
+						{
+							/*x [0] -= Lx [p] * X [Li [p]] ;*/
+							MULT_SUB (x [0], Lx [p], X [Li [p]]) ;
+						}
 					}
-					X[k] = x[0];
+					X [k] = x [0] ;
 				}
-				break;
+				break ;
 
 			case 2:
 
-				for (k = n-1; k >= 0; k--)
+				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x[0] = X[2*k    ];
-					x[1] = X[2*k + 1];
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
-					for (p = 0; p < len; p++)
+					x [0] = X [2*k    ] ;
+					x [1] = X [2*k + 1] ;
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Li[p];
-						lik = Lx[p];
-						MULT_SUB (x[0], lik, X[2*i]);
-						MULT_SUB (x[1], lik, X[2*i + 1]);
+						i = Li [p] ;
+						{
+							lik = Lx [p] ;
+						}
+						MULT_SUB (x [0], lik, X [2*i]) ;
+						MULT_SUB (x [1], lik, X [2*i + 1]) ;
 					}
-					X[2*k    ] = x[0];
-					X[2*k + 1] = x[1];
+					X [2*k    ] = x [0] ;
+					X [2*k + 1] = x [1] ;
 				}
-				break;
+				break ;
 
 			case 3:
 
-				for (k = n-1; k >= 0; k--)
+				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x[0] = X[3*k    ];
-					x[1] = X[3*k + 1];
-					x[2] = X[3*k + 2];
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
-					for (p = 0; p < len; p++)
+					x [0] = X [3*k    ] ;
+					x [1] = X [3*k + 1] ;
+					x [2] = X [3*k + 2] ;
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Li[p];
-						lik = Lx[p];
-						MULT_SUB (x[0], lik, X[3*i]);
-						MULT_SUB (x[1], lik, X[3*i + 1]);
-						MULT_SUB (x[2], lik, X[3*i + 2]);
+						i = Li [p] ;
+						{
+							lik = Lx [p] ;
+						}
+						MULT_SUB (x [0], lik, X [3*i]) ;
+						MULT_SUB (x [1], lik, X [3*i + 1]) ;
+						MULT_SUB (x [2], lik, X [3*i + 2]) ;
 					}
-					X[3*k    ] = x[0];
-					X[3*k + 1] = x[1];
-					X[3*k + 2] = x[2];
+					X [3*k    ] = x [0] ;
+					X [3*k + 1] = x [1] ;
+					X [3*k + 2] = x [2] ;
 				}
-				break;
+				break ;
 
 			case 4:
 
-				for (k = n-1; k >= 0; k--)
+				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x[0] = X[4*k    ];
-					x[1] = X[4*k + 1];
-					x[2] = X[4*k + 2];
-					x[3] = X[4*k + 3];
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len);
-					for (p = 0; p < len; p++)
+					x [0] = X [4*k    ] ;
+					x [1] = X [4*k + 1] ;
+					x [2] = X [4*k + 2] ;
+					x [3] = X [4*k + 3] ;
+					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Li[p];
-						lik = Lx[p];
-						MULT_SUB (x[0], lik, X[4*i]);
-						MULT_SUB (x[1], lik, X[4*i + 1]);
-						MULT_SUB (x[2], lik, X[4*i + 2]);
-						MULT_SUB (x[3], lik, X[4*i + 3]);
+						i = Li [p] ;
+						{
+							lik = Lx [p] ;
+						}
+						MULT_SUB (x [0], lik, X [4*i]) ;
+						MULT_SUB (x [1], lik, X [4*i + 1]) ;
+						MULT_SUB (x [2], lik, X [4*i + 2]) ;
+						MULT_SUB (x [3], lik, X [4*i + 3]) ;
 					}
-					X[4*k    ] = x[0];
-					X[4*k + 1] = x[1];
-					X[4*k + 2] = x[2];
-					X[4*k + 3] = x[3];
+					X [4*k    ] = x [0] ;
+					X [4*k + 1] = x [1] ;
+					X [4*k + 2] = x [2] ;
+					X [4*k + 3] = x [3] ;
 				}
-				break;
+				break ;
 		}
 	}
 
@@ -560,103 +565,118 @@ public class Dklu extends Dklu_internal {
 	 * @param nrhs
 	 * @param X right-hand-side on input, solution to Ux=b on output
 	 */
-	public static void klu_utsolve(int n, int[] Uip, int[] Ulen, Unit[] LU,
-			Entry[] Udiag, int nrhs, Entry[] X)
+	public static void klu_utsolve(int n, int[] Uip, int[] Ulen, double[] LU,
+			double[] Udiag, int nrhs, double[] X)
 	{
-		Entry[] x = new Entry[4];
-		Entry uik, ukk;
-		int k, p, len, i;
-		int[] Ui;
-		Entry[] Ux;
+		double[] x = new double[4] ;
+		double uik, ukk ;
+		int k, p, len, i ;
+		int[] Ui ;
+		double[] Ux ;
 
 		switch (nrhs)
 		{
 
 			case 1:
 
-				for (k = 0; k < n; k++)
+				for (k = 0 ; k < n ; k++)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
-					x[0] = X[k];
-					for (p = 0; p < len; p++)
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
+					x [0] = X [k] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						/* x[0] -= Ux[p] * X[Ui[p]]; */
-						MULT_SUB (x[0], Ux[p], X[Ui[p]]);
+						{
+							/* x [0] -= Ux [p] * X [Ui [p]] ; */
+							MULT_SUB (x [0], Ux [p], X [Ui [p]]) ;
+						}
 					}
-					ukk = Udiag[k];
-					DIV (X[k], x[0], ukk);
+					{
+						ukk = Udiag [k] ;
+					}
+					DIV (X [k], x [0], ukk) ;
 				}
-				break;
+				break ;
 
 			case 2:
 
-				for (k = 0; k < n; k++)
+				for (k = 0 ; k < n ; k++)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
-					x[0] = X[2*k    ];
-					x[1] = X[2*k + 1];
-					for (p = 0; p < len; p++)
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
+					x [0] = X [2*k    ] ;
+					x [1] = X [2*k + 1] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Ui[p];
-						uik = Ux[p];
-						MULT_SUB (x[0], uik, X[2*i]);
-						MULT_SUB (x[1], uik, X[2*i + 1]);
+						i = Ui [p] ;
+						{
+							uik = Ux [p] ;
+						}
+						MULT_SUB (x [0], uik, X [2*i]) ;
+						MULT_SUB (x [1], uik, X [2*i + 1]) ;
 					}
-					ukk = Udiag[k];
-					DIV (X[2*k], x[0], ukk);
-					DIV (X[2*k + 1], x[1], ukk);
+					{
+						ukk = Udiag [k] ;
+					}
+					DIV (X [2*k], x [0], ukk) ;
+					DIV (X [2*k + 1], x [1], ukk) ;
 				}
-				break;
+				break ;
 
 			case 3:
 
-				for (k = 0; k < n; k++)
+				for (k = 0 ; k < n ; k++)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
-					x[0] = X[3*k    ];
-					x[1] = X[3*k + 1];
-					x[2] = X[3*k + 2];
-					for (p = 0; p < len; p++)
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
+					x [0] = X [3*k    ] ;
+					x [1] = X [3*k + 1] ;
+					x [2] = X [3*k + 2] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Ui[p];
-						uik = Ux[p];
-						MULT_SUB (x[0], uik, X[3*i]);
-						MULT_SUB (x[1], uik, X[3*i + 1]);
-						MULT_SUB (x[2], uik, X[3*i + 2]);
+						i = Ui [p] ;
+						{
+							uik = Ux [p] ;
+						}
+						MULT_SUB (x [0], uik, X [3*i]) ;
+						MULT_SUB (x [1], uik, X [3*i + 1]) ;
+						MULT_SUB (x [2], uik, X [3*i + 2]) ;
 					}
-					ukk = Udiag[k];
-					DIV (X[3*k], x[0], ukk);
-					DIV (X[3*k + 1], x[1], ukk);
-					DIV (X[3*k + 2], x[2], ukk);
+					{
+						ukk = Udiag [k] ;
+					}
+					DIV (X [3*k], x [0], ukk) ;
+					DIV (X [3*k + 1], x [1], ukk) ;
+					DIV (X [3*k + 2], x [2], ukk) ;
 				}
-				break;
+				break ;
 
 			case 4:
 
-				for (k = 0; k < n; k++)
+				for (k = 0 ; k < n ; k++)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len);
-					x[0] = X[4*k    ];
-					x[1] = X[4*k + 1];
-					x[2] = X[4*k + 2];
-					x[3] = X[4*k + 3];
-					for (p = 0; p < len; p++)
+					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
+					x [0] = X [4*k    ] ;
+					x [1] = X [4*k + 1] ;
+					x [2] = X [4*k + 2] ;
+					x [3] = X [4*k + 3] ;
+					for (p = 0 ; p < len ; p++)
 					{
-						i = Ui[p];
-						uik = Ux[p];
-						MULT_SUB (x[0], uik, X[4*i]);
-						MULT_SUB (x[1], uik, X[4*i + 1]);
-						MULT_SUB (x[2], uik, X[4*i + 2]);
-						MULT_SUB (x[3], uik, X[4*i + 3]);
+						i = Ui [p] ;
+						{
+							uik = Ux [p] ;
+						}
+						MULT_SUB (x [0], uik, X [4*i]) ;
+						MULT_SUB (x [1], uik, X [4*i + 1]) ;
+						MULT_SUB (x [2], uik, X [4*i + 2]) ;
+						MULT_SUB (x [3], uik, X [4*i + 3]) ;
 					}
-					ukk = Udiag[k];
-					DIV (X[4*k], x[0], ukk);
-					DIV (X[4*k + 1], x[1], ukk);
-					DIV (X[4*k + 2], x[2], ukk);
-					DIV (X[4*k + 3], x[3], ukk);
+					{
+						ukk = Udiag [k] ;
+					}
+					DIV (X [4*k], x [0], ukk) ;
+					DIV (X [4*k + 1], x [1], ukk) ;
+					DIV (X [4*k + 2], x [2], ukk) ;
+					DIV (X [4*k + 3], x [3], ukk) ;
 				}
-				break;
+				break ;
 		}
 	}
-
 }

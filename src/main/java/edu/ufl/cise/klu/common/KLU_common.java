@@ -30,14 +30,6 @@ package edu.ufl.cise.klu.common;
 public class KLU_common
 {
 
-	public static final int KLU_OK = 0;
-	/* status > 0 is a warning, not an error */
-	public static final int KLU_SINGULAR = 1;
-	public static final int KLU_OUT_OF_MEMORY = -2;
-	public static final int KLU_INVALID = -3;
-	/* integer overflow has occured */
-	public static final int KLU_TOO_LARGE = -4;
-
 	/* ---------------------------------------------------------------------- */
     /* parameters */
     /* ---------------------------------------------------------------------- */
@@ -108,7 +100,7 @@ public class KLU_common
     public double rgrowth;     /* reciprocal pivot rgrowth, from klu_rgrowth */
     public double work;        /* actual work done in BTF, in klu_analyze */
 
-    public size_t memusage;    /* current memory usage, in bytes */
-    public size_t mempeak;     /* peak memory usage, in bytes */
+    public int memusage;    /* current memory usage, in bytes */
+    public int mempeak;     /* peak memory usage, in bytes */
 
 }

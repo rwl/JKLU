@@ -34,63 +34,63 @@ public class Dklu_free_numeric extends Dklu_internal
 {
 
 	public static int klu_free_numeric(KLU_numeric NumericHandle,
-		    KLU_common  Common)
+			KLU_common  Common)
 	{
-	    KLU_numeric Numeric ;
-	    double[][] LUbx ;
-	    size_t LUsize ;
-	    int block, n, nzoff, nblocks ;
+		KLU_numeric Numeric ;
+		double[][] LUbx ;
+		int LUsize ;
+		int block, n, nzoff, nblocks ;
 
-	    if (Common == null)
-	    {
-	        return (FALSE) ;
-	    }
-	    if (NumericHandle == null || NumericHandle == null)
-	    {
-	        return (TRUE) ;
-	    }
+		if (Common == null)
+		{
+			return (FALSE) ;
+		}
+		if (NumericHandle == null || NumericHandle == null)
+		{
+			return (TRUE) ;
+		}
 
-	    Numeric = NumericHandle ;
+		Numeric = NumericHandle ;
 
-	    n = Numeric.n ;
-	    nzoff = Numeric.nzoff ;
-	    nblocks = Numeric.nblocks ;
-	    LUsize = Numeric.LUsize ;
+		n = Numeric.n ;
+		nzoff = Numeric.nzoff ;
+		nblocks = Numeric.nblocks ;
+		LUsize = Numeric.LUsize ;
 
-	    LUbx = (Unit [][]) Numeric.LUbx ;
-	    if (LUbx != null)
-	    {
-	        for (block = 0 ; block < nblocks ; block++)
-	        {
-	            KLU_free (LUbx [block], LUsize ? LUsize [block] : 0,
-	                sizeof (Unit), Common) ;
-	        }
-	    }
+		LUbx = (double[][]) Numeric.LUbx ;
+		if (LUbx != null)
+		{
+			for (block = 0 ; block < nblocks ; block++)
+			{
+				KLU_free (LUbx [block], LUsize ? LUsize [block] : 0,
+					sizeof (double), Common) ;
+			}
+		}
 
-	    KLU_free (Numeric.Pnum, n, sizeof (Integer), Common) ;
-	    KLU_free (Numeric.Offp, n+1, sizeof (Integer), Common) ;
-	    KLU_free (Numeric.Offi, nzoff+1, sizeof (Integer), Common) ;
-	    KLU_free (Numeric.Offx, nzoff+1, sizeof (Entry), Common) ;
+		KLU_free (Numeric.Pnum, n, sizeof (Integer), Common) ;
+		KLU_free (Numeric.Offp, n+1, sizeof (Integer), Common) ;
+		KLU_free (Numeric.Offi, nzoff+1, sizeof (Integer), Common) ;
+		KLU_free (Numeric.Offx, nzoff+1, sizeof (double), Common) ;
 
-	    KLU_free (Numeric.Lip,  n, sizeof (Integer), Common) ;
-	    KLU_free (Numeric.Llen, n, sizeof (Integer), Common) ;
-	    KLU_free (Numeric.Uip,  n, sizeof (Integer), Common) ;
-	    KLU_free (Numeric.Ulen, n, sizeof (Integer), Common) ;
+		KLU_free (Numeric.Lip,  n, sizeof (Integer), Common) ;
+		KLU_free (Numeric.Llen, n, sizeof (Integer), Common) ;
+		KLU_free (Numeric.Uip,  n, sizeof (Integer), Common) ;
+		KLU_free (Numeric.Ulen, n, sizeof (Integer), Common) ;
 
-	    KLU_free (Numeric.LUsize, nblocks, sizeof (size_t), Common) ;
+		KLU_free (Numeric.LUsize, nblocks, sizeof (int), Common) ;
 
-	    KLU_free (Numeric.LUbx, nblocks, sizeof (Unit[]), Common) ;
+		KLU_free (Numeric.LUbx, nblocks, sizeof (double[]), Common) ;
 
-	    KLU_free (Numeric.Udiag, n, sizeof (Entry), Common) ;
+		KLU_free (Numeric.Udiag, n, sizeof (double), Common) ;
 
-	    KLU_free (Numeric.Rs,   n, sizeof (Double), Common) ;
-	    KLU_free (Numeric.Pinv, n, sizeof (Int), Common) ;
+		KLU_free (Numeric.Rs,   n, sizeof (Double), Common) ;
+		KLU_free (Numeric.Pinv, n, sizeof (Int), Common) ;
 
-	    KLU_free (Numeric.Work, Numeric.worksize, 1, Common) ;
+		KLU_free (Numeric.Work, Numeric.worksize, 1, Common) ;
 
-	    KLU_free (Numeric, 1, sizeof (KLU_numeric), Common) ;
+		KLU_free (Numeric, 1, sizeof (KLU_numeric), Common) ;
 
-	    NumericHandle = null ;
-	    return (TRUE) ;
+		NumericHandle = null ;
+		return (TRUE) ;
 	}
 }

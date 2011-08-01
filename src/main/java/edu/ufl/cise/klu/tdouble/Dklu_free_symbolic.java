@@ -36,25 +36,25 @@ public class Dklu_free_symbolic extends Dklu_internal
 	public static int klu_free_symbolic(KLU_symbolic SymbolicHandle,
 			KLU_common Common)
 	{
-	    KLU_symbolic Symbolic ;
-	    int n ;
-	    if (Common == null)
-	    {
-	        return (FALSE) ;
-	    }
-	    if (SymbolicHandle == null)
-	    {
-	        return (TRUE) ;
-	    }
-	    Symbolic = SymbolicHandle ;
-	    n = Symbolic.n ;
-	    KLU_free (Symbolic.P, n, sizeof (Integer), Common) ;
-	    KLU_free (Symbolic.Q, n, sizeof (Integer), Common) ;
-	    KLU_free (Symbolic.R, n+1, sizeof (Integer), Common) ;
-	    KLU_free (Symbolic.Lnz, n, sizeof (Souble), Common) ;
-	    KLU_free (Symbolic, 1, sizeof (KLU_symbolic), Common) ;
-	    SymbolicHandle = null ;
-	    return (TRUE) ;
+		KLU_symbolic Symbolic ;
+		int n ;
+		if (Common == null)
+		{
+			return (FALSE) ;
+		}
+		if (SymbolicHandle == null)
+		{
+			return (TRUE) ;
+		}
+		Symbolic = SymbolicHandle ;
+		n = Symbolic.n ;
+		KLU_free (Symbolic.P, n, sizeof (Integer), Common) ;
+		KLU_free (Symbolic.Q, n, sizeof (Integer), Common) ;
+		KLU_free (Symbolic.R, n+1, sizeof (Integer), Common) ;
+		KLU_free (Symbolic.Lnz, n, sizeof (Souble), Common) ;
+		KLU_free (Symbolic, 1, sizeof (KLU_symbolic), Common) ;
+		SymbolicHandle = null ;
+		return (TRUE) ;
 	}
 
 }

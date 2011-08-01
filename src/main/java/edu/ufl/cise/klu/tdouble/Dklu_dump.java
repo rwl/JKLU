@@ -47,51 +47,51 @@ public class Dklu_dump extends Dklu_internal
 	 *
 	 * Not user-callable.  Only used when debugging.
 	 */
-	public static int klu_valid(int n, int[] Ap, int[] Ai, Entry[] Ax)
+	public static int klu_valid(int n, int[] Ap, int[] Ai, double[] Ax)
 	{
 		int nz, j, p1, p2, i, p ;
-	    PRINTF ("\ncolumn oriented matrix, n = %d\n", n) ;
-	    if (n <= 0)
-	    {
-	        PRINTF ("n must be >= 0: %d\n", n) ;
-	        return (FALSE) ;
-	    }
-	    nz = Ap [n] ;
-	    if (Ap [0] != 0 || nz < 0)
-	    {
-	        /* column pointers must start at Ap [0] = 0, and Ap [n] must be >= 0 */
-	        PRINTF ("column 0 pointer bad or nz < 0\n") ;
-	        return (FALSE) ;
-	    }
-	    for (j = 0 ; j < n ; j++)
-	    {
-	        p1 = Ap [j] ;
-	        p2 = Ap [j+1] ;
-	        PRINTF ("\nColumn: %d p1: %d p2: %d\n", j, p1, p2) ;
-	        if (p1 > p2)
-	        {
-	            /* column pointers must be ascending */
-	            PRINTF ("column %d pointer bad\n", j) ;
-	            return (FALSE) ;
-	        }
-	        for (p = p1 ; p < p2 ; p++)
-	        {
-	            i = Ai [p] ;
-	            PRINTF ("row: %d", i) ;
-	            if (i < 0 || i >= n)
-	            {
-	                /* row index out of range */
-	                PRINTF ("index out of range, col %d row %d\n", j, i) ;
-	                return (FALSE) ;
-	            }
-	            if (Ax != null)
-	            {
-	                PRINT_ENTRY (Ax [p]) ;
-	            }
-	            PRINTF ("\n") ;
-	        }
-	    }
-	    return (TRUE) ;
+		PRINTF ("\ncolumn oriented matrix, n = %d\n", n) ;
+		if (n <= 0)
+		{
+			PRINTF ("n must be >= 0: %d\n", n) ;
+			return (FALSE) ;
+		}
+		nz = Ap [n] ;
+		if (Ap [0] != 0 || nz < 0)
+		{
+			/* column pointers must start at Ap [0] = 0, and Ap [n] must be >= 0 */
+			PRINTF ("column 0 pointer bad or nz < 0\n") ;
+			return (FALSE) ;
+		}
+		for (j = 0 ; j < n ; j++)
+		{
+			p1 = Ap [j] ;
+			p2 = Ap [j+1] ;
+			PRINTF ("\nColumn: %d p1: %d p2: %d\n", j, p1, p2) ;
+			if (p1 > p2)
+			{
+				/* column pointers must be ascending */
+				PRINTF ("column %d pointer bad\n", j) ;
+				return (FALSE) ;
+			}
+			for (p = p1 ; p < p2 ; p++)
+			{
+				i = Ai [p] ;
+				PRINTF ("row: %d", i) ;
+				if (i < 0 || i >= n)
+				{
+					/* row index out of range */
+					PRINTF ("index out of range, col %d row %d\n", j, i) ;
+					return (FALSE) ;
+				}
+				if (Ax != null)
+				{
+					PRINT_ENTRY (Ax [p]) ;
+				}
+				PRINTF ("\n") ;
+			}
+		}
+		return (TRUE) ;
 	}
 
 	/**
@@ -101,56 +101,56 @@ public class Dklu_dump extends Dklu_internal
 	 * function for U, the flag should be set to false.  Only used when debugging.
 	 */
 	public static int klu_valid_LU(int n, int flag_test_start_ptr, int[] Xip,
-            int[] Xlen, Unit[] LU)
+			int[] Xlen, double[] LU)
 	{
 		int[] Xi ;
-	    Entry[] Xx ;
-	    int j, p1, p2, i, p, len ;
+		double[] Xx ;
+		int j, p1, p2, i, p, len ;
 
-	    PRINTF ("\ncolumn oriented matrix, n = %d\n", n) ;
-	    if (n <= 0)
-	    {
-	        PRINTF ("n must be >= 0: %d\n", n) ;
-	        return (FALSE) ;
-	    }
-	    if (flag_test_start_ptr == 1 && Xip [0] != 0)
-	    {
-	        /* column pointers must start at Xip [0] = 0*/
-	        PRINTF ("column 0 pointer bad\n") ;
-	        return (FALSE) ;
-	    }
+		PRINTF ("\ncolumn oriented matrix, n = %d\n", n) ;
+		if (n <= 0)
+		{
+			PRINTF ("n must be >= 0: %d\n", n) ;
+			return (FALSE) ;
+		}
+		if (flag_test_start_ptr == 1 && Xip [0] != 0)
+		{
+			/* column pointers must start at Xip [0] = 0*/
+			PRINTF ("column 0 pointer bad\n") ;
+			return (FALSE) ;
+		}
 
-	    for (j = 0 ; j < n ; j++)
-	    {
-	        p1 = Xip [j] ;
-	        p2 = Xip [j+1] ;
-	        PRINTF ("\nColumn: %d p1: %d p2: %d\n", j, p1, p2) ;
-	        if (p1 > p2)
-	        {
-	            /* column pointers must be ascending */
-	            PRINTF ("column %d pointer bad\n", j) ;
-	            return (FALSE) ;
-	        }
-	        GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len) ;
-	        for (p = 0 ; p < len ; p++)
-	        {
-	            i = Xi [p] ;
-	            PRINTF ("row: %d", i) ;
-	            if (i < 0 || i >= n)
-	            {
-	                /* row index out of range */
-	                PRINTF ("index out of range, col %d row %d\n", j, i) ;
-	                return (FALSE) ;
-	            }
-	            if (Xx != null)
-	            {
-	                PRINT_ENTRY (Xx [p]) ;
-	            }
-	            PRINTF ("\n") ;
-	        }
-	    }
+		for (j = 0 ; j < n ; j++)
+		{
+			p1 = Xip [j] ;
+			p2 = Xip [j+1] ;
+			PRINTF ("\nColumn: %d p1: %d p2: %d\n", j, p1, p2) ;
+			if (p1 > p2)
+			{
+				/* column pointers must be ascending */
+				PRINTF ("column %d pointer bad\n", j) ;
+				return (FALSE) ;
+			}
+			GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len) ;
+			for (p = 0 ; p < len ; p++)
+			{
+				i = Xi [p] ;
+				PRINTF ("row: %d", i) ;
+				if (i < 0 || i >= n)
+				{
+					/* row index out of range */
+					PRINTF ("index out of range, col %d row %d\n", j, i) ;
+					return (FALSE) ;
+				}
+				if (Xx != null)
+				{
+					PRINT_ENTRY (Xx [p]) ;
+				}
+				PRINTF ("\n") ;
+			}
+		}
 
-	    return (TRUE) ;
+		return (TRUE) ;
 	}
 
 }

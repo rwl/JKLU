@@ -24,7 +24,15 @@
 
 package edu.ufl.cise.klu.tdouble;
 
-public class Dklu_version {
+public abstract class Dklu_version {
+
+	public static final int KLU_OK = 0;
+	/** status > 0 is a warning, not an error */
+	public static final int KLU_SINGULAR = 1;
+	public static final int KLU_OUT_OF_MEMORY = -2;
+	public static final int KLU_INVALID = -3;
+	/** integer overflow has occured */
+	public static final int KLU_TOO_LARGE = -4;
 
 	/** enable diagnostic printing */
 	protected static boolean NPRINT = true ;
@@ -45,30 +53,32 @@ public class Dklu_version {
 
 	protected static double UNITS (Object type, double n)
 	{
-		return CEILING (BYTES (type, n), sizeof (Unit)) ;
+		return CEILING (BYTES (type, n), sizeof (double)) ;
 	}
 
 	protected static double DUNITS (Object type, int n)
 	{
-		return Math.ceil(BYTES (type, (double) n) / sizeof (Unit)) ;
+		return Math.ceil(BYTES (type, (double) n) / sizeof (double)) ;
 	}
 
 	protected static void GET_I_POINTER(LU, Xip, Xi, k)
 	{
-	    Xi = (Int[]) (LU + Xip [k]) ;
+		Xi = (Int[]) (LU + Xip [k]) ;
 	}
 
-	protected static void GET_X_POINTER(LU, Xip, Xlen, Xx, k)
+	protected static void GET_X_POINTER(double[] LU, int[] Xip, int Xlen,
+			double[] Xx, int k)
 	{
-	    Xx = (Entry[]) (LU + Xip [k] + UNITS (Int, Xlen [k])) ;
+		Xx = (double[]) (LU + Xip [k] + UNITS (Int, Xlen [k])) ;
 	}
 
-	protected static void GET_POINTER(LU, Xip, Xlen, Xi, Xx, k, xlen)
+	protected static void GET_POINTER(double[] LU, int[] Xip, int Xlen,
+			int[] Xi, double[] Xx, int k, int xlen)
 	{
-	    Unit xp = LU + Xip [k] ;
-	    xlen = Xlen [k] ;
-	    Xi = (Int[]) xp ;
-	    Xx = (Entry[]) (xp + UNITS (Int, xlen)) ;
+		double xp = LU + Xip [k] ;
+		xlen = Xlen [k] ;
+		Xi = (Int[]) xp ;
+		Xx = (double[]) (xp + UNITS (Int, xlen)) ;
 	}
 
 	protected static boolean SCALAR_IS_NAN (double x)
@@ -106,14 +116,14 @@ public class Dklu_version {
 	{
 		if (!NPRINT) {
 
-		    if (SCALAR_IS_NONZERO (a))
-		    {
-		        PRINTF (" (%g)", a) ;
-		    }
-		    else
-		    {
-		        PRINTF (" (0)") ;
-		    }
+			if (SCALAR_IS_NONZERO (a))
+			{
+				PRINTF (" (%g)", a) ;
+			}
+			else
+			{
+				PRINTF (" (0)") ;
+			}
 
 		}
 	}
@@ -121,10 +131,6 @@ public class Dklu_version {
 	/* ---------------------------------------------------------------------- */
 	/* Real floating-point arithmetic */
 	/* ---------------------------------------------------------------------- */
-
-	protected static final Class Unit = Double.class ;
-
-	protected static final Class Entry = Double.class ;
 
 	/**
 	 * @return TRUE if a complex number is in split form, FALSE if in packed

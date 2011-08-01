@@ -32,22 +32,22 @@ import edu.ufl.cise.klu.common.KLU_common;
 public class Dklu_memory extends Dklu_internal {
 
 	/**
-	 * Safely compute a+b, and check for size_t overflow.
+	 * Safely compute a+b, and check for int overflow.
 	 */
-	public static size_t klu_add_size_t(size_t a, size_t b, int ok)
+	public static int klu_add_size_t(int a, int b, int ok)
 	{
-	    ok = ok && ((a + b) >= MAX (a, b));
-	    return ok ? (a + b) : (size_t) -1;
+		(ok) = (ok != 0) && ((a + b) >= MAX (a,b)) ? 1 : 0;
+		return ((ok != 0) ? (a + b) : ((int) -1)) ;
 	}
 
-	public static size_t klu_mult_size_t(size_t a, size_t k, Int ok)
+	public static int klu_mult_size_t(int a, int k, int ok)
 	{
-	    size_t i, s = 0;
-	    for (i = 0 ; i < k ; i++)
-	    {
-	        s = klu_add_size_t(s, a, ok);
-	    }
-	    return ((ok) ? s : ((size_t) -1));
+		int i, s = 0 ;
+		for (i = 0 ; i < k ; i++)
+		{
+			s = klu_add_size_t (s, a, ok) ;
+		}
+		return ((ok != 0) ? s : ((int) -1)) ;
 	}
 
 	/**
@@ -69,46 +69,46 @@ public class Dklu_memory extends Dklu_internal {
 	 * @param Common
 	 * @return
 	 */
-	public static Object klu_malloc(size_t n, size_t size, KLU_common Common)
+	public static Object klu_malloc(int n, int size, KLU_common Common)
 	{
 		Object p ;
-	    size_t s ;
-	    int ok = TRUE ;
+		int s ;
+		int ok = TRUE ;
 
-	    if (Common == null)
-	    {
-	        p = null ;
-	    }
-	    else if (size == 0)
-	    {
-	        /* size must be > 0 */
-	        Common.status = KLU_common.KLU_INVALID ;
-	        p = null ;
-	    }
-	    else if (n >= INT_MAX)
-	    {
-	        /* object is too big to allocate; p[i] where i is an Int will not
-	         * be enough. */
-	        Common.status = KLU_common.KLU_TOO_LARGE ;
-	        p = null ;
-	    }
-	    else
-	    {
-	        /* call malloc, or its equivalent */
-	        s = klu_mult_size_t (MAX (1, n), size, ok) ;
-	        p = ok == 1 ? ((Common.malloc_memory) (s)) : null ;
-	        if (p == null)
-	        {
-	            /* failure: out of memory */
-	            Common.status = KLU_common.KLU_OUT_OF_MEMORY ;
-	        }
-	        else
-	        {
-	            Common.memusage += s ;
-	            Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
-	        }
-	    }
-	    return (p) ;
+		if (Common == null)
+		{
+			p = null ;
+		}
+		else if (size == 0)
+		{
+			/* size must be > 0 */
+			Common.status = KLU_INVALID ;
+			p = null ;
+		}
+		else if (n >= INT_MAX)
+		{
+			/* object is too big to allocate; p[i] where i is an Int will not
+			 * be enough. */
+			Common.status = KLU_TOO_LARGE ;
+			p = null ;
+		}
+		else
+		{
+			/* call malloc, or its equivalent */
+			s = klu_mult_size_t (MAX (1,n), size, ok) ;
+			p = ok != 0 ? ((Common.malloc_memory) (s)) : null ;
+			if (p == null)
+			{
+				/* failure: out of memory */
+				Common.status = KLU_OUT_OF_MEMORY ;
+			}
+			else
+			{
+				Common.memusage += s ;
+				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
+			}
+		}
+		return (p) ;
 	}
 
 	/**
@@ -119,21 +119,21 @@ public class Dklu_memory extends Dklu_internal {
 	 * @param size size of each item
 	 * @param Common
 	 */
-	public static void klu_free(Object p, size_t n, size_t size,
+	public static void klu_free(Object p, int n, int size,
 			KLU_common Common) {
-		size_t s ;
-	    int ok = TRUE ;
-	    if (p != null && Common != null)
-	    {
-	        /* only free the object if the pointer is not null */
-	        /* call free, or its equivalent */
-	        (Common.free_memory) (p) ;
-	        s = klu_mult_size_t (MAX (1, n), size, ok) ;
-	        Common.memusage -= s ;
-	    }
-	    /* return null, and the caller should assign this to p.  This avoids
-	     * freeing the same pointer twice. */
-	    //return (null) ;
+		int s ;
+		int ok = TRUE ;
+		if (p != null && Common != null)
+		{
+			/* only free the object if the pointer is not null */
+			/* call free, or its equivalent */
+			(Common.free_memory) (p) ;
+			s = klu_mult_size_t (MAX (1,n), size, &ok) ;
+			Common.memusage -= s ;
+		}
+		/* return null, and the caller should assign this to p.  This avoids
+		 * freeing the same pointer twice. */
+		//return (null) ;
 	}
 
 	/**
@@ -160,54 +160,54 @@ public class Dklu_memory extends Dklu_internal {
 	 * @param Common
 	 * @return pointer to reallocated block
 	 */
-	public static Object klu_realloc(size_t nnew, size_t nold, size_t size,
+	public static Object klu_realloc(int nnew, int nold, int size,
 			Object p, KLU_common Common)
 	{
 		Object pnew ;
-	    size_t snew, sold ;
-	    int ok = TRUE ;
+		int snew, sold ;
+		int ok = TRUE ;
 
-	    if (Common == null)
-	    {
-	        p = null ;
-	    }
-	    else if (size == 0)
-	    {
-	        /* size must be > 0 */
-	        Common.status = KLU_common.KLU_INVALID ;
-	        p = null ;
-	    }
-	    else if (p == null)
-	    {
-	        /* A fresh object is being allocated. */
-	        p = klu_malloc (nnew, size, Common) ;
-	    }
-	    else if (nnew >= INT_MAX)
-	    {
-	        /* failure: nnew is too big.  Do not change p */
-	        Common.status = KLU_common.KLU_TOO_LARGE ;
-	    }
-	    else
-	    {
-	        /* The object exists, and is changing to some other nonzero size. */
-	        /* call realloc, or its equivalent */
-	        snew = klu_mult_size_t (MAX (1,nnew), size, ok) ;
-	        sold = klu_mult_size_t (MAX (1,nold), size, ok) ;
-	        pnew = ok == 1 ? ((Common.realloc_memory) (p, snew)) : null ;
-	        if (pnew == null)
-	        {
-	            /* Do not change p, since it still points to allocated memory */
-	            Common.status = KLU_common.KLU_OUT_OF_MEMORY ;
-	        }
-	        else
-	        {
-	            /* success: return the new p and change the size of the block */
-	            Common.memusage += (snew - sold) ;
-	            Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
-	            p = pnew ;
-	        }
-	    }
-	    return (p) ;
+		if (Common == null)
+		{
+			p = null ;
+		}
+		else if (size == 0)
+		{
+			/* size must be > 0 */
+			Common.status = KLU_INVALID ;
+			p = null ;
+		}
+		else if (p == null)
+		{
+			/* A fresh object is being allocated. */
+			p = klu_malloc (nnew, size, Common) ;
+		}
+		else if (nnew >= INT_MAX)
+		{
+			/* failure: nnew is too big.  Do not change p */
+			Common.status = KLU_TOO_LARGE ;
+		}
+		else
+		{
+			/* The object exists, and is changing to some other nonzero size. */
+			/* call realloc, or its equivalent */
+			snew = klu_mult_size_t (MAX (1,nnew), size, &ok) ;
+			sold = klu_mult_size_t (MAX (1,nold), size, &ok) ;
+			pnew = ok != 0 ? ((Common.realloc_memory) (p, snew)) : null ;
+			if (pnew == null)
+			{
+				/* Do not change p, since it still points to allocated memory */
+				Common.status = KLU_OUT_OF_MEMORY ;
+			}
+			else
+			{
+				/* success: return the new p and change the size of the block */
+				Common.memusage += (snew - sold) ;
+				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
+				p = pnew ;
+			}
+		}
+		return (p) ;
 	}
 
 }

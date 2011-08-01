@@ -49,70 +49,70 @@ public class Dklu_refactor extends Dklu_internal {
 	public static int klu_refactor(int[] Ap, int[] Ai, double[] Ax,
 			KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common  Common)
 	{
-		Entry ukk, ujk, s;
-		Entry[] Offx, Lx, Ux, X, Az, Udiag;
-		double[] Rs;
-		int[] P, Q, R, Pnum, Offp, Offi, Ui, Li, Pinv, Lip, Uip, Llen, Ulen;
-		Unit[][] LUbx;
-		Unit[] LU;
+		double ukk, ujk, s ;
+		double[] Offx, Lx, Ux, X, Az, Udiag ;
+		double[] Rs ;
+		int[] P, Q, R, Pnum, Offp, Offi, Ui, Li, Pinv, Lip, Uip, Llen, Ulen ;
+		double[][] LUbx ;
+		double[] LU ;
 		int k1, k2, nk, k, block, oldcol, pend, oldrow, n, p, newrow, scale,
-			nblocks, poff, i, j, up, ulen, llen, maxblock, nzoff;
+			nblocks, poff, i, j, up, ulen, llen, maxblock, nzoff ;
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* check inputs */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
 		if (Common == null)
 		{
-			return FALSE;
+			return (FALSE) ;
 		}
-		Common.status = KLU_common.KLU_OK;
+		Common.status = KLU_OK ;
 
 		if (Numeric == null)
 		{
 			/* invalid Numeric object */
-			Common.status = KLU_common.KLU_INVALID;
-			return FALSE;
+			Common.status = KLU_INVALID ;
+			return (FALSE) ;
 		}
 
-		Common.numerical_rank = EMPTY;
-		Common.singular_col = EMPTY;
+		Common.numerical_rank = EMPTY ;
+		Common.singular_col = EMPTY ;
 
-		Az = (Entry[]) Ax;
+		Az = (double[]) Ax ;
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* get the contents of the Symbolic object */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
-		n = Symbolic.n;
-		P = Symbolic.P;
-		Q = Symbolic.Q;
-		R = Symbolic.R;
-		nblocks = Symbolic.nblocks;
-		maxblock = Symbolic.maxblock;
+		n = Symbolic.n ;
+		P = Symbolic.P ;
+		Q = Symbolic.Q ;
+		R = Symbolic.R ;
+		nblocks = Symbolic.nblocks ;
+		maxblock = Symbolic.maxblock ;
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* get the contents of the Numeric object */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
-		Pnum = Numeric.Pnum;
-		Offp = Numeric.Offp;
-		Offi = Numeric.Offi;
-		Offx = (Entry[]) Numeric.Offx;
+		Pnum = Numeric.Pnum ;
+		Offp = Numeric.Offp ;
+		Offi = Numeric.Offi ;
+		Offx = (double[]) Numeric.Offx ;
 
-		LUbx = (Unit[][]) Numeric.LUbx;
+		LUbx = (double[][]) Numeric.LUbx ;
 
-		scale = Common.scale;
+		scale = Common.scale ;
 		if (scale > 0)
 		{
 			/* factorization was not scaled, but refactorization is scaled */
 			if (Numeric.Rs == null)
 			{
-				Numeric.Rs = KLU_malloc (n, sizeof(Double), Common);
-				if (Common.status < KLU_common.KLU_OK)
+				Numeric.Rs = KLU_malloc (n, sizeof (double), Common) ;
+				if (Common.status < KLU_OK)
 				{
-					Common.status = KLU_common.KLU_OUT_OF_MEMORY;
-					return FALSE;
+					Common.status = KLU_OUT_OF_MEMORY ;
+					return (FALSE) ;
 				}
 			}
 		}
@@ -120,177 +120,177 @@ public class Dklu_refactor extends Dklu_internal {
 		{
 			/* no scaling for refactorization; ensure Numeric.Rs is freed.  This
 			 * does nothing if Numeric.Rs is already null. */
-			Numeric.Rs = Dklu_free.klu_free (Numeric.Rs, n, sizeof(Double), Common);
+			Numeric.Rs = KLU_free (Numeric.Rs, n, sizeof (double), Common) ;
 		}
-		Rs = Numeric.Rs;
+		Rs = Numeric.Rs ;
 
-		Pinv = Numeric.Pinv;
-		X = (Entry[]) Numeric.Xwork;
-		Common.nrealloc = 0;
-		Udiag = Numeric.Udiag;
-		nzoff = Symbolic.nzoff;
+		Pinv = Numeric.Pinv ;
+		X = (double[]) Numeric.Xwork ;
+		Common.nrealloc = 0 ;
+		Udiag = Numeric.Udiag ;
+		nzoff = Symbolic.nzoff ;
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* check the input matrix compute the row scale factors, Rs */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
 		/* do no scale, or check the input matrix, if scale < 0 */
 		if (scale >= 0)
 		{
 			/* check for out-of-range indices, but do not check for duplicates */
-			if (Dklu_scale.klu_scale (scale, n, Ap, Ai, Ax, Rs, null, Common) == 0)
+			if (!KLU_scale (scale, n, Ap, Ai, Ax, Rs, null, Common))
 			{
-				return FALSE;
+				return (FALSE) ;
 			}
 		}
 
-		/* ------------------------------------------------------------------ */
-		/* clearworkspace X */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
+		/* clear workspace X */
+		/* ---------------------------------------------------------------------- */
 
-		for (k = 0; k < maxblock; k++)
+		for (k = 0 ; k < maxblock ; k++)
 		{
-			/* X[k] = 0 */
-			CLEAR (X[k]);
+			/* X [k] = 0 */
+			CLEAR (X [k]) ;
 		}
 
-		poff = 0;
+		poff = 0 ;
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* factor each block */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
 		if (scale <= 0)
 		{
 
-			/* -------------------------------------------------------------- */
+			/* ------------------------------------------------------------------ */
 			/* no scaling */
-			/* -------------------------------------------------------------- */
+			/* ------------------------------------------------------------------ */
 
-			for (block = 0; block < nblocks; block++)
+			for (block = 0 ; block < nblocks ; block++)
 			{
 
-				/* ---------------------------------------------------------- */
+				/* -------------------------------------------------------------- */
 				/* the block is from rows/columns k1 to k2-1 */
-				/* ---------------------------------------------------------- */
+				/* -------------------------------------------------------------- */
 
-				k1 = R[block];
-				k2 = R[block+1];
-				nk = k2 - k1;
+				k1 = R [block] ;
+				k2 = R [block+1] ;
+				nk = k2 - k1 ;
 
 				if (nk == 1)
 				{
 
-					/* ------------------------------------------------------ */
+					/* ---------------------------------------------------------- */
 					/* singleton case */
-					/* ------------------------------------------------------ */
+					/* ---------------------------------------------------------- */
 
-					oldcol = Q[k1];
-					pend = Ap[oldcol+1];
-					CLEAR (s);
-					for (p = Ap[oldcol]; p < pend; p++)
+					oldcol = Q [k1] ;
+					pend = Ap [oldcol+1] ;
+					CLEAR (s) ;
+					for (p = Ap [oldcol] ; p < pend ; p++)
 					{
-						newrow = Pinv[Ai[p]] - k1;
+						newrow = Pinv [Ai [p]] - k1 ;
 						if (newrow < 0 && poff < nzoff)
 						{
 							/* entry in off-diagonal block */
-							Offx[poff] = Az[p];
-							poff++;
+							Offx [poff] = Az [p] ;
+							poff++ ;
 						}
 						else
 						{
 							/* singleton */
-							s = Az[p];
+							s = Az [p] ;
 						}
 					}
-					Udiag[k1] = s;
+					Udiag [k1] = s ;
 
 				}
 				else
 				{
 
-					/* ------------------------------------------------------ */
+					/* ---------------------------------------------------------- */
 					/* construct and factor the kth block */
-					/* ------------------------------------------------------ */
+					/* ---------------------------------------------------------- */
 
-					Lip  = Numeric.Lip  + k1;
-					Llen = Numeric.Llen + k1;
-					Uip  = Numeric.Uip  + k1;
-					Ulen = Numeric.Ulen + k1;
-					LU = LUbx[block];
+					Lip  = Numeric.Lip  + k1 ;
+					Llen = Numeric.Llen + k1 ;
+					Uip  = Numeric.Uip  + k1 ;
+					Ulen = Numeric.Ulen + k1 ;
+					LU = LUbx [block] ;
 
-					for (k = 0; k < nk; k++)
+					for (k = 0 ; k < nk ; k++)
 					{
 
-						/* -------------------------------------------------- */
+						/* ------------------------------------------------------ */
 						/* scatter kth column of the block into workspace X */
-						/* -------------------------------------------------- */
+						/* ------------------------------------------------------ */
 
-						oldcol = Q[k+k1];
-						pend = Ap[oldcol+1];
-						for (p = Ap[oldcol]; p < pend; p++)
+						oldcol = Q [k+k1] ;
+						pend = Ap [oldcol+1] ;
+						for (p = Ap [oldcol] ; p < pend ; p++)
 						{
-							newrow = Pinv[Ai[p]] - k1;
+							newrow = Pinv [Ai [p]] - k1 ;
 							if (newrow < 0 && poff < nzoff)
 							{
 								/* entry in off-diagonal block */
-								Offx[poff] = Az[p];
-								poff++;
+								Offx [poff] = Az [p] ;
+								poff++ ;
 							}
 							else
 							{
 								/* (newrow,k) is an entry in the block */
-								X[newrow] = Az[p];
+								X [newrow] = Az [p] ;
 							}
 						}
 
 						/* ------------------------------------------------------ */
 						/* compute kth column of U, and update kth column of A */
-						/* -------------------------------------------------- */
+						/* ------------------------------------------------------ */
 
-						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen);
-						for (up = 0; up < ulen; up++)
+						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen) ;
+						for (up = 0 ; up < ulen ; up++)
 						{
-							j = Ui[up];
-							ujk = X[j];
-							/* X[j] = 0 */
-							CLEAR (X[j]);
-							Ux[up] = ujk;
-							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen);
-							for (p = 0; p < llen; p++)
+							j = Ui [up] ;
+							ujk = X [j] ;
+							/* X [j] = 0 */
+							CLEAR (X [j]) ;
+							Ux [up] = ujk ;
+							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen) ;
+							for (p = 0 ; p < llen ; p++)
 							{
-								/* X[Li[p]] -= Lx[p] * ujk */
-								MULT_SUB (X[Li[p]], Lx[p], ujk);
+								/* X [Li [p]] -= Lx [p] * ujk */
+								MULT_SUB (X [Li [p]], Lx [p], ujk) ;
 							}
 						}
 						/* get the diagonal entry of U */
-						ukk = X[k];
-						/* X[k] = 0 */
-						CLEAR (X[k]);
+						ukk = X [k] ;
+						/* X [k] = 0 */
+						CLEAR (X [k]) ;
 						/* singular case */
 						if (IS_ZERO (ukk))
 						{
 							/* matrix is numerically singular */
-							Common.status = KLU_SINGULAR;
+							Common.status = KLU_SINGULAR ;
 							if (Common.numerical_rank == EMPTY)
 							{
-								Common.numerical_rank = k+k1;
-								Common.singular_col = Q[k+k1];
+								Common.numerical_rank = k+k1 ;
+								Common.singular_col = Q [k+k1] ;
 							}
 							if (Common.halt_if_singular)
 							{
 								/* do not continue the factorization */
-								return FALSE;
+								return (FALSE) ;
 							}
 						}
-						Udiag[k+k1] = ukk;
+						Udiag [k+k1] = ukk ;
 						/* gather and divide by pivot to get kth column of L */
-						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen);
-						for (p = 0; p < llen; p++)
+						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen) ;
+						for (p = 0 ; p < llen ; p++)
 						{
-							i = Li[p];
-							DIV (Lx[p], X[i], ukk);
-							CLEAR (X[i]);
+							i = Li [p] ;
+							DIV (Lx [p], X [i], ukk) ;
+							CLEAR (X [i]) ;
 						}
 
 					}
@@ -301,201 +301,204 @@ public class Dklu_refactor extends Dklu_internal {
 		else
 		{
 
-			/* -------------------------------------------------------------- */
+			/* ------------------------------------------------------------------ */
 			/* scaling */
-			/* -------------------------------------------------------------- */
+			/* ------------------------------------------------------------------ */
 
-			for (block = 0; block < nblocks; block++)
+			for (block = 0 ; block < nblocks ; block++)
 			{
 
-				/* ---------------------------------------------------------- */
+				/* -------------------------------------------------------------- */
 				/* the block is from rows/columns k1 to k2-1 */
-				/* ---------------------------------------------------------- */
+				/* -------------------------------------------------------------- */
 
-				k1 = R[block];
-				k2 = R[block+1];
-				nk = k2 - k1;
+				k1 = R [block] ;
+				k2 = R [block+1] ;
+				nk = k2 - k1 ;
 
 				if (nk == 1)
 				{
 
-					/* ------------------------------------------------------ */
+					/* ---------------------------------------------------------- */
 					/* singleton case */
-					/* ------------------------------------------------------ */
+					/* ---------------------------------------------------------- */
 
-					oldcol = Q[k1];
-					pend = Ap[oldcol+1];
-					CLEAR (s);
-					for (p = Ap[oldcol]; p < pend; p++)
+					oldcol = Q [k1] ;
+					pend = Ap [oldcol+1] ;
+					CLEAR (s) ;
+					for (p = Ap [oldcol] ; p < pend ; p++)
 					{
-						oldrow = Ai[p];
-						newrow = Pinv[oldrow] - k1;
+						oldrow = Ai [p] ;
+						newrow = Pinv [oldrow] - k1 ;
 						if (newrow < 0 && poff < nzoff)
 						{
 							/* entry in off-diagonal block */
-							/* Offx[poff] = Az[p] / Rs[oldrow] */
-							SCALE_DIV_ASSIGN (Offx[poff], Az[p], Rs[oldrow]);
-							poff++;
+							/* Offx [poff] = Az [p] / Rs [oldrow] */
+							SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]) ;
+							poff++ ;
 						}
 						else
 						{
 							/* singleton */
-							/* s = Az[p] / Rs[oldrow] */
-							SCALE_DIV_ASSIGN (s, Az[p], Rs[oldrow]);
+							/* s = Az [p] / Rs [oldrow] */
+							SCALE_DIV_ASSIGN (s, Az [p], Rs [oldrow]) ;
 						}
 					}
-					Udiag[k1] = s;
+					Udiag [k1] = s ;
 
 				}
 				else
 				{
 
-					/* ------------------------------------------------------ */
+					/* ---------------------------------------------------------- */
 					/* construct and factor the kth block */
-					/* ------------------------------------------------------ */
+					/* ---------------------------------------------------------- */
 
-					Lip  = Numeric.Lip  + k1;
-					Llen = Numeric.Llen + k1;
-					Uip  = Numeric.Uip  + k1;
-					Ulen = Numeric.Ulen + k1;
-					LU = LUbx[block];
+					Lip  = Numeric.Lip  + k1 ;
+					Llen = Numeric.Llen + k1 ;
+					Uip  = Numeric.Uip  + k1 ;
+					Ulen = Numeric.Ulen + k1 ;
+					LU = LUbx [block] ;
 
-					for (k = 0; k < nk; k++)
+					for (k = 0 ; k < nk ; k++)
 					{
 
-						/* -------------------------------------------------- */
+						/* ------------------------------------------------------ */
 						/* scatter kth column of the block into workspace X */
-						/* -------------------------------------------------- */
+						/* ------------------------------------------------------ */
 
-						oldcol = Q[k+k1];
-						pend = Ap[oldcol+1];
-						for (p = Ap[oldcol]; p < pend; p++)
+						oldcol = Q [k+k1] ;
+						pend = Ap [oldcol+1] ;
+						for (p = Ap [oldcol] ; p < pend ; p++)
 						{
-							oldrow = Ai[p];
-							newrow = Pinv[oldrow] - k1;
+							oldrow = Ai [p] ;
+							newrow = Pinv [oldrow] - k1 ;
 							if (newrow < 0 && poff < nzoff)
 							{
 								/* entry in off-diagonal part */
-								/* Offx[poff] = Az[p] / Rs[oldrow] */
-								SCALE_DIV_ASSIGN (Offx[poff], Az[p], Rs[oldrow]);
-								poff++;
+								/* Offx [poff] = Az [p] / Rs [oldrow] */
+								SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]);
+								poff++ ;
 							}
 							else
 							{
 								/* (newrow,k) is an entry in the block */
-								/* X[newrow] = Az[p] / Rs[oldrow] */
-								SCALE_DIV_ASSIGN (X[newrow], Az[p], Rs[oldrow]);
+								/* X [newrow] = Az [p] / Rs [oldrow] */
+								SCALE_DIV_ASSIGN (X [newrow], Az [p], Rs [oldrow]) ;
 							}
 						}
 
-						/* -------------------------------------------------- */
+						/* ------------------------------------------------------ */
 						/* compute kth column of U, and update kth column of A */
-						/* -------------------------------------------------- */
+						/* ------------------------------------------------------ */
 
-						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen);
-						for (up = 0; up < ulen; up++)
+						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen) ;
+						for (up = 0 ; up < ulen ; up++)
 						{
-							j = Ui[up];
-							ujk = X[j];
-							/* X[j] = 0 */
-							CLEAR (X[j]);
-							Ux[up] = ujk;
-							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen);
-							for (p = 0; p < llen; p++)
+							j = Ui [up] ;
+							ujk = X [j] ;
+							/* X [j] = 0 */
+							CLEAR (X [j]) ;
+							Ux [up] = ujk ;
+							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen) ;
+							for (p = 0 ; p < llen ; p++)
 							{
-								/* X[Li[p]] -= Lx[p] * ujk */
-								MULT_SUB (X[Li[p]], Lx[p], ujk);
+								/* X [Li [p]] -= Lx [p] * ujk */
+								MULT_SUB (X [Li [p]], Lx [p], ujk) ;
 							}
 						}
 						/* get the diagonal entry of U */
-						ukk = X[k];
-						/* X[k] = 0 */
-						CLEAR (X[k]);
+						ukk = X [k] ;
+						/* X [k] = 0 */
+						CLEAR (X [k]) ;
 						/* singular case */
-						if (is_zero(ukk))
+						if (IS_ZERO (ukk))
 						{
 							/* matrix is numerically singular */
-							Common.status = KLU_common.KLU_SINGULAR;
+							Common.status = KLU_SINGULAR ;
 							if (Common.numerical_rank == EMPTY)
 							{
-								Common.numerical_rank = k+k1;
-								Common.singular_col = Q[k+k1];
+								Common.numerical_rank = k+k1 ;
+								Common.singular_col = Q [k+k1] ;
 							}
-							if (Common.halt_if_singular == 1)
+							if (Common.halt_if_singular)
 							{
 								/* do not continue the factorization */
-								return FALSE;
+								return (FALSE) ;
 							}
 						}
-						Udiag[k+k1] = ukk;
+						Udiag [k+k1] = ukk ;
 						/* gather and divide by pivot to get kth column of L */
-						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen);
-						for (p = 0; p < llen; p++)
+						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen) ;
+						for (p = 0 ; p < llen ; p++)
 						{
-							i = Li[p];
-							DIV (Lx[p], X[i], ukk);
-							CLEAR (X[i]);
+							i = Li [p] ;
+							DIV (Lx [p], X [i], ukk) ;
+							CLEAR (X [i]) ;
 						}
 					}
 				}
 			}
 		}
 
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 		/* permute scale factors Rs according to pivotal row order */
-		/* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
 
 		if (scale > 0)
 		{
-			for (k = 0; k < n; k++)
+			for (k = 0 ; k < n ; k++)
 			{
-				REAL (X[k]) = Rs[Pnum[k]];
+				REAL (X [k]) = Rs [Pnum [k]] ;
 			}
-			for (k = 0; k < n; k++)
+			for (k = 0 ; k < n ; k++)
 			{
-				Rs[k] = REAL (X[k]);
+				Rs [k] = REAL (X [k]) ;
 			}
 		}
 
-		if (false) {
-			ASSERT (Offp[n] == poff);
-			ASSERT (Symbolic.nzoff == poff);
-			PRINTF ("\n------------------- Off diagonal entries, new:\n");
-			ASSERT (Dklu_valid.klu_valid(n, Offp, Offi, Offx));
-			if (Common.status == KLU_common.KLU_OK)
+		if (!NDEBUG)
+		{
+			ASSERT (Offp [n] == poff) ;
+			ASSERT (Symbolic.nzoff == poff) ;
+			PRINTF (("\n------------------- Off diagonal entries, new:\n")) ;
+			ASSERT (Dklu_dump.klu_valid (n, Offp, Offi, Offx)) ;
+			if (Common.status == KLU_OK)
 			{
 				PRINTF ("\n ########### KLU_BTF_REFACTOR done, nblocks %d\n",
 						nblocks);
-				for (block = 0; block < nblocks; block++)
+				for (block = 0 ; block < nblocks ; block++)
 				{
-					k1 = R[block];
-					k2 = R[block+1];
-					nk = k2 - k1;
+					k1 = R [block] ;
+					k2 = R [block+1] ;
+					nk = k2 - k1 ;
 					PRINTF (
 						"\n================KLU_refactor output: k1 %d k2 %d nk %d\n",
-						k1, k2, nk);
+						k1, k2, nk) ;
 					if (nk == 1)
 					{
-						PRINTF ("singleton  ");
-						PRINT_ENTRY (Udiag[k1]);
+						PRINTF ("singleton  ") ;
+						PRINT_ENTRY (Udiag [k1]) ;
 					}
 					else
 					{
-						Lip = Numeric.Lip + k1;
-						Llen = Numeric.Llen + k1;
-						LU = (Unit[]) Numeric.LUbx[block];
-						PRINTF ("\n---- L block %d\n", block);
-						ASSERT (Dklu_valid_LU.klu_valid_LU(nk, true, Lip, Llen, LU));
-						Uip = Numeric.Uip + k1;
-						Ulen = Numeric.Ulen + k1;
-						PRINTF ("\n---- U block %d\n", block);
-						ASSERT (Dklu_valid_LU.klu_valid_LU(nk, false, Uip, Ulen, LU));
+						Lip = Numeric.Lip + k1 ;
+						Llen = Numeric.Llen + k1 ;
+						LU = (double[]) Numeric.LUbx [block] ;
+						PRINTF ("\n---- L block %d\n", block) ;
+						ASSERT (Dklu_dump.klu_valid_LU (nk, TRUE, Lip, Llen,
+								LU)) ;
+						Uip = Numeric.Uip + k1 ;
+						Ulen = Numeric.Ulen + k1 ;
+						PRINTF ("\n---- U block %d\n", block) ;
+						ASSERT (Dklu_dump.klu_valid_LU (nk, FALSE, Uip, Ulen,
+								LU)) ;
 					}
 				}
 			}
 		}
 
-		return TRUE;
+		return (TRUE) ;
 	}
 
 }

@@ -39,6 +39,11 @@ public abstract class Dklu_internal extends Dklu_version {
 		}
 	}
 
+	protected static void ASSERT (int a)
+	{
+		ASSERT (a != 0) ;
+	}
+
 	/**
 	 * @return true if an integer (stored in double x) would overflow (or if
 	 * x is NaN)
@@ -46,11 +51,21 @@ public abstract class Dklu_internal extends Dklu_version {
 	protected static boolean INT_OVERFLOW (double x)
 	{
 		return ((!(x * (1.0+1e-8) <= (double) INT_MAX))
-	                        || SCALAR_IS_NAN (x)) ;
+							|| SCALAR_IS_NAN (x)) ;
 	}
 
 	protected static final int TRUE = 1 ;
 	protected static final int FALSE = 0 ;
+
+	protected static int MAX (int a, int b)
+	{
+		return a > b ?  a : b ;
+	}
+
+	protected static int MIN (int a, int b)
+	{
+		return a < b ?  a : b ;
+	}
 
 	protected static double MAX (double a, double b)
 	{

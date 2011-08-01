@@ -53,133 +53,133 @@ public class Dklu_scale extends Dklu_internal {
 	 * @return true if successful, false otherwise
 	 */
 	public static int klu_scale(int scale, int n, int[] Ap, int[] Ai,
-		    double[] Ax, double[] Rs, int[] W, KLU_common Common)
+			double[] Ax, double[] Rs, int[] W, KLU_common Common)
 	{
-		double a;
-	    Entry[] Az;
-	    int row, col, p, pend;
-	    boolean check_duplicates;
+		double a ;
+		double[] Az ;
+		int row, col, p, pend ;
+		boolean check_duplicates ;
 
-	    /* ------------------------------------------------------------------ */
-	    /* check inputs */
-	    /* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
+		/* check inputs */
+		/* ---------------------------------------------------------------------- */
 
-	    if (Common == null)
-	    {
-	        return FALSE;
-	    }
-	    Common.status = KLU_common.KLU_OK;
+		if (Common == null)
+		{
+			return (FALSE) ;
+		}
+		Common.status = KLU_OK ;
 
-	    if (scale < 0)
-	    {
-	        /* return without checking anything and without computing the
-	         * scale factors */
-	        return TRUE;
-	    }
+		if (scale < 0)
+		{
+			/* return without checking anything and without computing the
+			 * scale factors */
+			return (TRUE) ;
+		}
 
-	    Az = (Entry[]) Ax;
+		Az = (double[]) Ax ;
 
-	    if (n <= 0 || Ap == null || Ai == null || Az == null ||
-	        (scale > 0 && Rs == null))
-	    {
-	        /* Ap, Ai, Ax and Rs must be present, and n must be > 0 */
-	        Common.status = KLU_common.KLU_INVALID;
-	        return FALSE;
-	    }
-	    if (Ap[0] != 0 || Ap[n] < 0)
-	    {
-	        /* nz = Ap[n] must be >= 0 and Ap[0] must equal zero */
-	        Common.status = KLU_common.KLU_INVALID;
-	        return FALSE;
-	    }
-	    for (col = 0; col < n; col++)
-	    {
-	        if (Ap[col] > Ap[col+1])
-	        {
-	            /* column pointers must be non-decreasing */
-	            Common.status = KLU_common.KLU_INVALID;
-	            return FALSE;
-	        }
-	    }
+		if (n <= 0 || Ap == null || Ai == null || Az == null ||
+			(scale > 0 && Rs == null))
+		{
+			/* Ap, Ai, Ax and Rs must be present, and n must be > 0 */
+			Common.status = KLU_INVALID ;
+			return (FALSE) ;
+		}
+		if (Ap [0] != 0 || Ap [n] < 0)
+		{
+			/* nz = Ap [n] must be >= 0 and Ap [0] must equal zero */
+			Common.status = KLU_INVALID ;
+			return (FALSE) ;
+		}
+		for (col = 0 ; col < n ; col++)
+		{
+			if (Ap [col] > Ap [col+1])
+			{
+				/* column pointers must be non-decreasing */
+				Common.status = KLU_INVALID ;
+				return (FALSE) ;
+			}
+		}
 
-	    /* ------------------------------------------------------------------ */
-	    /* scale */
-	    /* ------------------------------------------------------------------ */
+		/* ---------------------------------------------------------------------- */
+		/* scale */
+		/* ---------------------------------------------------------------------- */
 
-	    if (scale > 0)
-	    {
-	        /* initialize row sum or row max*/
-	        for (row = 0; row < n; row++)
-	        {
-	            Rs[row] = 0;
-	        }
-	    }
+		if (scale > 0)
+		{
+			/* initialize row sum or row max */
+			for (row = 0 ; row < n ; row++)
+			{
+				Rs [row] = 0 ;
+			}
+		}
 
-	    /* check for duplicates only if W is present */
-	    check_duplicates = (W != null);
-	    if (check_duplicates)
-	    {
-	        for (row = 0; row < n; row++)
-	        {
-	            W[row] = EMPTY;
-	        }
-	    }
+		/* check for duplicates only if W is present */
+		check_duplicates = (W != null) ;
+		if (check_duplicates)
+		{
+			for (row = 0 ; row < n ; row++)
+			{
+				W [row] = EMPTY ;
+			}
+		}
 
-	    for (col = 0; col < n; col++)
-	    {
-	        pend = Ap[col+1];
-	        for (p = Ap[col]; p < pend; p++)
-	        {
-	            row = Ai[p];
-	            if (row < 0 || row >= n)
-	            {
-	                /* row index out of range, or duplicate entry */
-	                Common.status = KLU_common.KLU_INVALID;
-	                return FALSE;
-	            }
-	            if (check_duplicates)
-	            {
-	                if (W[row] == col)
-	                {
-	                    /* duplicate entry */
-	                    Common.status = KLU_common.KLU_INVALID;
-	                    return FALSE;
-	                }
-	                /* flag row i as appearing in column col */
-	                W[row] = col;
-	            }
-	            /* a = ABS (Az[p]);*/
-	            ABS (a, Az[p]);
-	            if (scale == 1)
-	            {
-	                /* accumulate the abs. row sum */
-	                Rs[row] += a;
-	            }
-	            else if (scale > 1)
-	            {
-	                /* find the maxabs. value in the row */
-	                Rs[row] = MAX (Rs[row], a);
-	            }
-	        }
-	    }
+		for (col = 0 ; col < n ; col++)
+		{
+			pend = Ap [col+1] ;
+			for (p = Ap [col] ; p < pend ; p++)
+			{
+				row = Ai [p] ;
+				if (row < 0 || row >= n)
+				{
+					/* row index out of range, or duplicate entry */
+					Common.status = KLU_INVALID ;
+					return (FALSE) ;
+				}
+				if (check_duplicates)
+				{
+					if (W [row] == col)
+					{
+						/* duplicate entry */
+						Common.status = KLU_INVALID ;
+						return (FALSE) ;
+					}
+					/* flag row i as appearing in column col */
+					W [row] = col ;
+				}
+				/* a = ABS (Az [p]) ;*/
+				ABS (a, Az [p]) ;
+				if (scale == 1)
+				{
+					/* accumulate the abs. row sum */
+					Rs [row] += a ;
+				}
+				else if (scale > 1)
+				{
+					/* find the max abs. value in the row */
+					Rs [row] = MAX (Rs [row], a) ;
+				}
+			}
+		}
 
-	    if (scale > 0)
-	    {
-	        /* do not scale empty rows */
-	        for (row = 0; row < n; row++)
-	        {
-	            /* matrix is singular */
-	            PRINTF ("Rs[%d] = %g\n", row, Rs[row]);
+		if (scale > 0)
+		{
+			/* do not scale empty rows */
+			for (row = 0 ; row < n ; row++)
+			{
+				/* matrix is singular */
+				PRINTF ("Rs [%d] = %g\n", row, Rs [row]) ;
 
-	            if (Rs[row] == 0.0)
-	            {
-	            	PRINTF ("Row %d of A is all zero\n", row);
-	                Rs[row] = 1.0;
-	            }
-	        }
-	    }
+				if (Rs [row] == 0.0)
+				{
+					PRINTF ("Row %d of A is all zero\n", row) ;
+					Rs [row] = 1.0 ;
+				}
+			}
+		}
 
-	    return TRUE;
+		return (TRUE) ;
 	}
 
 }
