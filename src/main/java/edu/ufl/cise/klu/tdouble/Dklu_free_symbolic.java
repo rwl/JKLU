@@ -37,7 +37,7 @@ public class Dklu_free_symbolic extends Dklu_internal
 			KLU_common Common)
 	{
 		KLU_symbolic Symbolic ;
-		int n ;
+
 		if (Common == null)
 		{
 			return (FALSE) ;
@@ -47,13 +47,19 @@ public class Dklu_free_symbolic extends Dklu_internal
 			return (TRUE) ;
 		}
 		Symbolic = SymbolicHandle ;
-		n = Symbolic.n ;
-		KLU_free (Symbolic.P, n, sizeof (Integer), Common) ;
-		KLU_free (Symbolic.Q, n, sizeof (Integer), Common) ;
-		KLU_free (Symbolic.R, n+1, sizeof (Integer), Common) ;
-		KLU_free (Symbolic.Lnz, n, sizeof (Souble), Common) ;
-		KLU_free (Symbolic, 1, sizeof (KLU_symbolic), Common) ;
+
+		//KLU_free (Symbolic.P, n, sizeof (Integer), Common) ;
+		Symbolic.P = null;
+		//KLU_free (Symbolic.Q, n, sizeof (Integer), Common) ;
+		Symbolic.Q = null;
+		//KLU_free (Symbolic.R, n+1, sizeof (Integer), Common) ;
+		Symbolic.R = null;
+		//KLU_free (Symbolic.Lnz, n, sizeof (Souble), Common) ;
+		Symbolic.Lnz = null;
+		//KLU_free (Symbolic, 1, sizeof (KLU_symbolic), Common) ;
+		Symbolic = null;
 		SymbolicHandle = null ;
+
 		return (TRUE) ;
 	}
 

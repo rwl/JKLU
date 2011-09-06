@@ -50,18 +50,18 @@ public class Dklu_defaults extends Dklu_internal
 		Common.btf = TRUE ;        /* use BTF pre-ordering, or not */
 		Common.maxwork = 0 ;       /* no limit to work done by btf_order */
 		Common.ordering = 0 ;      /* 0: AMD, 1: COLAMD, 2: user-provided P and Q,
-									 * 3: user-provided function */
+		                            * 3: user-provided function */
 		Common.scale = 2 ;         /* scale: -1: none, and do not check for errors
-									 * in the input matrix in KLU_refactor.
-									 * 0: none, but check for errors,
-									 * 1: sum, 2: max */
+		                            * in the input matrix in KLU_refactor.
+		                            * 0: none, but check for errors,
+		                            * 1: sum, 2: max */
 		Common.halt_if_singular = TRUE ;   /* quick halt if matrix is singular */
 
 		/* memory management routines */
-//	    Common.malloc_memory  = malloc ;
-//	    Common.calloc_memory  = calloc ;
-//	    Common.free_memory    = free ;
-//	    Common.realloc_memory = realloc ;
+//		Common.malloc_memory  = malloc ;
+//		Common.calloc_memory  = calloc ;
+//		Common.free_memory    = free ;
+//		Common.realloc_memory = realloc ;
 
 		/* user ordering function and optional argument */
 		Common.user_order = null ;

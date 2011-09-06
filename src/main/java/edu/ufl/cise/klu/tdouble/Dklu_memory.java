@@ -25,6 +25,7 @@
 package edu.ufl.cise.klu.tdouble;
 
 import edu.ufl.cise.klu.common.KLU_common;
+import edu.ufl.cise.klu.common.KLU_symbolic;
 
 /**
  * KLU memory management routines.
@@ -34,21 +35,21 @@ public class Dklu_memory extends Dklu_internal {
 	/**
 	 * Safely compute a+b, and check for int overflow.
 	 */
-	public static int klu_add_size_t(int a, int b, int ok)
-	{
-		(ok) = (ok != 0) && ((a + b) >= MAX (a,b)) ? 1 : 0;
-		return ((ok != 0) ? (a + b) : ((int) -1)) ;
-	}
-
-	public static int klu_mult_size_t(int a, int k, int ok)
-	{
-		int i, s = 0 ;
-		for (i = 0 ; i < k ; i++)
-		{
-			s = klu_add_size_t (s, a, ok) ;
-		}
-		return ((ok != 0) ? s : ((int) -1)) ;
-	}
+//	public static int klu_add_size_t(int a, int b, int ok)
+//	{
+//		(ok) = (ok != 0) && ((a + b) >= MAX (a,b)) ? 1 : 0;
+//		return ((ok != 0) ? (a + b) : ((int) -1)) ;
+//	}
+//
+//	public static int klu_mult_size_t(int a, int k, int ok)
+//	{
+//		int i, s = 0 ;
+//		for (i = 0 ; i < k ; i++)
+//		{
+//			s = klu_add_size_t (s, a, ok) ;
+//		}
+//		return ((ok != 0) ? s : ((int) -1)) ;
+//	}
 
 	/**
 	 * Wrapper around malloc routine (mxMalloc for a mexFunction).  Allocates
@@ -69,17 +70,16 @@ public class Dklu_memory extends Dklu_internal {
 	 * @param Common
 	 * @return
 	 */
-	public static Object klu_malloc(int n, int size, KLU_common Common)
+	public static Object klu_malloc(int n, Class<?> size, KLU_common Common)
 	{
-		Object p ;
-		int s ;
-		int ok = TRUE ;
+		Runtime runtime;
+		Object p = null;
 
 		if (Common == null)
 		{
 			p = null ;
 		}
-		else if (size == 0)
+		else if (size == null)
 		{
 			/* size must be > 0 */
 			Common.status = KLU_INVALID ;
@@ -94,18 +94,18 @@ public class Dklu_memory extends Dklu_internal {
 		}
 		else
 		{
-			/* call malloc, or its equivalent */
-			s = klu_mult_size_t (MAX (1,n), size, ok) ;
-			p = ok != 0 ? ((Common.malloc_memory) (s)) : null ;
-			if (p == null)
+			try
+			{
+				p = java.lang.reflect.Array.newInstance(size, n);
+				runtime = Runtime.getRuntime ();
+				Common.memusage = runtime.totalMemory () - runtime.freeMemory ();
+				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
+			}
+			catch (OutOfMemoryError e)
 			{
 				/* failure: out of memory */
 				Common.status = KLU_OUT_OF_MEMORY ;
-			}
-			else
-			{
-				Common.memusage += s ;
-				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
+				p = null;
 			}
 		}
 		return (p) ;
@@ -119,22 +119,22 @@ public class Dklu_memory extends Dklu_internal {
 	 * @param size size of each item
 	 * @param Common
 	 */
-	public static void klu_free(Object p, int n, int size,
-			KLU_common Common) {
-		int s ;
-		int ok = TRUE ;
-		if (p != null && Common != null)
-		{
-			/* only free the object if the pointer is not null */
-			/* call free, or its equivalent */
-			(Common.free_memory) (p) ;
-			s = klu_mult_size_t (MAX (1,n), size, &ok) ;
-			Common.memusage -= s ;
-		}
-		/* return null, and the caller should assign this to p.  This avoids
-		 * freeing the same pointer twice. */
-		//return (null) ;
-	}
+//	public static void klu_free(Object p, int n, int size,
+//			KLU_common Common) {
+//		int s ;
+//		int ok = TRUE ;
+//		if (p != null && Common != null)
+//		{
+//			/* only free the object if the pointer is not null */
+//			/* call free, or its equivalent */
+//			(Common.free_memory) (p) ;
+//			s = klu_mult_size_t (MAX (1,n), size, &ok) ;
+//			Common.memusage -= s ;
+//		}
+//		/* return null, and the caller should assign this to p.  This avoids
+//		 * freeing the same pointer twice. */
+//		//return (null) ;
+//	}
 
 	/**
 	 * Wrapper around realloc routine (mxRealloc for a mexFunction).  Given a

@@ -77,6 +77,11 @@ public abstract class Dklu_internal extends Dklu_version {
 		return a < b ?  a : b ;
 	}
 
+	protected static long MAX (long a, long b)
+	{
+		return a > b ?  a : b ;
+	}
+
 	/* FLIP is a "negation about -1", and is used to mark an integer i that is
 	 * normally non-negative.  FLIP (EMPTY) is EMPTY.  FLIP of a number > EMPTY
 	 * is negative, and FLIP of a number < EMTPY is positive.  FLIP (FLIP (i)) = i

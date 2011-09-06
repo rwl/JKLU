@@ -381,7 +381,9 @@ public class Dklu_demo {
 						REAL(x, j, xR[j]);
 						IMAG(x, j, xI[j]);
 					}
-				} else {
+				}
+				else
+				{
 					x = new double[nnz];
 					reader.readCoordinate(i, p, x);
 				}

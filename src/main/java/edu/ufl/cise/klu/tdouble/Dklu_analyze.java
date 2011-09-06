@@ -27,6 +27,8 @@ package edu.ufl.cise.klu.tdouble;
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
+import static edu.ufl.cise.klu.tdouble.Dklu_analyze_given.klu_analyze_given;
+
 /**
  * Orders and analyzes a matrix.
  *
@@ -474,8 +476,7 @@ public class Dklu_analyze extends Dklu_internal
 	 * @param Common
 	 * @return null if error, or a valid KLU_symbolic object if successful
 	 */
-	public static KLU_symbolic klu_analyze(int n, int[] Ap, int[] Ai,
-			KLU_common Common)
+	public static KLU_symbolic klu_analyze(int n, int[] Ap, int[] Ai, KLU_common Common)
 	{
 		/* ---------------------------------------------------------------------- */
 		/* get the control parameters for BTF and ordering method */
@@ -495,8 +496,7 @@ public class Dklu_analyze extends Dklu_internal
 		if (Common.ordering == 2)
 		{
 			/* natural ordering */
-			return (Dklu_analyze_given.klu_analyze_given (n, Ap, Ai, null,
-					null, Common)) ;
+			return (klu_analyze_given (n, Ap, Ai, null, null, Common)) ;
 		}
 		else
 		{
