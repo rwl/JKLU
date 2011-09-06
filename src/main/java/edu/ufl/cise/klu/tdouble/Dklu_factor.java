@@ -28,6 +28,9 @@ import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_int;
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
+
 /**
  * Factor the matrix, after ordering and analyzing it with KLU_analyze
  * or KLU_analyze_given.
@@ -470,7 +473,8 @@ public class Dklu_factor extends Dklu_internal
 		n1 = ((int) n) + 1 ;
 		nzoff1 = ((int) nzoff) + 1 ;
 
-		Numeric = Dklu_memory.klu_malloc (sizeof (KLU_numeric), 1, Common) ;
+		//Numeric = Dklu_memory.klu_malloc (sizeof (KLU_numeric), 1, Common) ;
+		Numeric = new KLU_numeric();
 		if (Common.status < KLU_OK)
 		{
 			/* out of memory */
@@ -480,19 +484,19 @@ public class Dklu_factor extends Dklu_internal
 		Numeric.n = n ;
 		Numeric.nblocks = nblocks ;
 		Numeric.nzoff = nzoff ;
-		Numeric.Pnum = Dklu_memory.klu_malloc (n, sizeof (Integer), Common) ;
-		Numeric.Offp = Dklu_memory.klu_malloc (n1, sizeof (Integer), Common) ;
-		Numeric.Offi = Dklu_memory.klu_malloc (nzoff1, sizeof (Integer), Common) ;
-		Numeric.Offx = Dklu_memory.klu_malloc (nzoff1, sizeof (double), Common) ;
+		Numeric.Pnum = klu_malloc_int (n, Common) ;
+		Numeric.Offp = klu_malloc_int (n1, Common) ;
+		Numeric.Offi = klu_malloc_int (nzoff1, Common) ;
+		Numeric.Offx = klu_malloc_dbl (nzoff1, Common) ;
 
-		Numeric.Lip  = Dklu_memory.klu_malloc (n, sizeof (Integer), Common) ;
-		Numeric.Uip  = Dklu_memory.klu_malloc (n, sizeof (Integer), Common) ;
-		Numeric.Llen = Dklu_memory.klu_malloc (n, sizeof (Integer), Common) ;
-		Numeric.Ulen = Dklu_memory.klu_malloc (n, sizeof (Integer), Common) ;
+		Numeric.Lip  = klu_malloc_int (n, Common) ;
+		Numeric.Uip  = klu_malloc_int (n, Common) ;
+		Numeric.Llen = klu_malloc_int (n, Common) ;
+		Numeric.Ulen = klu_malloc_int (n, Common) ;
 
-		Numeric.LUsize = Dklu_memory.klu_malloc (nblocks, sizeof (int), Common) ;
+		Numeric.LUsize = klu_malloc_int (nblocks, Common) ;
 
-		Numeric.LUbx = Dklu_memory.klu_malloc (nblocks, sizeof (double[]), Common) ;
+		Numeric.LUbx = klu_malloc (nblocks, sizeof (double[]), Common) ;
 		if (Numeric.LUbx != null)
 		{
 			for (k = 0 ; k < nblocks ; k++)
@@ -501,11 +505,11 @@ public class Dklu_factor extends Dklu_internal
 			}
 		}
 
-		Numeric.Udiag = Dklu_memory.klu_malloc (n, sizeof (double), Common) ;
+		Numeric.Udiag = klu_malloc_dbl (n, Common) ;
 
 		if (Common.scale > 0)
 		{
-			Numeric.Rs = Dklu_memory.klu_malloc (n, sizeof (Double), Common) ;
+			Numeric.Rs = klu_malloc_dbl (n, Common) ;
 		}
 		else
 		{
@@ -513,7 +517,7 @@ public class Dklu_factor extends Dklu_internal
 			Numeric.Rs = null ;
 		}
 
-		Numeric.Pinv = Dklu_memory.klu_malloc (n, sizeof (Int), Common) ;
+		Numeric.Pinv = klu_malloc_int (n, Common) ;
 
 		/* allocate permanent workspace for factorization and solve.  Note that the
 		 * solver will use an Xwork of size 4n, whereas the factorization codes use

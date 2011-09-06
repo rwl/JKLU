@@ -70,25 +70,13 @@ public class Dklu_memory extends Dklu_internal {
 	 * @param Common
 	 * @return
 	 */
-	public static Object klu_malloc(int n, Class<?> size, KLU_common Common)
+	public static int[] klu_malloc_int(int n, KLU_common Common)
 	{
 		Runtime runtime;
-		Object p = null;
+		int[] p = null;
 
-		if (Common == null)
+		if (n >= INT_MAX)
 		{
-			p = null ;
-		}
-		else if (size == null)
-		{
-			/* size must be > 0 */
-			Common.status = KLU_INVALID ;
-			p = null ;
-		}
-		else if (n >= INT_MAX)
-		{
-			/* object is too big to allocate; p[i] where i is an Int will not
-			 * be enough. */
 			Common.status = KLU_TOO_LARGE ;
 			p = null ;
 		}
@@ -96,7 +84,65 @@ public class Dklu_memory extends Dklu_internal {
 		{
 			try
 			{
-				p = java.lang.reflect.Array.newInstance(size, n);
+				p = new int[n];
+				runtime = Runtime.getRuntime ();
+				Common.memusage = runtime.totalMemory () - runtime.freeMemory ();
+				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
+			}
+			catch (OutOfMemoryError e)
+			{
+				/* failure: out of memory */
+				Common.status = KLU_OUT_OF_MEMORY ;
+				p = null;
+			}
+		}
+		return (p) ;
+	}
+
+	public static double[] klu_malloc_dbl(int n, KLU_common Common)
+	{
+		Runtime runtime;
+		double[] p = null;
+
+		if (n >= INT_MAX)
+		{
+			Common.status = KLU_TOO_LARGE ;
+			p = null ;
+		}
+		else
+		{
+			try
+			{
+				p = new double[n];
+				runtime = Runtime.getRuntime ();
+				Common.memusage = runtime.totalMemory () - runtime.freeMemory ();
+				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
+			}
+			catch (OutOfMemoryError e)
+			{
+				/* failure: out of memory */
+				Common.status = KLU_OUT_OF_MEMORY ;
+				p = null;
+			}
+		}
+		return (p) ;
+	}
+
+	public static double[][] klu_malloc_dbl2(int n, KLU_common Common)
+	{
+		Runtime runtime;
+		double[][] p = null;
+
+		if (n >= INT_MAX)
+		{
+			Common.status = KLU_TOO_LARGE ;
+			p = null ;
+		}
+		else
+		{
+			try
+			{
+				p = new double[n][n];
 				runtime = Runtime.getRuntime ();
 				Common.memusage = runtime.totalMemory () - runtime.freeMemory ();
 				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;

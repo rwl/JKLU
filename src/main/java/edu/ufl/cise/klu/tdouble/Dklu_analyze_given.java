@@ -27,7 +27,8 @@ package edu.ufl.cise.klu.tdouble;
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
-import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc;
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_int;
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
 import static edu.ufl.cise.klu.tdouble.Dklu_free_symbolic.klu_free_symbolic;
 
 import static edu.ufl.cise.btf.tdouble.Dbtf_strongcomp.btf_strongcomp;
@@ -94,7 +95,7 @@ public class Dklu_analyze_given extends Dklu_internal
 				return (null) ;
 			}
 		}
-		P = (int[]) klu_malloc (n, Integer.class, Common) ;
+		P = klu_malloc_int (n, Common) ;
 		if (Common.status < KLU_OK)
 		{
 			/* out of memory */
@@ -139,9 +140,9 @@ public class Dklu_analyze_given extends Dklu_internal
 			return (null) ;
 		}
 
-		Q = (int[]) klu_malloc (n, Integer.class, Common) ;
-		R = (int[]) klu_malloc (n+1, Integer.class, Common) ;
-		Lnz = (double[]) klu_malloc (n, Double.class, Common) ;
+		Q = klu_malloc_int(n, Common) ;
+		R = klu_malloc_int (n+1, Common) ;
+		Lnz = klu_malloc_dbl (n, Common) ;
 
 		Symbolic.n = n ;
 		Symbolic.nz = nz ;
@@ -153,7 +154,7 @@ public class Dklu_analyze_given extends Dklu_internal
 		if (Common.status < KLU_OK)
 		{
 			/* out of memory */
-			klu_free_symbolic (Symbolic, Common) ;
+			//klu_free_symbolic (Symbolic, Common) ;
 			Symbolic = null;
 			Common.status = KLU_OUT_OF_MEMORY ;
 			return (null) ;
@@ -240,11 +241,11 @@ public class Dklu_analyze_given extends Dklu_internal
 			int[] Pinv, Work, Bi ;
 			int k1, k2, nk, oldcol ;
 
-			Work = (int[]) klu_malloc (4*n, Integer.class, Common) ;
-			Pinv = (int[]) klu_malloc (n, Integer.class, Common) ;
+			Work = klu_malloc_int (4*n, Common) ;
+			Pinv = klu_malloc_int (n, Common) ;
 			if (Puser != null)
 			{
-				Bi = (int[]) klu_malloc (nz+1, Integer.class, Common) ;
+				Bi = klu_malloc_int (nz+1, Common) ;
 			}
 			else
 			{
@@ -263,7 +264,7 @@ public class Dklu_analyze_given extends Dklu_internal
 					//Dklu_memory.klu_free (Bi, nz+1, sizeof (int), Common) ;
 					Bi = null;
 				}
-				klu_free_symbolic (Symbolic, Common) ;
+				//klu_free_symbolic (Symbolic, Common) ;
 				Symbolic = null;
 				Common.status = KLU_OUT_OF_MEMORY ;
 				return (null) ;
