@@ -45,6 +45,6 @@ public class KLU_l_common
     long status, nrealloc, structural_rank, numerical_rank, singular_col,
         noffdiag;
     double flops, rcond, condest, rgrowth, work;
-    size_t memusage, mempeak;
+    long memusage, mempeak;
 
 }

@@ -28,8 +28,11 @@ import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
+import static edu.ufl.cise.klu.tdouble.Dklu_scale.klu_scale;
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_int;
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
+import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid_LU;
+import static edu.ufl.cise.klu.tdouble.Dklu.klu_kernel_factor;
 
 /**
  * Factor the matrix, after ordering and analyzing it with KLU_analyze
@@ -47,8 +50,8 @@ public class Dklu_factor extends Dklu_internal
 	 * @param Numeric
 	 * @param Common
 	 */
-	public static void factor2(int[] Ap, int[] Ai, double[] Ax,
-			KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common Common)
+	public static void factor2(final int[] Ap, final int[] Ai, final double[] Ax,
+			final KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common Common)
 	{
 		double lsize ;
 		double[] Lnz, Rs ;
@@ -77,20 +80,20 @@ public class Dklu_factor extends Dklu_internal
 		Pnum = Numeric.Pnum ;
 		Offp = Numeric.Offp ;
 		Offi = Numeric.Offi ;
-		Offx = (double[]) Numeric.Offx ;
+		Offx = Numeric.Offx ;
 
 		Lip = Numeric.Lip ;
 		Uip = Numeric.Uip ;
 		Llen = Numeric.Llen ;
 		Ulen = Numeric.Ulen ;
-		LUbx = (double[][]) Numeric.LUbx ;
+		LUbx = Numeric.LUbx ;
 		Udiag = Numeric.Udiag ;
 
 		Rs = Numeric.Rs ;
 		Pinv = Numeric.Pinv ;
-		X = (double[]) Numeric.Xwork ;              /* X is of size n */
-		Iwork = Numeric.Iwork ;                    /* 5*maxblock for KLU_factor */
-													/* 1*maxblock for Pblock */
+		X = Numeric.Xwork ;              /* X is of size n */
+		Iwork = Numeric.Iwork ;          /* 5*maxblock for KLU_factor */
+		                                 /* 1*maxblock for Pblock */								/* 1*maxblock for Pblock */
 		Pblock = Iwork + 5*((int) Symbolic.maxblock) ;
 		Common.nrealloc = 0 ;
 		scale = Common.scale ;
@@ -135,7 +138,7 @@ public class Dklu_factor extends Dklu_internal
 			 * the scale factors are permuted according to the final pivot row
 			 * permutation, so that Rs [k] is the scale factor for the kth row of
 			 * A(p,q) where p and q are the final row and column permutations. */
-			Dklu_scale.klu_scale (scale, n, Ap, Ai, (double[]) Ax, Rs, Pnum, Common) ;
+			klu_scale (scale, n, Ap, Ai, Ax, Rs, Pnum, Common) ;
 			if (Common.status < KLU_OK)
 			{
 				/* matrix is invalid */
@@ -177,7 +180,8 @@ public class Dklu_factor extends Dklu_internal
 				poff = Offp [k1] ;
 				oldcol = Q [k1] ;
 				pend = Ap [oldcol+1] ;
-				CLEAR (s) ;
+				//CLEAR (s) ;
+				s = 0.0;
 
 				if (scale <= 0)
 				{
@@ -216,7 +220,7 @@ public class Dklu_factor extends Dklu_internal
 						{
 							Offi [poff] = oldrow ;
 							/* Offx [poff] = Ax [p] / Rs [oldrow] ; */
-							SCALE_DIV_ASSIGN (Offx [poff], Ax [p], Rs [oldrow]) ;
+							Offx [poff] = SCALE_DIV_ASSIGN (Ax [p], Rs [oldrow]) ;
 							poff++ ;
 						}
 						else
@@ -224,7 +228,7 @@ public class Dklu_factor extends Dklu_internal
 							ASSERT (newrow == k1) ;
 							PRINTF ("singleton block %d ", block) ;
 							PRINT_ENTRY (Ax[p]) ;
-							SCALE_DIV_ASSIGN (s, Ax [p], Rs [oldrow]) ;
+							s = SCALE_DIV_ASSIGN (Ax [p], Rs [oldrow]) ;
 						}
 					}
 				}
@@ -268,7 +272,7 @@ public class Dklu_factor extends Dklu_internal
 				}
 
 				/* allocates 1 arrays: LUbx [block] */
-				Numeric.LUsize [block] = Dklu.klu_kernel_factor (
+				Numeric.LUsize [block] = klu_kernel_factor (
 						nk, Ap, Ai, Ax, Q,
 						lsize, LUbx [block], Udiag + k1, Llen + k1, Ulen + k1,
 						Lip + k1, Uip + k1, Pblock, lnz_block, unz_block,
@@ -283,10 +287,10 @@ public class Dklu_factor extends Dklu_internal
 				}
 
 				PRINTF ("\n----------------------- L %d:\n", block) ;
-				ASSERT (Dklu_dump.klu_valid_LU (nk, TRUE, Lip+k1, Llen+k1,
+				ASSERT (klu_valid_LU (nk, TRUE, Lip+k1, Llen+k1,
 						LUbx [block])) ;
 				PRINTF ("\n----------------------- U %d:\n", block) ;
-				ASSERT (Dklu_dump.klu_valid_LU (nk, FALSE, Uip+k1, Ulen+k1,
+				ASSERT (klu_valid_LU (nk, FALSE, Uip+k1, Ulen+k1,
 						LUbx [block])) ;
 
 				/* -------------------------------------------------------------- */
@@ -538,7 +542,8 @@ public class Dklu_factor extends Dklu_internal
 			/* out of memory or problem too large */
 			Common.status = ok == 1 ? KLU_OUT_OF_MEMORY :
 					KLU_TOO_LARGE ;
-			Dklu_free_numeric.klu_free_numeric (Numeric, Common) ;
+			//klu_free_numeric (Numeric, Common) ;
+			Numeric = null;
 			return (null) ;
 		}
 
@@ -546,7 +551,7 @@ public class Dklu_factor extends Dklu_internal
 		/* factorize the blocks */
 		/* ---------------------------------------------------------------------- */
 
-		factor2 (Ap, Ai, (double[]) Ax, Symbolic, Numeric, Common) ;
+		factor2 (Ap, Ai, Ax, Symbolic, Numeric, Common) ;
 
 		/* ---------------------------------------------------------------------- */
 		/* return or free the Numeric object */

@@ -160,22 +160,22 @@ public abstract class Dklu_version {
 	/**
 	 * c = (s1) + (s2)*i
 	 */
-	protected static void ASSIGN (Double c, double[] s1, double[] s2, int p,
-			boolean split)
-	{
-		c = s1[p] ;
-	}
+//	protected static void ASSIGN (Double c, double[] s1, double[] s2, int p,
+//			boolean split)
+//	{
+//		c = s1[p] ;
+//	}
 
-	protected static void CLEAR (Double c)
-	{
-		c = 0.0 ;
-	}
+//	protected static void CLEAR (Double c)
+//	{
+//		c = 0.0 ;
+//	}
 
-	protected static void CLEAR_AND_INCREMENT (Double p)
-	{
-		p = 0.0 ;
-		p++ ;
-	}
+//	protected static void CLEAR_AND_INCREMENT (Double p)
+//	{
+//		p = 0.0 ;
+//		p++ ;
+//	}
 
 	/**
 	 * @return True if a is NaN
@@ -204,132 +204,132 @@ public abstract class Dklu_version {
 	/**
 	 * c /= s
 	 */
-	protected static void SCALE_DIV (Double c, double s)
-	{
-		c /= s ;
-	}
+//	protected static void SCALE_DIV (Double c, double s)
+//	{
+//		c /= s ;
+//	}
 
 	/**
 	 * a = c/s
 	 */
-	protected static void SCALE_DIV_ASSIGN (Double a, double c, double s)
+	protected static double SCALE_DIV_ASSIGN (double c, double s)
 	{
-		a = c / s ;
+		return c / s ;
 	}
 
 	/**
 	 * c *= s
 	 */
-	protected static void SCALE (Double c, double s)
-	{
-		c *= s ;
-	}
+//	protected static void SCALE (Double c, double s)
+//	{
+//		c *= s ;
+//	}
 
 	/**
 	 * c += a
 	 */
-	protected static void ASSEMBLE (Double c, double a)
-	{
-		c += a ;
-	}
+//	protected static void ASSEMBLE (Double c, double a)
+//	{
+//		c += a ;
+//	}
 
 	/**
 	 * c += *p++
 	 */
-	protected static void ASSEMBLE_AND_INCREMENT (Double c, double p)
-	{
-		c += p++ ;
-	}
+//	protected static void ASSEMBLE_AND_INCREMENT (Double c, double p)
+//	{
+//		c += p++ ;
+//	}
 
 	/**
 	 * c -= a
 	 */
-	protected static void DECREMENT (Double c, double a)
-	{
-		c -= a ;
-	}
+//	protected static void DECREMENT (Double c, double a)
+//	{
+//		c -= a ;
+//	}
 
 	/**
 	 * c = a*b
 	 */
-	protected static void MULT (Double c, double a,  double b)
-	{
-		c = a * b ;
-	}
+//	protected static void MULT (Double c, double a,  double b)
+//	{
+//		c = a * b ;
+//	}
 
 	/**
 	 * c = a*conjugate(b)
 	 */
-	protected static void MULT_CONJ (Double c, double a, double b)
-	{
-		c = a * b ;
-	}
+//	protected static void MULT_CONJ (Double c, double a, double b)
+//	{
+//		c = a * b ;
+//	}
 
 	/**
 	 * c -= a*b
 	 */
-	protected static void MULT_SUB (Double c, double a, double b)
-	{
-		c -= a * b ;
-	}
-
-	/**
-	 * c -= a*conjugate(b)
-	 */
-	protected static void MULT_SUB_CONJ (Double c, double a, double b)
-	{
-		c -= a * b ;
-	}
-
-	/**
-	 * c = a/b
-	 */
-	protected static void DIV (Double c, double a, double b)
-	{
-		c = a / b ;
-	}
-
-	/**
-	 * c = 1/c
-	 */
-	protected static void RECIPROCAL (Double c)
-	{
-		c = 1.0 / c ;
-	}
-
-	/**
-	 * c = a/conjugate(b)
-	 */
-	protected static void DIV_CONJ (Double c, double a, double b)
-	{
-		c = a / b ;
-	}
-
-	/**
-	 * approximate absolute value, s = |r|+|i|
-	 */
-	protected static void APPROX_ABS (Double s, double a)
-	{
-		s = SCALAR_ABS (a) ;
-	}
-
-	/**
-	 * exact absolute value, s = sqrt (a.real^2 + amag^2)
-	 */
-	protected static void ABS (Double s, double a)
-	{
-		s = SCALAR_ABS (a) ;
-	}
+//	protected static void MULT_SUB (Double c, double a, double b)
+//	{
+//		c -= a * b ;
+//	}
+//
+//	/**
+//	 * c -= a*conjugate(b)
+//	 */
+//	protected static void MULT_SUB_CONJ (Double c, double a, double b)
+//	{
+//		c -= a * b ;
+//	}
+//
+//	/**
+//	 * c = a/b
+//	 */
+//	protected static void DIV (Double c, double a, double b)
+//	{
+//		c = a / b ;
+//	}
+//
+//	/**
+//	 * c = 1/c
+//	 */
+//	protected static void RECIPROCAL (Double c)
+//	{
+//		c = 1.0 / c ;
+//	}
+//
+//	/**
+//	 * c = a/conjugate(b)
+//	 */
+//	protected static void DIV_CONJ (Double c, double a, double b)
+//	{
+//		c = a / b ;
+//	}
+//
+//	/**
+//	 * approximate absolute value, s = |r|+|i|
+//	 */
+//	protected static void APPROX_ABS (Double s, double a)
+//	{
+//		s = SCALAR_ABS (a) ;
+//	}
+//
+//	/**
+//	 * exact absolute value, s = sqrt (a.real^2 + amag^2)
+//	 */
+//	protected static void ABS (Double s, double a)
+//	{
+//		s = SCALAR_ABS (a) ;
+//	}
 
 	protected static void PRINT_ENTRY (double a)
 	{
 		PRINT_SCALAR (a) ;
 	}
 
-	protected static void CONJ (Double a, double x)
-	{
-		a = x ;
-	}
+//	protected static void CONJ (Double a, double x)
+//	{
+//		a = x ;
+//	}
 
 	/* for flop counts */
 	protected static final double MULTSUB_FLOPS   = 2.0 ;      /* c -= a*b */

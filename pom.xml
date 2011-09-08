@@ -16,5 +16,15 @@
   		<artifactId>BTFJ</artifactId>
   		<version>1.1.2-SNAPSHOT</version>
   	</dependency>
+  	<dependency>
+  		<groupId>edu.ufl.cise</groupId>
+  		<artifactId>AMDJ</artifactId>
+  		<version>2.2.2-SNAPSHOT</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>edu.ufl.cise</groupId>
+  		<artifactId>COLAMDJ</artifactId>
+  		<version>2.7.3-SNAPSHOT</version>
+  	</dependency>
   </dependencies>
 </project>

@@ -29,7 +29,6 @@ import edu.ufl.cise.klu.common.KLU_symbolic;
 
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_int;
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
-import static edu.ufl.cise.klu.tdouble.Dklu_free_symbolic.klu_free_symbolic;
 
 import static edu.ufl.cise.btf.tdouble.Dbtf_strongcomp.btf_strongcomp;
 
@@ -129,16 +128,16 @@ public class Dklu_analyze_given extends Dklu_internal
 		/* allocate the Symbolic object */
 		/* ---------------------------------------------------------------------- */
 
-		//Symbolic = klu_malloc (KLU_symbolic.class, 1, Common) ;
+//		Symbolic = klu_malloc (KLU_symbolic.class, 1, Common) ;
 		Symbolic = new KLU_symbolic();
-		if (Common.status < KLU_OK)
-		{
-			/* out of memory */
-			//klu_free (P, n, sizeof (int), Common) ;
-			P = null;
-			Common.status = KLU_OUT_OF_MEMORY ;
-			return (null) ;
-		}
+//		if (Common.status < KLU_OK)
+//		{
+//			/* out of memory */
+//			//klu_free (P, n, sizeof (int), Common) ;
+//			P = null;
+//			Common.status = KLU_OUT_OF_MEMORY ;
+//			return (null) ;
+//		}
 
 		Q = klu_malloc_int(n, Common) ;
 		R = klu_malloc_int (n+1, Common) ;
@@ -255,16 +254,16 @@ public class Dklu_analyze_given extends Dklu_internal
 			if (Common.status < KLU_OK)
 			{
 				/* out of memory */
-				//Dklu_memory.klu_free (Work, 4*n, sizeof (int), Common) ;
+//				klu_free (Work, 4*n, sizeof (int), Common) ;
 				Work = null;
-				//Dklu_memory.klu_free (Pinv, n, sizeof (int), Common) ;
+//				klu_free (Pinv, n, sizeof (int), Common) ;
 				Pinv = null;
 				if (Puser != null)
 				{
-					//Dklu_memory.klu_free (Bi, nz+1, sizeof (int), Common) ;
+//					klu_free (Bi, nz+1, sizeof (int), Common) ;
 					Bi = null;
 				}
-				//klu_free_symbolic (Symbolic, Common) ;
+//				klu_free_symbolic (Symbolic, Common) ;
 				Symbolic = null;
 				Common.status = KLU_OUT_OF_MEMORY ;
 				return (null) ;
@@ -363,13 +362,13 @@ public class Dklu_analyze_given extends Dklu_internal
 			/* free all workspace */
 			/* ------------------------------------------------------------------ */
 
-			//Dklu_memory.klu_free (Work, 4*n, sizeof (int), Common) ;
+//			klu_free (Work, 4*n, sizeof (int), Common) ;
 			Work = null;
-			//Dklu_memory.klu_free (Pinv, n, sizeof (int), Common) ;
+//			klu_free (Pinv, n, sizeof (int), Common) ;
 			Pinv = null;
 			if (Puser != null)
 			{
-				//Dklu_memory.klu_free (Bi, nz+1, sizeof (int), Common) ;
+//				klu_free (Bi, nz+1, sizeof (int), Common) ;
 				Bi = null;
 			}
 
