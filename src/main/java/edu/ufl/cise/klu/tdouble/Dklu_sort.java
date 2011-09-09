@@ -28,6 +28,10 @@ import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
+import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid_LU;
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_int;
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
+
 /**
  * Sorts the columns of L and U so that the row indices appear in strictly
  * increasing order.
@@ -38,14 +42,14 @@ public class Dklu_sort extends Dklu_internal {
 	/**
 	 * Sort L or U using a double-transpose.
 	 */
-	public static void sort(int n, int[] Xip, int[] Xlen, double LU, int[] Tp,
-			int[] Tj, double Tx, int[] W)
+	public static void sort(int n, int[] Xip, int[] Xlen, double[] LU, int[] Tp,
+			int[] Tj, double[] Tx, int[] W)
 	{
 		int[] Xi ;
-		double Xx ;
+		double[] Xx ;
 		int p, i, j, len, nz, tp, xlen, pend ;
 
-		ASSERT (Dklu_dump.klu_valid_LU (n, FALSE, Xip, Xlen, LU)) ;
+		ASSERT (klu_valid_LU (n, FALSE, Xip, Xlen, LU)) ;
 
 		/* count the number of entries in each row of L or U */
 		for (i = 0 ; i < n ; i++)
@@ -104,7 +108,7 @@ public class Dklu_sort extends Dklu_internal {
 			}
 		}
 
-		ASSERT (Dklu_dump.klu_valid_LU (n, FALSE, Xip, Xlen, LU)) ;
+		ASSERT (klu_valid_LU (n, FALSE, Xip, Xlen, LU)) ;
 	}
 
 
@@ -112,7 +116,7 @@ public class Dklu_sort extends Dklu_internal {
 			KLU_common Common)
 	{
 		int[] R, W, Tp, Ti, Lip, Uip, Llen, Ulen ;
-		double Tx ;
+		double[] Tx ;
 		double[][] LUbx ;
 		int n, nk, nz, block, nblocks, maxblock, k1 ;
 		int m1 ;
@@ -138,10 +142,10 @@ public class Dklu_sort extends Dklu_internal {
 
 		/* allocate workspace */
 		nz = MAX (Numeric.max_lnz_block, Numeric.max_unz_block) ;
-		W  = KLU_malloc (maxblock, sizeof (Int), Common) ;
-		Tp = KLU_malloc (m1, sizeof (Int), Common) ;
-		Ti = KLU_malloc (nz, sizeof (Int), Common) ;
-		Tx = KLU_malloc (nz, sizeof (double), Common) ;
+		W  = klu_malloc_int (maxblock, Common) ;
+		Tp = klu_malloc_int (m1, Common) ;
+		Ti = klu_malloc_int (nz, Common) ;
+		Tx = klu_malloc_dbl (nz, Common) ;
 
 		PRINTF ("\n======================= Start sort:\n") ;
 
@@ -164,11 +168,16 @@ public class Dklu_sort extends Dklu_internal {
 		PRINTF ("\n======================= sort done.\n") ;
 
 		/* free workspace */
-		KLU_free (W, maxblock, sizeof (Int), Common) ;
-		KLU_free (Tp, m1, sizeof (Int), Common) ;
-		KLU_free (Ti, nz, sizeof (Int), Common) ;
-		KLU_free (Tx, nz, sizeof (double), Common) ;
-		return (Common.status == KLU_OK) ;
+		W = null;
+		//KLU_free (W, maxblock, sizeof (Int), Common) ;
+		Tp = null;
+		//KLU_free (Tp, m1, sizeof (Int), Common) ;
+		Ti = null;
+		//KLU_free (Ti, nz, sizeof (Int), Common) ;
+		Tx = null;
+		//KLU_free (Tx, nz, sizeof (double), Common) ;
+
+		return (Common.status == KLU_OK ? 1 : 0) ;
 	}
 
 }

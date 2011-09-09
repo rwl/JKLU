@@ -128,35 +128,6 @@ public class Dklu_memory extends Dklu_internal {
 		return (p) ;
 	}
 
-	public static double[][] klu_malloc_dbl2(int n, KLU_common Common)
-	{
-		Runtime runtime;
-		double[][] p = null;
-
-		if (n >= INT_MAX)
-		{
-			Common.status = KLU_TOO_LARGE ;
-			p = null ;
-		}
-		else
-		{
-			try
-			{
-				p = new double[n][n];
-				runtime = Runtime.getRuntime ();
-				Common.memusage = runtime.totalMemory () - runtime.freeMemory ();
-				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
-			}
-			catch (OutOfMemoryError e)
-			{
-				/* failure: out of memory */
-				Common.status = KLU_OUT_OF_MEMORY ;
-				p = null;
-			}
-		}
-		return (p) ;
-	}
-
 	/**
 	 * Wrapper around free routine.
 	 *
@@ -206,8 +177,8 @@ public class Dklu_memory extends Dklu_internal {
 	 * @param Common
 	 * @return pointer to reallocated block
 	 */
-	public static Object klu_realloc(int nnew, int nold, int size,
-			Object p, KLU_common Common)
+	public static int[] klu_realloc(int nnew, int nold, int size,
+			int[] p, KLU_common Common)
 	{
 		Object pnew ;
 		int snew, sold ;
@@ -226,7 +197,7 @@ public class Dklu_memory extends Dklu_internal {
 		else if (p == null)
 		{
 			/* A fresh object is being allocated. */
-			p = klu_malloc (nnew, size, Common) ;
+			p = klu_malloc_int (nnew, Common) ;
 		}
 		else if (nnew >= INT_MAX)
 		{

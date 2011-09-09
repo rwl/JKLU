@@ -144,18 +144,18 @@ public abstract class Dklu_version {
 	/**
 	 * @return real part of c
 	 */
-	protected static double REAL (double c)
-	{
-		return c ;
-	}
+//	protected static double REAL (double c)
+//	{
+//		return c ;
+//	}
 
 	/**
 	 * @return imag part of c
 	 */
-	protected static double IMAG (double c)
-	{
-		return 0.0 ;
-	}
+//	protected static double IMAG (double c)
+//	{
+//		return 0.0 ;
+//	}
 
 	/**
 	 * c = (s1) + (s2)*i
@@ -212,10 +212,10 @@ public abstract class Dklu_version {
 	/**
 	 * a = c/s
 	 */
-	protected static double SCALE_DIV_ASSIGN (double c, double s)
-	{
-		return c / s ;
-	}
+//	protected static double SCALE_DIV_ASSIGN (double c, double s)
+//	{
+//		return c / s ;
+//	}
 
 	/**
 	 * c *= s

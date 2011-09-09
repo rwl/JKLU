@@ -88,9 +88,19 @@ public abstract class Dklu_internal extends Dklu_version {
 	 * for all integers i.  UNFLIP (i) is >= EMPTY. */
 	protected static final int EMPTY = -1 ;
 
+	protected static int FLIP (int i)
+	{
+		return -i - 2 ;
+	}
+
 	protected static double FLIP (double i)
 	{
 		return -i - 2 ;
+	}
+
+	protected static int UNFLIP (int i)
+	{
+		return (i < EMPTY) ? FLIP (i) : i ;
 	}
 
 	protected static double UNFLIP (double i)

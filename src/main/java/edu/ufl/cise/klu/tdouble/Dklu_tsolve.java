@@ -28,6 +28,8 @@ import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
+import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid;
+
 /**
  * Solve A'x=b using the symbolic and numeric objects from KLU_analyze
  * (or KLU_analyze_given) and KLU_factor.  Note that no iterative refinement is
@@ -80,7 +82,7 @@ public class Dklu_tsolve extends Dklu_internal {
 		/* get the contents of the Symbolic object */
 		/* ---------------------------------------------------------------------- */
 
-		Bz = (double[]) B ;
+		Bz = B ;
 		n = Symbolic.n ;
 		nblocks = Symbolic.nblocks ;
 		Q = Symbolic.Q ;
@@ -94,18 +96,18 @@ public class Dklu_tsolve extends Dklu_internal {
 		Pnum = Numeric.Pnum ;
 		Offp = Numeric.Offp ;
 		Offi = Numeric.Offi ;
-		Offx = (double[]) Numeric.Offx ;
+		Offx = Numeric.Offx ;
 
 		Lip  = Numeric.Lip ;
 		Llen = Numeric.Llen ;
 		Uip  = Numeric.Uip ;
 		Ulen = Numeric.Ulen ;
-		LUbx = (double[][]) Numeric.LUbx ;
+		LUbx = Numeric.LUbx ;
 		Udiag = Numeric.Udiag ;
 
 		Rs = Numeric.Rs ;
-		X = (double[]) Numeric.Xwork ;
-		ASSERT (Dklu_dump.klu_valid (n, Offp, Offi, Offx)) ;
+		X = Numeric.Xwork ;
+		ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 
 		/* ---------------------------------------------------------------------- */
 		/* solve in chunks of 4 columns at a time */
@@ -203,7 +205,8 @@ public class Dklu_tsolve extends Dklu_internal {
 								for (p = Offp [k] ; p < pend ; p++)
 								{
 									{
-										MULT_SUB (X [k], Offx [p], X [Offi [p]]) ;
+										X [k] -= Offx [p] * X [Offi [p]] ;
+										//MULT_SUB (X [k], Offx [p], X [Offi [p]]) ;
 									}
 								}
 							}
@@ -222,8 +225,10 @@ public class Dklu_tsolve extends Dklu_internal {
 									{
 										offik = Offx [p] ;
 									}
-									MULT_SUB (x [0], offik, X [2*i]) ;
-									MULT_SUB (x [1], offik, X [2*i + 1]) ;
+									x [0] -= offik * X [2*i] ;
+									//MULT_SUB (x [0], offik, X [2*i]) ;
+									x [1] -= offik * X [2*i + 1] ;
+									//MULT_SUB (x [1], offik, X [2*i + 1]) ;
 								}
 								X [2*k    ] = x [0] ;
 								X [2*k + 1] = x [1] ;
@@ -244,9 +249,12 @@ public class Dklu_tsolve extends Dklu_internal {
 									{
 										offik = Offx [p] ;
 									}
-									MULT_SUB (x [0], offik, X [3*i]) ;
-									MULT_SUB (x [1], offik, X [3*i + 1]) ;
-									MULT_SUB (x [2], offik, X [3*i + 2]) ;
+									x [0] -= offik * X [3*i] ;
+									//MULT_SUB (x [0], offik, X [3*i]) ;
+									x [1] -= offik * X [3*i + 1] ;
+									//MULT_SUB (x [1], offik, X [3*i + 1]) ;
+									x [2] -= offik * X [3*i + 2] ;
+									//MULT_SUB (x [2], offik, X [3*i + 2]) ;
 								}
 								X [3*k    ] = x [0] ;
 								X [3*k + 1] = x [1] ;
@@ -269,10 +277,14 @@ public class Dklu_tsolve extends Dklu_internal {
 									{
 										offik = Offx [p] ;
 									}
-									MULT_SUB (x [0], offik, X [4*i]) ;
-									MULT_SUB (x [1], offik, X [4*i + 1]) ;
-									MULT_SUB (x [2], offik, X [4*i + 2]) ;
-									MULT_SUB (x [3], offik, X [4*i + 3]) ;
+									x [0] -= offik * X [4*i] ;
+									//MULT_SUB (x [0], offik, X [4*i]) ;
+									x [1] -= offik * X [4*i + 1] ;
+									//MULT_SUB (x [1], offik, X [4*i + 1]) ;
+									x [2] -= offik * X [4*i + 2] ;
+									//MULT_SUB (x [2], offik, X [4*i + 2]) ;
+									x [3] -= offik * X [4*i + 3] ;
+									//MULT_SUB (x [3], offik, X [4*i + 3]) ;
 								}
 								X [4*k    ] = x [0] ;
 								X [4*k + 1] = x [1] ;
@@ -296,25 +308,35 @@ public class Dklu_tsolve extends Dklu_internal {
 					{
 
 						case 1:
-							DIV (X [k1], X [k1], s) ;
+							X [k1] = X [k1] / s ;
+							//DIV (X [k1], X [k1], s) ;
 							break ;
 
 						case 2:
-							DIV (X [2*k1], X [2*k1], s) ;
-							DIV (X [2*k1 + 1], X [2*k1 + 1], s) ;
+							X [2*k1] = X [2*k1] / s ;
+							//DIV (X [2*k1], X [2*k1], s) ;
+							X [2*k1 + 1] = X [2*k1 + 1] / s ;
+							//DIV (X [2*k1 + 1], X [2*k1 + 1], s) ;
 							break ;
 
 						case 3:
-							DIV (X [3*k1], X [3*k1], s) ;
-							DIV (X [3*k1 + 1], X [3*k1 + 1], s) ;
-							DIV (X [3*k1 + 2], X [3*k1 + 2], s) ;
+							X [3*k1] = X [3*k1] / s ;
+							//DIV (X [3*k1], X [3*k1], s) ;
+							X [3*k1 + 1] = X [3*k1 + 1] / s ;
+							//DIV (X [3*k1 + 1], X [3*k1 + 1], s) ;
+							X [3*k1 + 2] = X [3*k1 + 2] / s ;
+							//DIV (X [3*k1 + 2], X [3*k1 + 2], s) ;
 							break ;
 
 						case 4:
-							DIV (X [4*k1], X [4*k1], s) ;
-							DIV (X [4*k1 + 1], X [4*k1 + 1], s) ;
-							DIV (X [4*k1 + 2], X [4*k1 + 2], s) ;
-							DIV (X [4*k1 + 3], X [4*k1 + 3], s) ;
+							X [4*k1] = X [4*k1] / s ;
+							//DIV (X [4*k1], X [4*k1], s) ;
+							X [4*k1 + 1] = X [4*k1 + 1] / s ;
+							//DIV (X [4*k1 + 1], X [4*k1 + 1], s) ;
+							X [4*k1 + 2] = X [4*k1 + 2] / s ;
+							//DIV (X [4*k1 + 2], X [4*k1 + 2], s) ;
+							X [4*k1 + 3] = X [4*k1 + 3] / s ;
+							//DIV (X [4*k1 + 3], X [4*k1 + 3], s) ;
 							break ;
 
 					}
@@ -322,8 +344,7 @@ public class Dklu_tsolve extends Dklu_internal {
 				else
 				{
 					KLU_utsolve (nk, Uip + k1, Ulen + k1, LUbx [block],
-							Udiag + k1, nr,
-							X + nr*k1) ;
+							Udiag + k1, nr, X + nr*k1) ;
 					KLU_ltsolve (nk, Lip + k1, Llen + k1, LUbx [block], nr,
 							X + nr*k1) ;
 				}
@@ -393,7 +414,8 @@ public class Dklu_tsolve extends Dklu_internal {
 
 						for (k = 0 ; k < n ; k++)
 						{
-							SCALE_DIV_ASSIGN (Bz [Pnum [k]], X [k], Rs [k]) ;
+							Bz [Pnum [k]] = X [k] / Rs [k] ;
+							//SCALE_DIV_ASSIGN (Bz [Pnum [k]], X [k], Rs [k]) ;
 						}
 						break ;
 
@@ -403,8 +425,10 @@ public class Dklu_tsolve extends Dklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							SCALE_DIV_ASSIGN (Bz [i], X [2*k], rs) ;
-							SCALE_DIV_ASSIGN (Bz [i + d], X [2*k + 1], rs) ;
+							Bz [i] = X [2*k] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i], X [2*k], rs) ;
+							Bz [i + d] = X [2*k + 1] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i + d], X [2*k + 1], rs) ;
 						}
 						break ;
 
@@ -414,9 +438,12 @@ public class Dklu_tsolve extends Dklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							SCALE_DIV_ASSIGN (Bz [i], X [3*k], rs) ;
-							SCALE_DIV_ASSIGN (Bz [i + d], X [3*k + 1], rs) ;
-							SCALE_DIV_ASSIGN (Bz [i + d*2], X [3*k + 2], rs) ;
+							Bz [i] = X [3*k] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i], X [3*k], rs) ;
+							Bz [i + d] = X [3*k + 1] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i + d], X [3*k + 1], rs) ;
+							Bz [i + d*2] = X [3*k + 2] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i + d*2], X [3*k + 2], rs) ;
 						}
 						break ;
 
@@ -426,10 +453,14 @@ public class Dklu_tsolve extends Dklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							SCALE_DIV_ASSIGN (Bz [i], X [4*k], rs) ;
-							SCALE_DIV_ASSIGN (Bz [i + d], X [4*k + 1], rs) ;
-							SCALE_DIV_ASSIGN (Bz [i + d*2], X [4*k + 2], rs) ;
-							SCALE_DIV_ASSIGN (Bz [i + d*3], X [4*k + 3], rs) ;
+							Bz [i] = X [4*k] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i], X [4*k], rs) ;
+							Bz [i + d] = X [4*k + 1] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i + d], X [4*k + 1], rs) ;
+							Bz [i + d*2] = X [4*k + 2] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i + d*2], X [4*k + 2], rs) ;
+							Bz [i + d*3] = X [4*k + 3] / rs ;
+							//SCALE_DIV_ASSIGN (Bz [i + d*3], X [4*k + 3], rs) ;
 						}
 						break ;
 				}

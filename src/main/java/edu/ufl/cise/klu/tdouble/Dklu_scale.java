@@ -148,8 +148,8 @@ public class Dklu_scale extends Dklu_internal {
 					/* flag row i as appearing in column col */
 					W [row] = col ;
 				}
-				/* a = ABS (Az [p]) ;*/
-				ABS (a, Az [p]) ;
+				a = Math.abs (Az [p]) ;
+				//ABS (a, Az [p]) ;
 				if (scale == 1)
 				{
 					/* accumulate the abs. row sum */

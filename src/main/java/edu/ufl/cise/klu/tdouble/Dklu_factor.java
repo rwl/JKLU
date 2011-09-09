@@ -32,6 +32,7 @@ import static edu.ufl.cise.klu.tdouble.Dklu_scale.klu_scale;
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_int;
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
 import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid_LU;
+import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid;
 import static edu.ufl.cise.klu.tdouble.Dklu.klu_kernel_factor;
 
 /**
@@ -219,8 +220,8 @@ public class Dklu_factor extends Dklu_internal
 						if (newrow < k1)
 						{
 							Offi [poff] = oldrow ;
-							/* Offx [poff] = Ax [p] / Rs [oldrow] ; */
-							Offx [poff] = SCALE_DIV_ASSIGN (Ax [p], Rs [oldrow]) ;
+							Offx [poff] = Ax [p] / Rs [oldrow] ;
+							//SCALE_DIV_ASSIGN (Offx [poff], Ax [p], Rs [oldrow]) ;
 							poff++ ;
 						}
 						else
@@ -228,7 +229,8 @@ public class Dklu_factor extends Dklu_internal
 							ASSERT (newrow == k1) ;
 							PRINTF ("singleton block %d ", block) ;
 							PRINT_ENTRY (Ax[p]) ;
-							s = SCALE_DIV_ASSIGN (Ax [p], Rs [oldrow]) ;
+							s = Ax [p] / Rs [oldrow] ;
+							//SCALE_DIV_ASSIGN (s, Ax [p], Rs [oldrow]) ;
 						}
 					}
 				}
@@ -287,11 +289,9 @@ public class Dklu_factor extends Dklu_internal
 				}
 
 				PRINTF ("\n----------------------- L %d:\n", block) ;
-				ASSERT (klu_valid_LU (nk, TRUE, Lip+k1, Llen+k1,
-						LUbx [block])) ;
+				ASSERT (klu_valid_LU (nk, TRUE, Lip+k1, Llen+k1, LUbx [block])) ;
 				PRINTF ("\n----------------------- U %d:\n", block) ;
-				ASSERT (klu_valid_LU (nk, FALSE, Uip+k1, Ulen+k1,
-						LUbx [block])) ;
+				ASSERT (klu_valid_LU (nk, FALSE, Uip+k1, Ulen+k1, LUbx [block])) ;
 
 				/* -------------------------------------------------------------- */
 				/* get statistics */
@@ -327,7 +327,7 @@ public class Dklu_factor extends Dklu_internal
 		}
 		ASSERT (nzoff == Offp [n]) ;
 		PRINTF ("\n------------------- Off diagonal entries:\n") ;
-		ASSERT (Dklu_dump.klu_valid (n, Offp, Offi, Offx)) ;
+		ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 
 		Numeric.lnz = lnz ;
 		Numeric.unz = unz ;
@@ -357,16 +357,18 @@ public class Dklu_factor extends Dklu_internal
 		{
 			for (k = 0 ; k < n ; k++)
 			{
-				REAL (X [k]) = Rs [Pnum [k]] ;
+				X [k] = Rs [Pnum [k]] ;
+				//REAL (X [k]) = Rs [Pnum [k]] ;
 			}
 			for (k = 0 ; k < n ; k++)
 			{
-				Rs [k] = REAL (X [k]) ;
+				Rs [k] = X [k] ;
+				//Rs [k] = REAL (X [k]) ;
 			}
 		}
 
 		PRINTF ("\n------------------- Off diagonal entries, old:\n") ;
-		ASSERT (Dklu_dump.klu_valid (n, Offp, Offi, Offx)) ;
+		ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 
 		/* apply the pivot row permutations to the off-diagonal entries */
 		for (p = 0 ; p < nzoff ; p++)
@@ -376,14 +378,14 @@ public class Dklu_factor extends Dklu_internal
 		}
 
 		PRINTF ("\n------------------- Off diagonal entries, new:\n") ;
-		ASSERT (Dklu_dump.klu_valid (n, Offp, Offi, Offx)) ;
+		ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 
 		if (!NDEBUG)
 		{
 			PRINTF ("\n ############# KLU_BTF_FACTOR done, nblocks %d\n",
 					nblocks);
 			double ss ;
-			double[] Udiag = Numeric.Udiag ;
+			Udiag = Numeric.Udiag ;
 			for (block = 0 ; block < nblocks && Common.status == KLU_OK ; block++)
 			{
 				k1 = R [block] ;
@@ -399,7 +401,7 @@ public class Dklu_factor extends Dklu_internal
 				}
 				else
 				{
-					int[] Lip, Uip, Llen, Ulen ;
+//					int[] Lip, Uip, Llen, Ulen ;
 					double[] LU ;
 					Lip = Numeric.Lip + k1 ;
 					Llen = Numeric.Llen + k1 ;
@@ -474,17 +476,17 @@ public class Dklu_factor extends Dklu_internal
 		/* ---------------------------------------------------------------------- */
 
 		/* this will not cause int overflow (already checked by KLU_symbolic) */
-		n1 = ((int) n) + 1 ;
-		nzoff1 = ((int) nzoff) + 1 ;
+		n1 = n + 1 ;
+		nzoff1 = nzoff + 1 ;
 
 		//Numeric = Dklu_memory.klu_malloc (sizeof (KLU_numeric), 1, Common) ;
 		Numeric = new KLU_numeric();
-		if (Common.status < KLU_OK)
-		{
-			/* out of memory */
-			Common.status = KLU_OUT_OF_MEMORY ;
-			return (null) ;
-		}
+//		if (Common.status < KLU_OK)
+//		{
+//			/* out of memory */
+//			Common.status = KLU_OUT_OF_MEMORY ;
+//			return (null) ;
+//		}
 		Numeric.n = n ;
 		Numeric.nblocks = nblocks ;
 		Numeric.nzoff = nzoff ;

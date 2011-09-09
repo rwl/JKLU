@@ -28,6 +28,11 @@ import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
+import static edu.ufl.cise.klu.tdouble.Dklu_scale.klu_scale;
+import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid;
+import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid_LU;
+
 /**
  * Factor the matrix, after ordering and analyzing it with KLU_analyze, and
  * factoring it once with KLU_factor.  This routine cannot do any numerical
@@ -98,9 +103,9 @@ public class Dklu_refactor extends Dklu_internal {
 		Pnum = Numeric.Pnum ;
 		Offp = Numeric.Offp ;
 		Offi = Numeric.Offi ;
-		Offx = (double[]) Numeric.Offx ;
+		Offx = Numeric.Offx ;
 
-		LUbx = (double[][]) Numeric.LUbx ;
+		LUbx = Numeric.LUbx ;
 
 		scale = Common.scale ;
 		if (scale > 0)
@@ -108,7 +113,7 @@ public class Dklu_refactor extends Dklu_internal {
 			/* factorization was not scaled, but refactorization is scaled */
 			if (Numeric.Rs == null)
 			{
-				Numeric.Rs = KLU_malloc (n, sizeof (double), Common) ;
+				Numeric.Rs = klu_malloc_dbl (n, Common) ;
 				if (Common.status < KLU_OK)
 				{
 					Common.status = KLU_OUT_OF_MEMORY ;
@@ -120,12 +125,13 @@ public class Dklu_refactor extends Dklu_internal {
 		{
 			/* no scaling for refactorization; ensure Numeric.Rs is freed.  This
 			 * does nothing if Numeric.Rs is already null. */
-			Numeric.Rs = KLU_free (Numeric.Rs, n, sizeof (double), Common) ;
+			//Numeric.Rs = KLU_free (Numeric.Rs, n, sizeof (double), Common) ;
+			Numeric.Rs = null ;
 		}
 		Rs = Numeric.Rs ;
 
 		Pinv = Numeric.Pinv ;
-		X = (double[]) Numeric.Xwork ;
+		X = Numeric.Xwork ;
 		Common.nrealloc = 0 ;
 		Udiag = Numeric.Udiag ;
 		nzoff = Symbolic.nzoff ;
@@ -138,7 +144,7 @@ public class Dklu_refactor extends Dklu_internal {
 		if (scale >= 0)
 		{
 			/* check for out-of-range indices, but do not check for duplicates */
-			if (!KLU_scale (scale, n, Ap, Ai, Ax, Rs, null, Common))
+			if (klu_scale (scale, n, Ap, Ai, Ax, Rs, null, Common) == 0)
 			{
 				return (FALSE) ;
 			}
@@ -150,8 +156,8 @@ public class Dklu_refactor extends Dklu_internal {
 
 		for (k = 0 ; k < maxblock ; k++)
 		{
-			/* X [k] = 0 */
-			CLEAR (X [k]) ;
+			X [k] = 0 ;
+			//CLEAR (X [k]) ;
 		}
 
 		poff = 0 ;
@@ -187,7 +193,8 @@ public class Dklu_refactor extends Dklu_internal {
 
 					oldcol = Q [k1] ;
 					pend = Ap [oldcol+1] ;
-					CLEAR (s) ;
+					s = 0 ;
+					//CLEAR (s) ;
 					for (p = Ap [oldcol] ; p < pend ; p++)
 					{
 						newrow = Pinv [Ai [p]] - k1 ;
@@ -253,20 +260,20 @@ public class Dklu_refactor extends Dklu_internal {
 						{
 							j = Ui [up] ;
 							ujk = X [j] ;
-							/* X [j] = 0 */
-							CLEAR (X [j]) ;
+							X [j] = 0 ;
+							//CLEAR (X [j]) ;
 							Ux [up] = ujk ;
 							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen) ;
 							for (p = 0 ; p < llen ; p++)
 							{
-								/* X [Li [p]] -= Lx [p] * ujk */
-								MULT_SUB (X [Li [p]], Lx [p], ujk) ;
+								X [Li [p]] -= Lx [p] * ujk ;
+								//MULT_SUB (X [Li [p]], Lx [p], ujk) ;
 							}
 						}
 						/* get the diagonal entry of U */
 						ukk = X [k] ;
-						/* X [k] = 0 */
-						CLEAR (X [k]) ;
+						X [k] = 0 ;
+						//CLEAR (X [k]) ;
 						/* singular case */
 						if (IS_ZERO (ukk))
 						{
@@ -277,7 +284,7 @@ public class Dklu_refactor extends Dklu_internal {
 								Common.numerical_rank = k+k1 ;
 								Common.singular_col = Q [k+k1] ;
 							}
-							if (Common.halt_if_singular)
+							if (Common.halt_if_singular != 0)
 							{
 								/* do not continue the factorization */
 								return (FALSE) ;
@@ -289,8 +296,10 @@ public class Dklu_refactor extends Dklu_internal {
 						for (p = 0 ; p < llen ; p++)
 						{
 							i = Li [p] ;
-							DIV (Lx [p], X [i], ukk) ;
-							CLEAR (X [i]) ;
+							Lx [p] = X [i] / ukk ;
+							//DIV (Lx [p], X [i], ukk) ;
+							X [i] = 0 ;
+							//CLEAR (X [i]) ;
 						}
 
 					}
@@ -325,7 +334,8 @@ public class Dklu_refactor extends Dklu_internal {
 
 					oldcol = Q [k1] ;
 					pend = Ap [oldcol+1] ;
-					CLEAR (s) ;
+					s = 0 ;
+					//CLEAR (s) ;
 					for (p = Ap [oldcol] ; p < pend ; p++)
 					{
 						oldrow = Ai [p] ;
@@ -333,15 +343,15 @@ public class Dklu_refactor extends Dklu_internal {
 						if (newrow < 0 && poff < nzoff)
 						{
 							/* entry in off-diagonal block */
-							/* Offx [poff] = Az [p] / Rs [oldrow] */
-							SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]) ;
+							Offx [poff] = Az [p] / Rs [oldrow] ;
+							//SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]) ;
 							poff++ ;
 						}
 						else
 						{
 							/* singleton */
-							/* s = Az [p] / Rs [oldrow] */
-							SCALE_DIV_ASSIGN (s, Az [p], Rs [oldrow]) ;
+							s = Az [p] / Rs [oldrow] ;
+							//SCALE_DIV_ASSIGN (s, Az [p], Rs [oldrow]) ;
 						}
 					}
 					Udiag [k1] = s ;
@@ -376,15 +386,15 @@ public class Dklu_refactor extends Dklu_internal {
 							if (newrow < 0 && poff < nzoff)
 							{
 								/* entry in off-diagonal part */
-								/* Offx [poff] = Az [p] / Rs [oldrow] */
-								SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]);
+								Offx [poff] = Az [p] / Rs [oldrow] ;
+								//SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]);
 								poff++ ;
 							}
 							else
 							{
 								/* (newrow,k) is an entry in the block */
-								/* X [newrow] = Az [p] / Rs [oldrow] */
-								SCALE_DIV_ASSIGN (X [newrow], Az [p], Rs [oldrow]) ;
+								X [newrow] = Az [p] / Rs [oldrow] ;
+								//SCALE_DIV_ASSIGN (X [newrow], Az [p], Rs [oldrow]) ;
 							}
 						}
 
@@ -397,20 +407,20 @@ public class Dklu_refactor extends Dklu_internal {
 						{
 							j = Ui [up] ;
 							ujk = X [j] ;
-							/* X [j] = 0 */
-							CLEAR (X [j]) ;
+							X [j] = 0 ;
+							//CLEAR (X [j]) ;
 							Ux [up] = ujk ;
 							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen) ;
 							for (p = 0 ; p < llen ; p++)
 							{
-								/* X [Li [p]] -= Lx [p] * ujk */
-								MULT_SUB (X [Li [p]], Lx [p], ujk) ;
+								X [Li [p]] -= Lx [p] * ujk ;
+								//MULT_SUB (X [Li [p]], Lx [p], ujk) ;
 							}
 						}
 						/* get the diagonal entry of U */
 						ukk = X [k] ;
-						/* X [k] = 0 */
-						CLEAR (X [k]) ;
+						X [k] = 0 ;
+						//CLEAR (X [k]) ;
 						/* singular case */
 						if (IS_ZERO (ukk))
 						{
@@ -421,7 +431,7 @@ public class Dklu_refactor extends Dklu_internal {
 								Common.numerical_rank = k+k1 ;
 								Common.singular_col = Q [k+k1] ;
 							}
-							if (Common.halt_if_singular)
+							if (Common.halt_if_singular != 0)
 							{
 								/* do not continue the factorization */
 								return (FALSE) ;
@@ -433,8 +443,10 @@ public class Dklu_refactor extends Dklu_internal {
 						for (p = 0 ; p < llen ; p++)
 						{
 							i = Li [p] ;
-							DIV (Lx [p], X [i], ukk) ;
-							CLEAR (X [i]) ;
+							Lx [p] = X [i] / ukk ;
+							//DIV (Lx [p], X [i], ukk) ;
+							X [i] = 0 ;
+							//CLEAR (X [i]) ;
 						}
 					}
 				}
@@ -449,11 +461,13 @@ public class Dklu_refactor extends Dklu_internal {
 		{
 			for (k = 0 ; k < n ; k++)
 			{
-				REAL (X [k]) = Rs [Pnum [k]] ;
+				X [k] = Rs [Pnum [k]] ;
+				//REAL (X [k]) = Rs [Pnum [k]] ;
 			}
 			for (k = 0 ; k < n ; k++)
 			{
-				Rs [k] = REAL (X [k]) ;
+				Rs [k] = X [k] ;
+				//Rs [k] = REAL (X [k]) ;
 			}
 		}
 
@@ -462,7 +476,7 @@ public class Dklu_refactor extends Dklu_internal {
 			ASSERT (Offp [n] == poff) ;
 			ASSERT (Symbolic.nzoff == poff) ;
 			PRINTF (("\n------------------- Off diagonal entries, new:\n")) ;
-			ASSERT (Dklu_dump.klu_valid (n, Offp, Offi, Offx)) ;
+			ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 			if (Common.status == KLU_OK)
 			{
 				PRINTF ("\n ########### KLU_BTF_REFACTOR done, nblocks %d\n",
@@ -486,13 +500,11 @@ public class Dklu_refactor extends Dklu_internal {
 						Llen = Numeric.Llen + k1 ;
 						LU = (double[]) Numeric.LUbx [block] ;
 						PRINTF ("\n---- L block %d\n", block) ;
-						ASSERT (Dklu_dump.klu_valid_LU (nk, TRUE, Lip, Llen,
-								LU)) ;
+						ASSERT (klu_valid_LU (nk, TRUE, Lip, Llen, LU)) ;
 						Uip = Numeric.Uip + k1 ;
 						Ulen = Numeric.Ulen + k1 ;
 						PRINTF ("\n---- U block %d\n", block) ;
-						ASSERT (Dklu_dump.klu_valid_LU (nk, FALSE, Uip, Ulen,
-								LU)) ;
+						ASSERT (klu_valid_LU (nk, FALSE, Uip, Ulen, LU)) ;
 					}
 				}
 			}

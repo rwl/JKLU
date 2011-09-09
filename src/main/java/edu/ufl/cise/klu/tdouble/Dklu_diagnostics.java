@@ -28,6 +28,9 @@ import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
+import static edu.ufl.cise.klu.tdouble.Dklu_tsolve.klu_tsolve;
+import static edu.ufl.cise.klu.tdouble.Dklu_solve.klu_solve;
+
 /**
  * Linear algebraic diagnostics.
  */
@@ -55,7 +58,7 @@ public class Dklu_diagnostics extends Dklu_internal
 		double temp, max_ai, max_ui, min_block_rgrowth ;
 		double aik ;
 		int[] Q, Ui, Uip, Ulen, Pinv ;
-		double[] LU ;
+		double LU ;
 		double[] Aentry, Ux, Ukk ;
 		double[] Rs ;
 		int i, newrow, oldrow, k1, k2, nk, j, oldcol, k, pend, len ;
@@ -103,7 +106,7 @@ public class Dklu_diagnostics extends Dklu_internal
 			{
 				continue ;      /* skip singleton blocks */
 			}
-			LU = (double[]) Numeric.LUbx[i] ;
+			LU = Numeric.LUbx[i] ;
 			Uip = Numeric.Uip + k1 ;
 			Ulen = Numeric.Ulen + k1 ;
 			Ukk = ((double[]) Numeric.Udiag) + k1 ;
@@ -125,15 +128,15 @@ public class Dklu_diagnostics extends Dklu_internal
 					ASSERT (newrow < k2) ;
 					if (Rs != null)
 					{
-						/* aik = Aentry [k] / Rs [oldrow] */
-						SCALE_DIV_ASSIGN (aik, Aentry [k], Rs [newrow]) ;
+						aik = Aentry [k] / Rs [newrow] ;
+						//SCALE_DIV_ASSIGN (aik, Aentry [k], Rs [newrow]) ;
 					}
 					else
 					{
 						aik = Aentry [k] ;
 					}
-					/* temp = ABS (aik) */
-					ABS (temp, aik) ;
+					temp = Math.abs( aik ) ;
+					//ABS (temp, aik) ;
 					if (temp > max_ai)
 					{
 						max_ai = temp ;
@@ -143,15 +146,16 @@ public class Dklu_diagnostics extends Dklu_internal
 				GET_POINTER (LU, Uip, Ulen, Ui, Ux, j, len) ;
 				for (k = 0 ; k < len ; k++)
 				{
-					/* temp = ABS (Ux [k]) */
-					ABS (temp, Ux [k]) ;
+					temp = Math.abs (Ux [k]) ;
+					//ABS (temp, Ux [k]) ;
 					if (temp > max_ui)
 					{
 						max_ui = temp ;
 					}
 				}
 				/* consider the diagonal element */
-				ABS (temp, Ukk [j]) ;
+				temp = Math.abs (Ukk [j]) ;
+				//ABS (temp, Ukk [j]) ;
 				if (temp > max_ui)
 				{
 					max_ui = temp ;
@@ -238,7 +242,8 @@ public class Dklu_diagnostics extends Dklu_internal
 
 		for (i = 0 ; i < n ; i++)
 		{
-			ABS (abs_value, Udiag [i]) ;
+			abs_value = Math.abs( Udiag [i] ) ;
+			//ABS (abs_value, Udiag [i]) ;
 			if (SCALAR_IS_ZERO (abs_value))
 			{
 				Common.condest = 1 / abs_value ;
@@ -259,7 +264,8 @@ public class Dklu_diagnostics extends Dklu_internal
 			csum = 0.0 ;
 			for (j = Ap [i] ; j < pend ; j++)
 			{
-				ABS (abs_value, Aentry [j]) ;
+				abs_value = Math.abs ( Aentry [j] ) ;
+				//ABS (abs_value, Aentry [j]) ;
 				csum += abs_value ;
 			}
 			if (csum > anorm)
@@ -274,14 +280,19 @@ public class Dklu_diagnostics extends Dklu_internal
 
 		/* get workspace (size 2*n double's) */
 		X = Numeric.Xwork ;            /* size n space used in KLU_solve, tsolve */
-		X += n ;                        /* X is size n */
-		S = X + n ;                     /* S is size n */
+		//X += n ;                       /* X is size n */
+		X = new double [n] ;
+		//S = X + n ;                    /* S is size n */
+		S = new double [n] ;
 
 		for (i = 0 ; i < n ; i++)
 		{
-			CLEAR (S [i]) ;
-			CLEAR (X [i]) ;
-			REAL (X [i]) = 1.0 / ((double) n) ;
+			S [i] = 0.0 ;
+			//CLEAR (S [i]) ;
+			X [i] = 0.0 ;
+			//CLEAR (X [i]) ;
+			//REAL (X [i]) = 1.0 / ((double) n) ;
+			X [i] = 1.0 / ((double) n);
 		}
 		jmax = 0 ;
 
@@ -293,10 +304,11 @@ public class Dklu_diagnostics extends Dklu_internal
 				/* X [jmax] is the largest entry in X */
 				for (j = 0 ; j < n ; j++)
 				{
-					/* X [j] = 0 ;*/
-					CLEAR (X [j]) ;
+					X [j] = 0 ;
+					//CLEAR (X [j]) ;
 				}
-				REAL (X [jmax]) = 1 ;
+				//REAL (X [jmax]) = 1 ;
+				X [jmax] = 1 ;
 			}
 
 			Dklu_solve.klu_solve (Symbolic, Numeric, n, 1, (double[]) X, Common) ;
@@ -306,7 +318,8 @@ public class Dklu_diagnostics extends Dklu_internal
 			for (j = 0 ; j < n ; j++)
 			{
 				/* ainv_norm += ABS (X [j]) ;*/
-				ABS (abs_value, X [j]) ;
+				abs_value = Math.abs( X [j] ) ;
+				//ABS (abs_value, X [j]) ;
 				ainv_norm += abs_value ;
 			}
 
@@ -315,7 +328,7 @@ public class Dklu_diagnostics extends Dklu_internal
 			for (j = 0 ; j < n ; j++)
 			{
 				double s = (X [j] >= 0) ? 1 : -1 ;
-				if (s != (int) REAL (S [j]))
+				if (s != S [j])
 				{
 					S [j] = s ;
 					unchanged = FALSE ;
@@ -333,15 +346,15 @@ public class Dklu_diagnostics extends Dklu_internal
 			}
 
 			/* do a transpose solve */
-			Dklu_tsolve.klu_tsolve (Symbolic, Numeric, n, 1, X, Common) ;
+			klu_tsolve (Symbolic, Numeric, n, 1, X, Common) ;
 
 			/* jnew = the position of the largest entry in X */
 			jnew = 0 ;
 			Xmax = 0 ;
 			for (j = 0 ; j < n ; j++)
 			{
-				/* xj = ABS (X [j]) ;*/
-				ABS (xj, X [j]) ;
+				xj = Math.abs (X [j]) ;
+				//ABS (xj, X [j]) ;
 				if (xj > Xmax)
 				{
 					Xmax = xj ;
@@ -363,24 +376,28 @@ public class Dklu_diagnostics extends Dklu_internal
 
 		for (j = 0 ; j < n ; j++)
 		{
-			CLEAR (X [j]) ;
+			X [j] = 0.0 ;
+			//CLEAR (X [j]) ;
 			if (j % 2 == 1)
 			{
-				REAL (X [j]) = 1 + ((double) j) / ((double) (n-1)) ;
+				X [j] = 1 + ((double) j) / ((double) (n-1)) ;
+				//REAL (X [j]) = 1 + ((double) j) / ((double) (n-1)) ;
 			}
 			else
 			{
-				REAL (X [j]) = -1 - ((double) j) / ((double) (n-1)) ;
+				X [j] = -1 - ((double) j) / ((double) (n-1)) ;
+				//REAL (X [j]) = -1 - ((double) j) / ((double) (n-1)) ;
 			}
 		}
 
-		Dklu_solve.klu_solve (Symbolic, Numeric, n, 1, (double[]) X, Common) ;
+		klu_solve (Symbolic, Numeric, n, 1, (double[]) X, Common) ;
 
 		est_new = 0.0 ;
 		for (j = 0 ; j < n ; j++)
 		{
 			/* est_new += ABS (X [j]) ;*/
-			ABS (abs_value, X [j]) ;
+			abs_value = Math.abs( X [j] ) ;
+			//ABS (abs_value, X [j]) ;
 			est_new += abs_value ;
 		}
 		est_new = 2 * est_new / (3 * n) ;
@@ -520,7 +537,8 @@ public class Dklu_diagnostics extends Dklu_internal
 		for (j = 0 ; j < n ; j++)
 		{
 			/* get the magnitude of the pivot */
-			ABS (ukk, Udiag [j]) ;
+			ukk = Math.abs( Udiag [j] ) ;
+			//ABS (ukk, Udiag [j]) ;
 			if (SCALAR_IS_NAN (ukk) || SCALAR_IS_ZERO (ukk))
 			{
 				/* if NaN, or zero, the rcond is zero */

@@ -26,6 +26,9 @@ package edu.ufl.cise.klu.tdouble;
 
 import edu.ufl.cise.klu.common.KLU_common;
 
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
+import static edu.ufl.cise.klu.tdouble.Dklu_kernel.klu_kernel;
+
 /**
  * KLU: factorizes P*A into L*U, using the Gilbert-Peierls algorithm[1], with
  * optional symmetric pruning by Eisenstat and Liu[2].  The code is by Tim
@@ -135,11 +138,11 @@ public class Dklu extends Dklu_internal {
 		{
 			Lsize = -Lsize ;
 			Lsize = MAX (Lsize, 1.0) ;
-			lsize = Lsize * anz + n ;
+			lsize = (int) (Lsize * anz + n) ;
 		}
 		else
 		{
-			lsize = Lsize ;
+			lsize = (int) Lsize ;
 		}
 
 		usize = lsize ;
@@ -149,8 +152,8 @@ public class Dklu extends Dklu_internal {
 
 		maxlnz = (((double) n) * ((double) n) + ((double) n)) / 2. ;
 		maxlnz = MIN (maxlnz, ((double) INT_MAX)) ;
-		lsize  = MIN (maxlnz, lsize) ;
-		usize  = MIN (maxlnz, usize) ;
+		lsize  = MIN ((int) maxlnz, lsize) ;
+		usize  = MIN ((int) maxlnz, usize) ;
 
 		PRINTF ("Welcome to klu: n %d anz %d k1 %d lsize %d usize %d maxlnz %g\n",
 			n, anz, k1, lsize, usize, maxlnz) ;
@@ -164,17 +167,17 @@ public class Dklu extends Dklu_internal {
 
 		/* these computations are safe from int overflow */
 		W = Work ;
-		Pinv = (int []) W ;      W += n ;
-		Stack = (int []) W ;     W += n ;
-		Flag = (int []) W ;      W += n ;
-		Lpend = (int []) W ;     W += n ;
-		Ap_pos = (int []) W ;    W += n ;
+		Pinv = W ;      W += n ;
+		Stack = W ;     W += n ;
+		Flag = W ;      W += n ;
+		Lpend = W ;     W += n ;
+		Ap_pos = W ;    W += n ;
 
 		dunits = DUNITS (Integer, lsize) + DUNITS (Double, lsize) +
 				 DUNITS (Integer, usize) + DUNITS (Double, usize) ;
 		lusize = (int) dunits ;
 		ok = INT_OVERFLOW (dunits) ? FALSE : TRUE ;
-		LU = ok != 0 ? KLU_malloc (lusize, sizeof (Double), Common) : null ;
+		LU = ok != 0 ? klu_malloc_dbl (lusize, Common) : null ;
 		if (LU == null)
 		{
 			/* out of memory, or problem too large */
@@ -188,8 +191,8 @@ public class Dklu extends Dklu_internal {
 		/* ---------------------------------------------------------------------- */
 
 		/* with pruning, and non-recursive depth-first-search */
-		lusize = Dklu_kernel.klu_kernel (n, Ap, Ai, Ax, Q, lusize,
-				Pinv, P, &LU, Udiag, Llen, Ulen, Lip, Uip, lnz, unz,
+		lusize = klu_kernel (n, Ap, Ai, Ax, Q, lusize,
+				Pinv, P, LU, Udiag, Llen, Ulen, Lip, Uip, lnz, unz,
 				X, Stack, Flag, Ap_pos, Lpend,
 				k1, PSinv, Rs, Offp, Offi, Offx, Common) ;
 
@@ -199,7 +202,8 @@ public class Dklu extends Dklu_internal {
 
 		if (Common.status < KLU_OK)
 		{
-			LU = KLU_free (LU, lusize, sizeof (double), Common) ;
+			//LU = KLU_free (LU, lusize, sizeof (double), Common) ;
+			LU = null ;
 			lusize = 0 ;
 		}
 		p_LU = LU ;
@@ -240,8 +244,8 @@ public class Dklu extends Dklu_internal {
 					/* unit diagonal of L is not stored*/
 					for (p = 0 ; p < len ; p++)
 					{
-						/* X [Li [p]] -= Lx [p] * x [0] ; */
-						MULT_SUB (X [Li [p]], Lx [p], x [0]) ;
+						X [Li [p]] -= Lx [p] * x [0] ;
+						//MULT_SUB (X [Li [p]], Lx [p], x [0]) ;
 					}
 				}
 				break ;
@@ -257,8 +261,10 @@ public class Dklu extends Dklu_internal {
 					{
 						i = Li [p] ;
 						lik = Lx [p] ;
-						MULT_SUB (X [2*i], lik, x [0]) ;
-						MULT_SUB (X [2*i + 1], lik, x [1]) ;
+						X [2*i] -= lik * x [0] ;
+						//MULT_SUB (X [2*i], lik, x [0]) ;
+						X [2*i + 1] -= lik * x [1] ;
+						//MULT_SUB (X [2*i + 1], lik, x [1]) ;
 					}
 				}
 				break ;
@@ -275,9 +281,12 @@ public class Dklu extends Dklu_internal {
 					{
 						i = Li [p] ;
 						lik = Lx [p] ;
-						MULT_SUB (X [3*i], lik, x [0]) ;
-						MULT_SUB (X [3*i + 1], lik, x [1]) ;
-						MULT_SUB (X [3*i + 2], lik, x [2]) ;
+						X [3*i] -= lik * x [0] ;
+						//MULT_SUB (X [3*i], lik, x [0]) ;
+						X [3*i + 1] -= lik * x [1] ;
+						//MULT_SUB (X [3*i + 1], lik, x [1]) ;
+						X [3*i + 2] -= lik * x [2] ;
+						//MULT_SUB (X [3*i + 2], lik, x [2]) ;
 					}
 				}
 				break ;
@@ -295,10 +304,14 @@ public class Dklu extends Dklu_internal {
 					{
 						i = Li [p] ;
 						lik = Lx [p] ;
-						MULT_SUB (X [4*i], lik, x [0]) ;
-						MULT_SUB (X [4*i + 1], lik, x [1]) ;
-						MULT_SUB (X [4*i + 2], lik, x [2]) ;
-						MULT_SUB (X [4*i + 3], lik, x [3]) ;
+						X [4*i] -= lik * x [0] ;
+						//MULT_SUB (X [4*i], lik, x [0]) ;
+						X [4*i + 1] -= lik * x [1] ;
+						//MULT_SUB (X [4*i + 1], lik, x [1]) ;
+						X [4*i + 2] -= lik * x [2] ;
+						//MULT_SUB (X [4*i + 2], lik, x [2]) ;
+						X [4*i + 3] -= lik * x [3] ;
+						//MULT_SUB (X [4*i + 3], lik, x [3]) ;
 					}
 				}
 				break ;
@@ -337,13 +350,13 @@ public class Dklu extends Dklu_internal {
 				for (k = n-1 ; k >= 0 ; k--)
 				{
 					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					/* x [0] = X [k] / Udiag [k] ; */
-					DIV (x [0], X [k], Udiag [k]) ;
+					x [0] = X [k] / Udiag [k] ;
+					//DIV (x [0], X [k], Udiag [k]) ;
 					X [k] = x [0] ;
 					for (p = 0 ; p < len ; p++)
 					{
-						/* X [Ui [p]] -= Ux [p] * x [0] ; */
-						MULT_SUB (X [Ui [p]], Ux [p], x [0]) ;
+						X [Ui [p]] -= Ux [p] * x [0] ;
+						//MULT_SUB (X [Ui [p]], Ux [p], x [0]) ;
 
 					}
 				}
@@ -356,10 +369,10 @@ public class Dklu extends Dklu_internal {
 				{
 					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
 					ukk = Udiag [k] ;
-					/* x [0] = X [2*k    ] / ukk ;
-					x [1] = X [2*k + 1] / ukk ; */
-					DIV (x [0], X [2*k], ukk) ;
-					DIV (x [1], X [2*k + 1], ukk) ;
+					x [0] = X [2*k    ] / ukk ;
+					x [1] = X [2*k + 1] / ukk ;
+					//DIV (x [0], X [2*k], ukk) ;
+					//DIV (x [1], X [2*k + 1], ukk) ;
 
 					X [2*k    ] = x [0] ;
 					X [2*k + 1] = x [1] ;
@@ -367,10 +380,10 @@ public class Dklu extends Dklu_internal {
 					{
 						i = Ui [p] ;
 						uik = Ux [p] ;
-						/* X [2*i    ] -= uik * x [0] ;
-						X [2*i + 1] -= uik * x [1] ; */
-						MULT_SUB (X [2*i], uik, x [0]) ;
-						MULT_SUB (X [2*i + 1], uik, x [1]) ;
+						X [2*i    ] -= uik * x [0] ;
+						X [2*i + 1] -= uik * x [1] ;
+						//MULT_SUB (X [2*i], uik, x [0]) ;
+						//MULT_SUB (X [2*i + 1], uik, x [1]) ;
 					}
 				}
 
@@ -383,9 +396,12 @@ public class Dklu extends Dklu_internal {
 					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
 					ukk = Udiag [k] ;
 
-					DIV (x [0], X [3*k], ukk) ;
-					DIV (x [1], X [3*k + 1], ukk) ;
-					DIV (x [2], X [3*k + 2], ukk) ;
+					x [0] = X [3*k] / ukk ;
+					//DIV (x [0], X [3*k], ukk) ;
+					x [1] = X [3*k + 1] / ukk ;
+					//DIV (x [1], X [3*k + 1], ukk) ;
+					x [2] = X [3*k + 2] / ukk ;
+					//DIV (x [2], X [3*k + 2], ukk) ;
 
 					X [3*k    ] = x [0] ;
 					X [3*k + 1] = x [1] ;
@@ -394,9 +410,12 @@ public class Dklu extends Dklu_internal {
 					{
 						i = Ui [p] ;
 						uik = Ux [p] ;
-						MULT_SUB (X [3*i], uik, x [0]) ;
-						MULT_SUB (X [3*i + 1], uik, x [1]) ;
-						MULT_SUB (X [3*i + 2], uik, x [2]) ;
+						X [3*i] -= uik * x [0] ;
+						//MULT_SUB (X [3*i], uik, x [0]) ;
+						X [3*i + 1] -= uik * x [1] ;
+						//MULT_SUB (X [3*i + 1], uik, x [1]) ;
+						X [3*i + 2] -= uik * x [2] ;
+						//MULT_SUB (X [3*i + 2], uik, x [2]) ;
 					}
 				}
 
@@ -409,10 +428,14 @@ public class Dklu extends Dklu_internal {
 					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
 					ukk = Udiag [k] ;
 
-					DIV (x [0], X [4*k], ukk) ;
-					DIV (x [1], X [4*k + 1], ukk) ;
-					DIV (x [2], X [4*k + 2], ukk) ;
-					DIV (x [3], X [4*k + 3], ukk) ;
+					x [0] = X [4*k] / ukk ;
+					//DIV (x [0], X [4*k], ukk) ;
+					x [1] = X [4*k + 1] / ukk ;
+					//DIV (x [1], X [4*k + 1], ukk) ;
+					x [2] = X [4*k + 2] / ukk ;
+					//DIV (x [2], X [4*k + 2], ukk) ;
+					x [3] = X [4*k + 3] / ukk ;
+					//DIV (x [3], X [4*k + 3], ukk) ;
 
 					X [4*k    ] = x [0] ;
 					X [4*k + 1] = x [1] ;
@@ -423,10 +446,14 @@ public class Dklu extends Dklu_internal {
 						i = Ui [p] ;
 						uik = Ux [p] ;
 
-						MULT_SUB (X [4*i], uik, x [0]) ;
-						MULT_SUB (X [4*i + 1], uik, x [1]) ;
-						MULT_SUB (X [4*i + 2], uik, x [2]) ;
-						MULT_SUB (X [4*i + 3], uik, x [3]) ;
+						X [4*i] -= uik * x [0] ;
+						//MULT_SUB (X [4*i], uik, x [0]) ;
+						X [4*i + 1] -= uik * x [1] ;
+						//MULT_SUB (X [4*i + 1], uik, x [1]) ;
+						X [4*i + 2] -= uik * x [2] ;
+						//MULT_SUB (X [4*i + 2], uik, x [2]) ;
+						X [4*i + 3] -= uik * x [3] ;
+						//MULT_SUB (X [4*i + 3], uik, x [3]) ;
 					}
 				}
 
@@ -469,8 +496,8 @@ public class Dklu extends Dklu_internal {
 					for (p = 0 ; p < len ; p++)
 					{
 						{
-							/*x [0] -= Lx [p] * X [Li [p]] ;*/
-							MULT_SUB (x [0], Lx [p], X [Li [p]]) ;
+							x [0] -= Lx [p] * X [Li [p]] ;
+							//MULT_SUB (x [0], Lx [p], X [Li [p]]) ;
 						}
 					}
 					X [k] = x [0] ;
@@ -490,8 +517,10 @@ public class Dklu extends Dklu_internal {
 						{
 							lik = Lx [p] ;
 						}
-						MULT_SUB (x [0], lik, X [2*i]) ;
-						MULT_SUB (x [1], lik, X [2*i + 1]) ;
+						x [0] -= lik * X [2*i] ;
+						//MULT_SUB (x [0], lik, X [2*i]) ;
+						x [1] -= lik * X [2*i + 1] ;
+						//MULT_SUB (x [1], lik, X [2*i + 1]) ;
 					}
 					X [2*k    ] = x [0] ;
 					X [2*k + 1] = x [1] ;
@@ -512,9 +541,12 @@ public class Dklu extends Dklu_internal {
 						{
 							lik = Lx [p] ;
 						}
-						MULT_SUB (x [0], lik, X [3*i]) ;
-						MULT_SUB (x [1], lik, X [3*i + 1]) ;
-						MULT_SUB (x [2], lik, X [3*i + 2]) ;
+						x [0] -= lik * X [3*i] ;
+						//MULT_SUB (x [0], lik, X [3*i]) ;
+						x [1] -= lik * X [3*i + 1] ;
+						//MULT_SUB (x [1], lik, X [3*i + 1]) ;
+						x [2] -= lik * X [3*i + 2] ;
+						//MULT_SUB (x [2], lik, X [3*i + 2]) ;
 					}
 					X [3*k    ] = x [0] ;
 					X [3*k + 1] = x [1] ;
@@ -537,10 +569,14 @@ public class Dklu extends Dklu_internal {
 						{
 							lik = Lx [p] ;
 						}
-						MULT_SUB (x [0], lik, X [4*i]) ;
-						MULT_SUB (x [1], lik, X [4*i + 1]) ;
-						MULT_SUB (x [2], lik, X [4*i + 2]) ;
-						MULT_SUB (x [3], lik, X [4*i + 3]) ;
+						x [0] -= lik * X [4*i] ;
+						//MULT_SUB (x [0], lik, X [4*i]) ;
+						x [1] -= lik * X [4*i + 1] ;
+						//MULT_SUB (x [1], lik, X [4*i + 1]) ;
+						x [2] -= lik * X [4*i + 2] ;
+						//MULT_SUB (x [2], lik, X [4*i + 2]) ;
+						x [3] -= lik * X [4*i + 3] ;
+						//MULT_SUB (x [3], lik, X [4*i + 3]) ;
 					}
 					X [4*k    ] = x [0] ;
 					X [4*k + 1] = x [1] ;
@@ -586,14 +622,15 @@ public class Dklu extends Dklu_internal {
 					for (p = 0 ; p < len ; p++)
 					{
 						{
-							/* x [0] -= Ux [p] * X [Ui [p]] ; */
-							MULT_SUB (x [0], Ux [p], X [Ui [p]]) ;
+							x [0] -= Ux [p] * X [Ui [p]] ;
+							//MULT_SUB (x [0], Ux [p], X [Ui [p]]) ;
 						}
 					}
 					{
 						ukk = Udiag [k] ;
 					}
-					DIV (X [k], x [0], ukk) ;
+					X [k] = x [0] / ukk ;
+					//DIV (X [k], x [0], ukk) ;
 				}
 				break ;
 
@@ -610,14 +647,18 @@ public class Dklu extends Dklu_internal {
 						{
 							uik = Ux [p] ;
 						}
-						MULT_SUB (x [0], uik, X [2*i]) ;
-						MULT_SUB (x [1], uik, X [2*i + 1]) ;
+						x [0] -= uik * X [2*i] ;
+						//MULT_SUB (x [0], uik, X [2*i]) ;
+						x [1] -= uik * X [2*i + 1] ;
+						//MULT_SUB (x [1], uik, X [2*i + 1]) ;
 					}
 					{
 						ukk = Udiag [k] ;
 					}
-					DIV (X [2*k], x [0], ukk) ;
-					DIV (X [2*k + 1], x [1], ukk) ;
+					X [2*k] = x [0] / ukk ;
+					//DIV (X [2*k], x [0], ukk) ;
+					X [2*k + 1] = x [1] / ukk ;
+					//DIV (X [2*k + 1], x [1], ukk) ;
 				}
 				break ;
 
@@ -635,16 +676,22 @@ public class Dklu extends Dklu_internal {
 						{
 							uik = Ux [p] ;
 						}
-						MULT_SUB (x [0], uik, X [3*i]) ;
-						MULT_SUB (x [1], uik, X [3*i + 1]) ;
-						MULT_SUB (x [2], uik, X [3*i + 2]) ;
+						x [0] -= uik * X [3*i] ;
+						//MULT_SUB (x [0], uik, X [3*i]) ;
+						x [1] -= uik * X [3*i + 1] ;
+						//MULT_SUB (x [1], uik, X [3*i + 1]) ;
+						x [2] -= uik * X [3*i + 2] ;
+						//MULT_SUB (x [2], uik, X [3*i + 2]) ;
 					}
 					{
 						ukk = Udiag [k] ;
 					}
-					DIV (X [3*k], x [0], ukk) ;
-					DIV (X [3*k + 1], x [1], ukk) ;
-					DIV (X [3*k + 2], x [2], ukk) ;
+					X [3*k] = x [0] / ukk ;
+					//DIV (X [3*k], x [0], ukk) ;
+					X [3*k + 1] = x [1] / ukk ;
+					//DIV (X [3*k + 1], x [1], ukk) ;
+					X [3*k + 2] = x [2] / ukk ;
+					//DIV (X [3*k + 2], x [2], ukk) ;
 				}
 				break ;
 
@@ -663,18 +710,26 @@ public class Dklu extends Dklu_internal {
 						{
 							uik = Ux [p] ;
 						}
-						MULT_SUB (x [0], uik, X [4*i]) ;
-						MULT_SUB (x [1], uik, X [4*i + 1]) ;
-						MULT_SUB (x [2], uik, X [4*i + 2]) ;
-						MULT_SUB (x [3], uik, X [4*i + 3]) ;
+						x [0] -= uik * X [4*i] ;
+						//MULT_SUB (x [0], uik, X [4*i]) ;
+						x [1] -= uik * X [4*i + 1] ;
+						//MULT_SUB (x [1], uik, X [4*i + 1]) ;
+						x [2] -= uik * X [4*i + 2] ;
+						//MULT_SUB (x [2], uik, X [4*i + 2]) ;
+						x [3] -= uik * X [4*i + 3] ;
+						//MULT_SUB (x [3], uik, X [4*i + 3]) ;
 					}
 					{
 						ukk = Udiag [k] ;
 					}
-					DIV (X [4*k], x [0], ukk) ;
-					DIV (X [4*k + 1], x [1], ukk) ;
-					DIV (X [4*k + 2], x [2], ukk) ;
-					DIV (X [4*k + 3], x [3], ukk) ;
+					X [4*k] = x [0] / ukk ;
+					//DIV (X [4*k], x [0], ukk) ;
+					X [4*k + 1] = x [1] / ukk ;
+					//DIV (X [4*k + 1], x [1], ukk) ;
+					X [4*k + 2] = x [2] / ukk ;
+					//DIV (X [4*k + 2], x [2], ukk) ;
+					X [4*k + 3] = x [3] / ukk ;
+					//DIV (X [4*k + 3], x [3], ukk) ;
 				}
 				break ;
 		}
