@@ -29,7 +29,7 @@ public abstract class Dklu_internal extends Dklu_version {
 	/**
 	 * enable debugging and assertions
 	 */
-	protected static boolean NDEBUG = true ;
+	public static boolean NDEBUG = true ;
 
 	protected static void ASSERT (boolean a)
 	{

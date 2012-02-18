@@ -30,6 +30,7 @@ import edu.ufl.cise.klu.common.KLU_symbolic;
 import static edu.ufl.cise.klu.tdouble.Dklu_analyze_given.klu_analyze_given;
 import static edu.ufl.cise.klu.tdouble.Dklu_analyze_given.klu_alloc_symbolic;
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_int;
+import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid;
 
 import static edu.ufl.cise.amd.tdouble.Damd_order.amd_order;
 import static edu.ufl.cise.amd.tdouble.Damd.AMD_INFO;
@@ -165,7 +166,7 @@ public class Dklu_analyze extends Dklu_internal
 			}
 			Cp [nk] = pc ;
 			maxnz = MAX (maxnz, pc) ;
-			ASSERT (Dklu_dump.klu_valid (nk, Cp, Ci, null)) ;
+			ASSERT (klu_valid (nk, Cp, Ci, null)) ;
 
 			/* ------------------------------------------------------------------ */
 			/* order the block C */
@@ -244,10 +245,9 @@ public class Dklu_analyze extends Dklu_internal
 				/* pass the block to the user-provided ordering function */
 				/* -------------------------------------------------------------- */
 
-				throw new UnsupportedOperationException();
-				//lnz1 = Common.user_order(nk, Cp, Ci, Pblk, Common) ;
-				//flops1 = EMPTY ;
-				//ok = (lnz1 != 0) ? 1 : 0 ;
+				lnz1 = Common.user_order.order(nk, Cp, Ci, Pblk, Common) ;
+				flops1 = EMPTY ;
+				ok = (lnz1 != 0) ? 1 : 0 ;
 			}
 
 			if (!(ok == 1))
@@ -306,13 +306,13 @@ public class Dklu_analyze extends Dklu_internal
 	 */
 	public static KLU_symbolic order_and_analyze(int n, int[] Ap, int[] Ai, KLU_common Common)
 	{
-		double work = 0.0 ;  // FIXME Pass by reference
+		double[] work = new double [1] ;
 		KLU_symbolic Symbolic ;
 		double[] Lnz ;
+		int[] structural_rank = new int [1] ;
 		int[] Qbtf, Cp, Ci, Pinv, Pblk, Pbtf, P, Q, R ;
 		int nblocks, nz, block, maxblock, k1, k2, nk, do_btf, ordering, k,
 			Cilen ;
-		int[] Work ;
 
 		/* ---------------------------------------------------------------------- */
 		/* allocate the Symbolic object, and check input matrix */
@@ -388,9 +388,9 @@ public class Dklu_analyze extends Dklu_internal
 
 		Common.work = 0 ;
 
-		if (do_btf == 1)
+		if (do_btf != 0)
 		{
-			Work = klu_malloc_int (5*n, Common) ;
+//			Work = klu_malloc_int (5*n, Common) ;
 			if (Common.status < KLU_OK)
 			{
 				/* out of memory */
@@ -404,12 +404,13 @@ public class Dklu_analyze extends Dklu_internal
 			}
 
 			nblocks = btf_order (n, Ap, Ai, Common.maxwork, work, Pbtf, Qbtf, R,
-					Symbolic.structural_rank, Work) ;
+					structural_rank) ;
+			Symbolic.structural_rank = structural_rank[0] ;
 			Common.structural_rank = Symbolic.structural_rank ;
-			Common.work += work ;
+			Common.work += work[0] ;
 
 //			KLU_free (Work, 5*n, sizeof (int), Common) ;
-			Work = null;
+//			Work = null;
 
 			/* unflip Qbtf if the matrix does not have full structural rank */
 			if (Symbolic.structural_rank < n)

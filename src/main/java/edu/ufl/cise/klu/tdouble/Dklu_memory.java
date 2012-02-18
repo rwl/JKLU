@@ -35,21 +35,21 @@ public class Dklu_memory extends Dklu_internal {
 	/**
 	 * Safely compute a+b, and check for int overflow.
 	 */
-//	public static int klu_add_size_t(int a, int b, int ok)
-//	{
-//		(ok) = (ok != 0) && ((a + b) >= MAX (a,b)) ? 1 : 0;
-//		return ((ok != 0) ? (a + b) : ((int) -1)) ;
-//	}
-//
-//	public static int klu_mult_size_t(int a, int k, int ok)
-//	{
-//		int i, s = 0 ;
-//		for (i = 0 ; i < k ; i++)
-//		{
-//			s = klu_add_size_t (s, a, ok) ;
-//		}
-//		return ((ok != 0) ? s : ((int) -1)) ;
-//	}
+	public static int klu_add_size_t(int a, int b, int[] ok)
+	{
+		(ok[0]) = (ok[0] != 0) && ((a + b) >= MAX (a,b)) ? 1 : 0;
+		return ((ok[0] != 0) ? (a + b) : ((int) -1)) ;
+	}
+
+	public static int klu_mult_size_t(int a, int k, int[] ok)
+	{
+		int i, s = 0 ;
+		for (i = 0 ; i < k ; i++)
+		{
+			s = klu_add_size_t (s, a, ok) ;
+		}
+		return ((ok[0] != 0) ? s : ((int) -1)) ;
+	}
 
 	/**
 	 * Wrapper around malloc routine (mxMalloc for a mexFunction).  Allocates

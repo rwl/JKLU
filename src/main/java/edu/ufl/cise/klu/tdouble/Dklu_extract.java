@@ -179,8 +179,7 @@ public class Dklu_extract extends Dklu_internal
 						for (p = 0 ; p < len ; p++)
 						{
 							Li [nz] = k1 + Li2 [p] ;
-							Lx [nz] = Lx2 [p] ;
-							//Lx [nz] = REAL (Lx2 [p]) ;
+							Lx [nz] = Lx2 [p] ; //REAL (Lx2 [p]) ;
 							nz++ ;
 						}
 					}
@@ -208,8 +207,7 @@ public class Dklu_extract extends Dklu_internal
 					/* singleton block */
 					Up [k1] = nz ;
 					Ui [nz] = k1 ;
-					Ux [nz] = Ukk [0] ;
-					//Ux [nz] = REAL (Ukk [0]) ;
+					Ux [nz] = Ukk [0] ; //REAL (Ukk [0]) ;
 					nz++ ;
 				}
 				else
@@ -225,14 +223,12 @@ public class Dklu_extract extends Dklu_internal
 						for (p = 0 ; p < len ; p++)
 						{
 							Ui [nz] = k1 + Ui2 [p] ;
-							Ux [nz] = Ux2 [p] ;
-							//Ux [nz] = REAL (Ux2 [p]) ;
+							Ux [nz] = Ux2 [p] ; //REAL (Ux2 [p]) ;
 							nz++ ;
 						}
 						/* add the diagonal entry */
 						Ui [nz] = k1 + kk ;
-						Ux [nz] = Ukk [kk] ;
-						//Ux [nz] = REAL (Ukk [kk]) ;
+						Ux [nz] = Ukk [kk] ; //REAL (Ukk [kk]) ;
 						nz++ ;
 					}
 				}

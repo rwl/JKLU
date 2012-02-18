@@ -35,7 +35,7 @@ public abstract class Dklu_version {
 	public static final int KLU_TOO_LARGE = -4;
 
 	/** enable diagnostic printing */
-	protected static boolean NPRINT = true ;
+	public static boolean NPRINT = true ;
 
 	protected static final int INT_MAX = 0x7fffffff ;
 
@@ -204,10 +204,11 @@ public abstract class Dklu_version {
 	/**
 	 * c /= s
 	 */
-//	protected static void SCALE_DIV (Double c, double s)
-//	{
-//		c /= s ;
-//	}
+	protected static double SCALE_DIV (double c, double s)
+	{
+		c /= s ;
+		return c ;
+	}
 
 	/**
 	 * a = c/s
@@ -268,11 +269,12 @@ public abstract class Dklu_version {
 	/**
 	 * c -= a*b
 	 */
-//	protected static void MULT_SUB (Double c, double a, double b)
-//	{
-//		c -= a * b ;
-//	}
-//
+	protected static double MULT_SUB (double c, double a, double b)
+	{
+		c -= a * b ;
+		return c ;
+	}
+
 //	/**
 //	 * c -= a*conjugate(b)
 //	 */
@@ -330,6 +332,16 @@ public abstract class Dklu_version {
 //	{
 //		a = x ;
 //	}
+
+	protected static double ABS (double a)
+	{
+		return Math.abs (a) ;
+	}
+
+	protected static void CLEAR(double[] A, int i)
+	{
+		A [i] = 0.0 ;
+	}
 
 	/* for flop counts */
 	protected static final double MULTSUB_FLOPS   = 2.0 ;      /* c -= a*b */

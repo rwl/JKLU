@@ -53,7 +53,7 @@ public class KLU_common
 //	void *(*calloc_memory) (size_t, size_t);    /* pointer to calloc */
 
 	/* pointer to user ordering function */
-	public Object user_order;
+	public KLU_user_order user_order;
 
 
 	/* pointer to user data, passed unchanged as the last parameter to the

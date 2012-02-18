@@ -57,7 +57,8 @@ public class Dklu_diagnostics extends Dklu_internal
 	{
 		double temp, max_ai, max_ui, min_block_rgrowth ;
 		double aik ;
-		int[] Q, Ui, Uip, Ulen, Pinv ;
+		int[] Q, Ui, Pinv ;
+		int Ulen, Uip ;
 		double LU ;
 		double[] Aentry, Ux, Ukk ;
 		double[] Rs ;
@@ -107,8 +108,10 @@ public class Dklu_diagnostics extends Dklu_internal
 				continue ;      /* skip singleton blocks */
 			}
 			LU = Numeric.LUbx[i] ;
-			Uip = Numeric.Uip + k1 ;
-			Ulen = Numeric.Ulen + k1 ;
+//			Uip = Numeric.Uip + k1 ;
+			Uip = Numeric.Uip [k1] ;
+//			Ulen = Numeric.Ulen + k1 ;
+			Ulen = Numeric.Ulen [k1] ;
 			Ukk = ((double[]) Numeric.Udiag) + k1 ;
 			min_block_rgrowth = 1 ;
 			for (j = 0 ; j < nk ; j++)
@@ -135,7 +138,7 @@ public class Dklu_diagnostics extends Dklu_internal
 					{
 						aik = Aentry [k] ;
 					}
-					temp = Math.abs( aik ) ;
+					temp = ABS ( aik ) ;
 					//ABS (temp, aik) ;
 					if (temp > max_ai)
 					{
@@ -146,7 +149,7 @@ public class Dklu_diagnostics extends Dklu_internal
 				GET_POINTER (LU, Uip, Ulen, Ui, Ux, j, len) ;
 				for (k = 0 ; k < len ; k++)
 				{
-					temp = Math.abs (Ux [k]) ;
+					temp = ABS (Ux [k]) ;
 					//ABS (temp, Ux [k]) ;
 					if (temp > max_ui)
 					{
@@ -154,7 +157,7 @@ public class Dklu_diagnostics extends Dklu_internal
 					}
 				}
 				/* consider the diagonal element */
-				temp = Math.abs (Ukk [j]) ;
+				temp = ABS (Ukk [j]) ;
 				//ABS (temp, Ukk [j]) ;
 				if (temp > max_ui)
 				{
@@ -242,7 +245,7 @@ public class Dklu_diagnostics extends Dklu_internal
 
 		for (i = 0 ; i < n ; i++)
 		{
-			abs_value = Math.abs( Udiag [i] ) ;
+			abs_value = ABS (Udiag [i]) ;
 			//ABS (abs_value, Udiag [i]) ;
 			if (SCALAR_IS_ZERO (abs_value))
 			{
@@ -264,7 +267,7 @@ public class Dklu_diagnostics extends Dklu_internal
 			csum = 0.0 ;
 			for (j = Ap [i] ; j < pend ; j++)
 			{
-				abs_value = Math.abs ( Aentry [j] ) ;
+				abs_value = ABS (Aentry [j]) ;
 				//ABS (abs_value, Aentry [j]) ;
 				csum += abs_value ;
 			}
@@ -287,12 +290,10 @@ public class Dklu_diagnostics extends Dklu_internal
 
 		for (i = 0 ; i < n ; i++)
 		{
-			S [i] = 0.0 ;
-			//CLEAR (S [i]) ;
-			X [i] = 0.0 ;
-			//CLEAR (X [i]) ;
-			//REAL (X [i]) = 1.0 / ((double) n) ;
+			CLEAR (S, i) ;
+			CLEAR (X, i) ;
 			X [i] = 1.0 / ((double) n);
+			//REAL (X [i]) = 1.0 / ((double) n) ;
 		}
 		jmax = 0 ;
 
@@ -304,11 +305,10 @@ public class Dklu_diagnostics extends Dklu_internal
 				/* X [jmax] is the largest entry in X */
 				for (j = 0 ; j < n ; j++)
 				{
-					X [j] = 0 ;
-					//CLEAR (X [j]) ;
+					CLEAR (X, j) ;
 				}
-				//REAL (X [jmax]) = 1 ;
 				X [jmax] = 1 ;
+				//REAL (X [jmax]) = 1 ;
 			}
 
 			Dklu_solve.klu_solve (Symbolic, Numeric, n, 1, (double[]) X, Common) ;
@@ -318,7 +318,7 @@ public class Dklu_diagnostics extends Dklu_internal
 			for (j = 0 ; j < n ; j++)
 			{
 				/* ainv_norm += ABS (X [j]) ;*/
-				abs_value = Math.abs( X [j] ) ;
+				abs_value = ABS (X [j]) ;
 				//ABS (abs_value, X [j]) ;
 				ainv_norm += abs_value ;
 			}
@@ -328,7 +328,7 @@ public class Dklu_diagnostics extends Dklu_internal
 			for (j = 0 ; j < n ; j++)
 			{
 				double s = (X [j] >= 0) ? 1 : -1 ;
-				if (s != S [j])
+				if (s != S [j])  // s != REAL (S [j])
 				{
 					S [j] = s ;
 					unchanged = FALSE ;
@@ -353,7 +353,7 @@ public class Dklu_diagnostics extends Dklu_internal
 			Xmax = 0 ;
 			for (j = 0 ; j < n ; j++)
 			{
-				xj = Math.abs (X [j]) ;
+				xj = ABS (X [j]) ;
 				//ABS (xj, X [j]) ;
 				if (xj > Xmax)
 				{
@@ -376,9 +376,8 @@ public class Dklu_diagnostics extends Dklu_internal
 
 		for (j = 0 ; j < n ; j++)
 		{
-			X [j] = 0.0 ;
-			//CLEAR (X [j]) ;
-			if (j % 2 == 1)
+			CLEAR (X, j) ;
+			if (j % 2 != 0)
 			{
 				X [j] = 1 + ((double) j) / ((double) (n-1)) ;
 				//REAL (X [j]) = 1 + ((double) j) / ((double) (n-1)) ;
@@ -396,7 +395,7 @@ public class Dklu_diagnostics extends Dklu_internal
 		for (j = 0 ; j < n ; j++)
 		{
 			/* est_new += ABS (X [j]) ;*/
-			abs_value = Math.abs( X [j] ) ;
+			abs_value = ABS (X [j]) ;
 			//ABS (abs_value, X [j]) ;
 			est_new += abs_value ;
 		}
@@ -537,7 +536,7 @@ public class Dklu_diagnostics extends Dklu_internal
 		for (j = 0 ; j < n ; j++)
 		{
 			/* get the magnitude of the pivot */
-			ukk = Math.abs( Udiag [j] ) ;
+			ukk = ABS (Udiag [j]) ;
 			//ABS (ukk, Udiag [j]) ;
 			if (SCALAR_IS_NAN (ukk) || SCALAR_IS_ZERO (ukk))
 			{

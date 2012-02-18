@@ -31,6 +31,7 @@ import edu.ufl.cise.klu.common.KLU_symbolic;
 import static edu.ufl.cise.klu.tdouble.Dklu_scale.klu_scale;
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_int;
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_add_size_t;
 import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid_LU;
 import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid;
 import static edu.ufl.cise.klu.tdouble.Dklu.klu_kernel_factor;
@@ -92,10 +93,12 @@ public class Dklu_factor extends Dklu_internal
 
 		Rs = Numeric.Rs ;
 		Pinv = Numeric.Pinv ;
-		X = Numeric.Xwork ;              /* X is of size n */
-		Iwork = Numeric.Iwork ;          /* 5*maxblock for KLU_factor */
-		                                 /* 1*maxblock for Pblock */								/* 1*maxblock for Pblock */
-		Pblock = Iwork + 5*((int) Symbolic.maxblock) ;
+		X = new double [n] ;
+//		X = Numeric.Xwork ;              /* X is of size n */
+		Iwork = new int [5 * Symbolic.maxblock] ;
+//		Iwork = Numeric.Iwork ;		/* 5*maxblock for KLU_factor */
+		Pblock = new int [Symbolic.maxblock] ;
+//		Pblock = Iwork + 5*((int) Symbolic.maxblock) ;  /* 1*maxblock for Pblock */
 		Common.nrealloc = 0 ;
 		scale = Common.scale ;
 		max_lnz_block = 1 ;
@@ -181,8 +184,8 @@ public class Dklu_factor extends Dklu_internal
 				poff = Offp [k1] ;
 				oldcol = Q [k1] ;
 				pend = Ap [oldcol+1] ;
-				//CLEAR (s) ;
 				s = 0.0;
+				//CLEAR (s) ;
 
 				if (scale <= 0)
 				{
@@ -362,8 +365,7 @@ public class Dklu_factor extends Dklu_internal
 			}
 			for (k = 0 ; k < n ; k++)
 			{
-				Rs [k] = X [k] ;
-				//Rs [k] = REAL (X [k]) ;
+				Rs [k] = X [k] ; //REAL (X [k]) ;
 			}
 		}
 
@@ -407,11 +409,11 @@ public class Dklu_factor extends Dklu_internal
 					Llen = Numeric.Llen + k1 ;
 					LU = (double[]) Numeric.LUbx [block] ;
 					PRINTF ("\n---- L block %d\n", block);
-					ASSERT (Dklu_dump.klu_valid_LU (nk, TRUE, Lip, Llen, LU)) ;
+					ASSERT (klu_valid_LU (nk, TRUE, Lip, Llen, LU)) ;
 					Uip = Numeric.Uip + k1 ;
 					Ulen = Numeric.Ulen + k1 ;
 					PRINTF ("\n---- U block %d\n", block) ;
-					ASSERT (Dklu_dump.klu_valid_LU (nk, FALSE, Uip, Ulen, LU)) ;
+					ASSERT (klu_valid_LU (nk, FALSE, Uip, Ulen, LU)) ;
 				}
 			}
 		}
@@ -429,7 +431,8 @@ public class Dklu_factor extends Dklu_internal
 	public static KLU_numeric klu_factor(int[] Ap, int[] Ai, double[] Ax,
 			KLU_symbolic Symbolic, KLU_common Common)
 	{
-		int n, nzoff, nblocks, maxblock, k, ok = TRUE ;
+		int n, nzoff, nblocks, maxblock, k ;
+		int[] ok = new int [] {TRUE} ;
 		int[] R ;
 		KLU_numeric Numeric ;
 		int n1, nzoff1, s, b6, n3 ;
@@ -480,13 +483,15 @@ public class Dklu_factor extends Dklu_internal
 		nzoff1 = nzoff + 1 ;
 
 		//Numeric = Dklu_memory.klu_malloc (sizeof (KLU_numeric), 1, Common) ;
-		Numeric = new KLU_numeric();
-//		if (Common.status < KLU_OK)
-//		{
-//			/* out of memory */
-//			Common.status = KLU_OUT_OF_MEMORY ;
-//			return (null) ;
-//		}
+		try
+		{
+			Numeric = new KLU_numeric();
+		}
+		catch (OutOfMemoryError e)
+		{
+			Common.status = KLU_OUT_OF_MEMORY ;
+			return (null) ;
+		}
 		Numeric.n = n ;
 		Numeric.nblocks = nblocks ;
 		Numeric.nzoff = nzoff ;
@@ -502,7 +507,8 @@ public class Dklu_factor extends Dklu_internal
 
 		Numeric.LUsize = klu_malloc_int (nblocks, Common) ;
 
-		Numeric.LUbx = klu_malloc (nblocks, sizeof (double[]), Common) ;
+//		Numeric.LUbx = klu_malloc (nblocks, sizeof (double[]), Common) ;
+		Numeric.LUbx = new double [nblocks][] ;
 		if (Numeric.LUbx != null)
 		{
 			for (k = 0 ; k < nblocks ; k++)
@@ -532,18 +538,27 @@ public class Dklu_factor extends Dklu_internal
 		 *
 		 *    n*sizeof(double) + max (6*maxblock*sizeof(Int), 3*n*sizeof(double))
 		 */
-		s = Dklu_mult_size_t.klu_mult_size_t (n, sizeof (double), ok) ;
-		n3 = Dklu_mult_size_t.klu_mult_size_t (n, 3 * sizeof (double), ok) ;
-		b6 = Dklu_mult_size_t.klu_mult_size_t (maxblock, 6 * sizeof (Int), ok) ;
-		Numeric.worksize = Dklu_add_size_t.klu_add_size_t (s, MAX (n3, b6), ok) ;
-		Numeric.Work = Dklu_memory.klu_malloc (Numeric.worksize, 1, Common) ;
-		Numeric.Xwork = Numeric.Work ;
-		Numeric.Iwork = (Int[]) ((double[]) Numeric.Xwork + n) ;
-		if (!ok || Common.status < KLU_OK)
+//		s = klu_mult_size_t (n, sizeof (double), ok) ;
+		s = n ;
+//		n3 = klu_mult_size_t (n, 3 * sizeof (double), ok) ;
+		n3 = 3 * n ;
+//		b6 = klu_mult_size_t (maxblock, 6 * sizeof (Int), ok) ;
+		b6 = 6 * maxblock ;
+		Numeric.worksize = klu_add_size_t (s, MAX (n3, b6), ok) ;
+		try
+		{
+			if (ok[0] == 0) throw new OutOfMemoryError() ;
+
+			Numeric.Work = new double [Numeric.worksize] ;
+//			Numeric.Work = klu_malloc (Numeric.worksize, 1, Common) ;
+			Numeric.Xwork = Numeric.Work ;
+			Numeric.Iwork = new int [b6] ;
+//			Numeric.Iwork = (Int[]) ((double[]) Numeric.Xwork + n) ;
+		}
+		catch (OutOfMemoryError e)
 		{
 			/* out of memory or problem too large */
-			Common.status = ok == 1 ? KLU_OUT_OF_MEMORY :
-					KLU_TOO_LARGE ;
+			Common.status = ok[0] == 1 ? KLU_OUT_OF_MEMORY : KLU_TOO_LARGE ;
 			//klu_free_numeric (Numeric, Common) ;
 			Numeric = null;
 			return (null) ;
@@ -562,7 +577,8 @@ public class Dklu_factor extends Dklu_internal
 		if (Common.status < KLU_OK)
 		{
 			/* out of memory or inputs invalid */
-			Dklu_free_numeric.klu_free_numeric (Numeric, Common) ;
+//			klu_free_numeric (Numeric, Common) ;
+			Numeric = null ;
 		}
 		else if (Common.status == KLU_SINGULAR)
 		{
@@ -571,7 +587,9 @@ public class Dklu_factor extends Dklu_internal
 				/* Matrix is singular, and the Numeric object is only partially
 				 * defined because we halted early.  This is the default case for
 				 * a singular matrix. */
-				Dklu_free_numeric.klu_free_numeric (Numeric, Common) ;
+				Numeric = null ;
+//				klu_free_numeric (Numeric, Common) ;
+
 			}
 		}
 		else if (Common.status == KLU_OK)

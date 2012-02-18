@@ -47,7 +47,7 @@ public class Dklu_dump extends Dklu_internal
 	 *
 	 * Not user-callable.  Only used when debugging.
 	 */
-	public static int klu_valid(int n, int[] Ap, int[] Ai, double[] Ax)
+	protected static int klu_valid(int n, int[] Ap, int[] Ai, double[] Ax)
 	{
 		int nz, j, p1, p2, i, p ;
 		PRINTF ("\ncolumn oriented matrix, n = %d\n", n) ;
@@ -100,7 +100,7 @@ public class Dklu_dump extends Dklu_internal
 	 * test if Xip [0] = 0. This is not applicable for U. So when calling this
 	 * function for U, the flag should be set to false.  Only used when debugging.
 	 */
-	public static int klu_valid_LU(int n, int flag_test_start_ptr, int[] Xip,
+	protected static int klu_valid_LU(int n, int flag_test_start_ptr, int[] Xip,
 			int[] Xlen, double[] LU)
 	{
 		int[] Xi ;
@@ -113,7 +113,7 @@ public class Dklu_dump extends Dklu_internal
 			PRINTF ("n must be >= 0: %d\n", n) ;
 			return (FALSE) ;
 		}
-		if (flag_test_start_ptr == 1 && Xip [0] != 0)
+		if (flag_test_start_ptr != 0 && Xip [0] != 0)
 		{
 			/* column pointers must start at Xip [0] = 0*/
 			PRINTF ("column 0 pointer bad\n") ;

@@ -128,16 +128,16 @@ public class Dklu_analyze_given extends Dklu_internal
 		/* allocate the Symbolic object */
 		/* ---------------------------------------------------------------------- */
 
-//		Symbolic = klu_malloc (KLU_symbolic.class, 1, Common) ;
-		Symbolic = new KLU_symbolic();
-//		if (Common.status < KLU_OK)
-//		{
-//			/* out of memory */
-//			//klu_free (P, n, sizeof (int), Common) ;
-//			P = null;
-//			Common.status = KLU_OUT_OF_MEMORY ;
-//			return (null) ;
-//		}
+		try {
+//			Symbolic = klu_malloc (KLU_symbolic.class, 1, Common) ;
+			Symbolic = new KLU_symbolic();
+		} catch (OutOfMemoryError e) {
+			/* out of memory */
+			//klu_free (P, n, sizeof (int), Common) ;
+			P = null;
+			Common.status = KLU_OUT_OF_MEMORY ;
+			return (null) ;
+		}
 
 		Q = klu_malloc_int(n, Common) ;
 		R = klu_malloc_int (n+1, Common) ;
@@ -230,7 +230,7 @@ public class Dklu_analyze_given extends Dklu_internal
 		/* find the block triangular form, if requested */
 		/* ---------------------------------------------------------------------- */
 
-		if (do_btf == 1)
+		if (do_btf != 0)
 		{
 
 			/* ------------------------------------------------------------------ */
@@ -290,7 +290,7 @@ public class Dklu_analyze_given extends Dklu_internal
 			/* ------------------------------------------------------------------ */
 
 			/* modifies Q, and determines P and R */
-			nblocks = btf_strongcomp (n, Ap, Bi, Q, P, R, Work) ;
+			nblocks = btf_strongcomp (n, Ap, Bi, Q, P, R) ;
 
 			/* ------------------------------------------------------------------ */
 			/* P = P * Puser */
