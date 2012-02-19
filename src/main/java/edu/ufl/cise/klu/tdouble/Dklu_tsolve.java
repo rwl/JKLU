@@ -195,104 +195,104 @@ public class Dklu_tsolve extends Dklu_internal {
 				if (block > 0)
 				{
 					switch (nr)
+					{
+
+					case 1:
+
+						for (k = k1 ; k < k2 ; k++)
 						{
-
-						case 1:
-
-							for (k = k1 ; k < k2 ; k++)
+							pend = Offp [k+1] ;
+							for (p = Offp [k] ; p < pend ; p++)
 							{
-								pend = Offp [k+1] ;
-								for (p = Offp [k] ; p < pend ; p++)
 								{
-									{
-										X [k] -= Offx [p] * X [Offi [p]] ;
-										//MULT_SUB (X [k], Offx [p], X [Offi [p]]) ;
-									}
+									X [k] -= Offx [p] * X [Offi [p]] ;
+									//MULT_SUB (X [k], Offx [p], X [Offi [p]]) ;
 								}
 							}
-							break ;
-
-						case 2:
-
-							for (k = k1 ; k < k2 ; k++)
-							{
-								pend = Offp [k+1] ;
-								x [0] = X [2*k    ] ;
-								x [1] = X [2*k + 1] ;
-								for (p = Offp [k] ; p < pend ; p++)
-								{
-									i = Offi [p] ;
-									{
-										offik = Offx [p] ;
-									}
-									x [0] -= offik * X [2*i] ;
-									//MULT_SUB (x [0], offik, X [2*i]) ;
-									x [1] -= offik * X [2*i + 1] ;
-									//MULT_SUB (x [1], offik, X [2*i + 1]) ;
-								}
-								X [2*k    ] = x [0] ;
-								X [2*k + 1] = x [1] ;
-							}
-							break ;
-
-						case 3:
-
-							for (k = k1 ; k < k2 ; k++)
-							{
-								pend = Offp [k+1] ;
-								x [0] = X [3*k    ] ;
-								x [1] = X [3*k + 1] ;
-								x [2] = X [3*k + 2] ;
-								for (p = Offp [k] ; p < pend ; p++)
-								{
-									i = Offi [p] ;
-									{
-										offik = Offx [p] ;
-									}
-									x [0] -= offik * X [3*i] ;
-									//MULT_SUB (x [0], offik, X [3*i]) ;
-									x [1] -= offik * X [3*i + 1] ;
-									//MULT_SUB (x [1], offik, X [3*i + 1]) ;
-									x [2] -= offik * X [3*i + 2] ;
-									//MULT_SUB (x [2], offik, X [3*i + 2]) ;
-								}
-								X [3*k    ] = x [0] ;
-								X [3*k + 1] = x [1] ;
-								X [3*k + 2] = x [2] ;
-							}
-							break ;
-
-						case 4:
-
-							for (k = k1 ; k < k2 ; k++)
-							{
-								pend = Offp [k+1] ;
-								x [0] = X [4*k    ] ;
-								x [1] = X [4*k + 1] ;
-								x [2] = X [4*k + 2] ;
-								x [3] = X [4*k + 3] ;
-								for (p = Offp [k] ; p < pend ; p++)
-								{
-									i = Offi [p] ;
-									{
-										offik = Offx [p] ;
-									}
-									x [0] -= offik * X [4*i] ;
-									//MULT_SUB (x [0], offik, X [4*i]) ;
-									x [1] -= offik * X [4*i + 1] ;
-									//MULT_SUB (x [1], offik, X [4*i + 1]) ;
-									x [2] -= offik * X [4*i + 2] ;
-									//MULT_SUB (x [2], offik, X [4*i + 2]) ;
-									x [3] -= offik * X [4*i + 3] ;
-									//MULT_SUB (x [3], offik, X [4*i + 3]) ;
-								}
-								X [4*k    ] = x [0] ;
-								X [4*k + 1] = x [1] ;
-								X [4*k + 2] = x [2] ;
-								X [4*k + 3] = x [3] ;
-							}
-							break ;
 						}
+						break ;
+
+					case 2:
+
+						for (k = k1 ; k < k2 ; k++)
+						{
+							pend = Offp [k+1] ;
+							x [0] = X [2*k    ] ;
+							x [1] = X [2*k + 1] ;
+							for (p = Offp [k] ; p < pend ; p++)
+							{
+								i = Offi [p] ;
+								{
+									offik = Offx [p] ;
+								}
+								x [0] -= offik * X [2*i] ;
+								//MULT_SUB (x [0], offik, X [2*i]) ;
+								x [1] -= offik * X [2*i + 1] ;
+								//MULT_SUB (x [1], offik, X [2*i + 1]) ;
+							}
+							X [2*k    ] = x [0] ;
+							X [2*k + 1] = x [1] ;
+						}
+						break ;
+
+					case 3:
+
+						for (k = k1 ; k < k2 ; k++)
+						{
+							pend = Offp [k+1] ;
+							x [0] = X [3*k    ] ;
+							x [1] = X [3*k + 1] ;
+							x [2] = X [3*k + 2] ;
+							for (p = Offp [k] ; p < pend ; p++)
+							{
+								i = Offi [p] ;
+								{
+									offik = Offx [p] ;
+								}
+								x [0] -= offik * X [3*i] ;
+								//MULT_SUB (x [0], offik, X [3*i]) ;
+								x [1] -= offik * X [3*i + 1] ;
+								//MULT_SUB (x [1], offik, X [3*i + 1]) ;
+								x [2] -= offik * X [3*i + 2] ;
+								//MULT_SUB (x [2], offik, X [3*i + 2]) ;
+							}
+							X [3*k    ] = x [0] ;
+							X [3*k + 1] = x [1] ;
+							X [3*k + 2] = x [2] ;
+						}
+						break ;
+
+					case 4:
+
+						for (k = k1 ; k < k2 ; k++)
+						{
+							pend = Offp [k+1] ;
+							x [0] = X [4*k    ] ;
+							x [1] = X [4*k + 1] ;
+							x [2] = X [4*k + 2] ;
+							x [3] = X [4*k + 3] ;
+							for (p = Offp [k] ; p < pend ; p++)
+							{
+								i = Offi [p] ;
+								{
+									offik = Offx [p] ;
+								}
+								x [0] -= offik * X [4*i] ;
+								//MULT_SUB (x [0], offik, X [4*i]) ;
+								x [1] -= offik * X [4*i + 1] ;
+								//MULT_SUB (x [1], offik, X [4*i + 1]) ;
+								x [2] -= offik * X [4*i + 2] ;
+								//MULT_SUB (x [2], offik, X [4*i + 2]) ;
+								x [3] -= offik * X [4*i + 3] ;
+								//MULT_SUB (x [3], offik, X [4*i + 3]) ;
+							}
+							X [4*k    ] = x [0] ;
+							X [4*k + 1] = x [1] ;
+							X [4*k + 2] = x [2] ;
+							X [4*k + 3] = x [3] ;
+						}
+						break ;
+					}
 				}
 
 				/* -------------------------------------------------------------- */

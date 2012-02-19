@@ -297,9 +297,9 @@ public class Dklu_solve extends Dklu_internal {
 				}
 				else
 				{
-					Dklu.klu_lsolve (nk, Lip + k1, Llen + k1,
+					klu_lsolve (nk, Lip + k1, Llen + k1,
 							LUbx [block], nr, X + nr*k1) ;
-					Dklu.klu_usolve (nk, Uip + k1, Ulen + k1,
+					klu_usolve (nk, Uip + k1, Ulen + k1,
 							LUbx [block], Udiag + k1, nr, X + nr*k1) ;
 				}
 

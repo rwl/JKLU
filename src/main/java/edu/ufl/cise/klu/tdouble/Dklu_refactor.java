@@ -156,8 +156,8 @@ public class Dklu_refactor extends Dklu_internal {
 
 		for (k = 0 ; k < maxblock ; k++)
 		{
-			X [k] = 0 ;
-			//CLEAR (X [k]) ;
+			/* X [k] = 0 ; */
+			CLEAR (X, k) ;
 		}
 
 		poff = 0 ;
@@ -193,8 +193,7 @@ public class Dklu_refactor extends Dklu_internal {
 
 					oldcol = Q [k1] ;
 					pend = Ap [oldcol+1] ;
-					s = 0 ;
-					//CLEAR (s) ;
+					s = 0 ; //CLEAR (s) ;
 					for (p = Ap [oldcol] ; p < pend ; p++)
 					{
 						newrow = Pinv [Ai [p]] - k1 ;
@@ -260,8 +259,8 @@ public class Dklu_refactor extends Dklu_internal {
 						{
 							j = Ui [up] ;
 							ujk = X [j] ;
-							X [j] = 0 ;
-							//CLEAR (X [j]) ;
+							/* X [j] = 0 ; */
+							CLEAR (X, j) ;
 							Ux [up] = ujk ;
 							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen) ;
 							for (p = 0 ; p < llen ; p++)
@@ -272,8 +271,8 @@ public class Dklu_refactor extends Dklu_internal {
 						}
 						/* get the diagonal entry of U */
 						ukk = X [k] ;
-						X [k] = 0 ;
-						//CLEAR (X [k]) ;
+						/* X [k] = 0 ; */
+						CLEAR (X, k) ;
 						/* singular case */
 						if (IS_ZERO (ukk))
 						{
@@ -298,8 +297,7 @@ public class Dklu_refactor extends Dklu_internal {
 							i = Li [p] ;
 							Lx [p] = X [i] / ukk ;
 							//DIV (Lx [p], X [i], ukk) ;
-							X [i] = 0 ;
-							//CLEAR (X [i]) ;
+							CLEAR (X, i) ;
 						}
 
 					}
@@ -334,8 +332,7 @@ public class Dklu_refactor extends Dklu_internal {
 
 					oldcol = Q [k1] ;
 					pend = Ap [oldcol+1] ;
-					s = 0 ;
-					//CLEAR (s) ;
+					s = 0 ; //CLEAR (s) ;
 					for (p = Ap [oldcol] ; p < pend ; p++)
 					{
 						oldrow = Ai [p] ;
@@ -407,8 +404,8 @@ public class Dklu_refactor extends Dklu_internal {
 						{
 							j = Ui [up] ;
 							ujk = X [j] ;
-							X [j] = 0 ;
-							//CLEAR (X [j]) ;
+							/* X [j] = 0 ; */
+							CLEAR (X, j) ;
 							Ux [up] = ujk ;
 							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen) ;
 							for (p = 0 ; p < llen ; p++)
@@ -419,8 +416,8 @@ public class Dklu_refactor extends Dklu_internal {
 						}
 						/* get the diagonal entry of U */
 						ukk = X [k] ;
-						X [k] = 0 ;
-						//CLEAR (X [k]) ;
+						/* X [k] = 0 ; */
+						CLEAR (X, k) ;
 						/* singular case */
 						if (IS_ZERO (ukk))
 						{
@@ -445,8 +442,7 @@ public class Dklu_refactor extends Dklu_internal {
 							i = Li [p] ;
 							Lx [p] = X [i] / ukk ;
 							//DIV (Lx [p], X [i], ukk) ;
-							X [i] = 0 ;
-							//CLEAR (X [i]) ;
+							CLEAR (X, i) ;
 						}
 					}
 				}

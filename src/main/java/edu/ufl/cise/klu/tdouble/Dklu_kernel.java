@@ -26,7 +26,7 @@ package edu.ufl.cise.klu.tdouble;
 
 import edu.ufl.cise.klu.common.KLU_common;
 
-import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_realloc;
+import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_realloc_dbl;
 
 /**
  * Sparse left-looking LU factorization, with partial pivoting.  Based on
@@ -737,8 +737,7 @@ public class Dklu_kernel extends Dklu_internal {
 				}
 				newlusize = (int) (memgrow * lusize + 2*n + 1) ;
 				/* Future work: retry mechanism in case of malloc failure */
-				LU = new double [newlusize] ;
-//				LU = klu_realloc (newlusize, lusize, Double.class, LU, Common) ;
+				LU = klu_realloc_dbl (newlusize, lusize, LU, Common) ;
 				Common.nrealloc++ ;
 				p_LU = LU ;
 				if (Common.status == KLU_OUT_OF_MEMORY)
@@ -976,8 +975,7 @@ public class Dklu_kernel extends Dklu_internal {
 		ASSERT ((int) newlusize <= lusize) ;
 
 		/* this cannot fail, since the block is descreasing in size */
-		LU = new double [newlusize] ;
-//		LU = klu_realloc (newlusize, lusize, Double.class, LU, Common) ;
+		LU = klu_realloc_dbl (newlusize, lusize, LU, Common) ;
 		p_LU = LU ;
 		return (newlusize) ;
 	}

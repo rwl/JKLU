@@ -115,13 +115,13 @@ public class Dklu extends Dklu_internal {
 	 */
 	public static int klu_kernel_factor(int n, int[] Ap, int[] Ai,
 			double[] Ax, int[] Q, double Lsize,
-			double[] p_LU, double[] Udiag, int[] Llen, int[] Ulen, int[] Lip,
+			double[][] p_LU, double[] Udiag, int[] Llen, int[] Ulen, int[] Lip,
 			int[] Uip, int P[], int[] lnz, int[] unz,
 			double[] X, int[] Work, int k1, int[] PSinv, double[] Rs,
 			int[] Offp, int[] Offi, double[] Offx, KLU_common Common)
 	{
 		double maxlnz, dunits ;
-		double[] LU ;
+		double[][] LU ;
 		int[] Pinv, Lpend, Stack, Flag, Ap_pos, W ;
 		int lsize, usize, anz, ok ;
 		int lusize ;
@@ -202,8 +202,8 @@ public class Dklu extends Dklu_internal {
 
 		if (Common.status < KLU_OK)
 		{
-			//LU = KLU_free (LU, lusize, sizeof (double), Common) ;
 			LU = null ;
+			//LU = KLU_free (LU, lusize, sizeof (double), Common) ;
 			lusize = 0 ;
 		}
 		p_LU = LU ;
@@ -370,8 +370,8 @@ public class Dklu extends Dklu_internal {
 					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
 					ukk = Udiag [k] ;
 					x [0] = X [2*k    ] / ukk ;
-					x [1] = X [2*k + 1] / ukk ;
 					//DIV (x [0], X [2*k], ukk) ;
+					x [1] = X [2*k + 1] / ukk ;
 					//DIV (x [1], X [2*k + 1], ukk) ;
 
 					X [2*k    ] = x [0] ;
@@ -381,8 +381,8 @@ public class Dklu extends Dklu_internal {
 						i = Ui [p] ;
 						uik = Ux [p] ;
 						X [2*i    ] -= uik * x [0] ;
-						X [2*i + 1] -= uik * x [1] ;
 						//MULT_SUB (X [2*i], uik, x [0]) ;
+						X [2*i + 1] -= uik * x [1] ;
 						//MULT_SUB (X [2*i + 1], uik, x [1]) ;
 					}
 				}

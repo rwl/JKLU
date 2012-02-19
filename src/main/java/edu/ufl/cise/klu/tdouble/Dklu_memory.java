@@ -25,7 +25,6 @@
 package edu.ufl.cise.klu.tdouble;
 
 import edu.ufl.cise.klu.common.KLU_common;
-import edu.ufl.cise.klu.common.KLU_symbolic;
 
 /**
  * KLU memory management routines.
@@ -52,8 +51,7 @@ public class Dklu_memory extends Dklu_internal {
 	}
 
 	/**
-	 * Wrapper around malloc routine (mxMalloc for a mexFunction).  Allocates
-	 * space of size MAX(1,n)*size, where size is normally a sizeof (...).
+	 * Allocates space of size MAX(1,n).
 	 *
 	 * This routine and KLU_realloc do not set Common.status to KLU_OK on success,
 	 * so that a sequence of KLU_malloc's or KLU_realloc's can be used.  If any of
@@ -62,8 +60,6 @@ public class Dklu_memory extends Dklu_internal {
 	 * Usage, for a pointer to Int:
 	 *
 	 *      p = KLU_malloc (n, sizeof (Int), Common)
-	 *
-	 * Uses a pointer to the malloc routine (or its equivalent) defined in Common.
 	 *
 	 * @param n number of items
 	 * @param size size of each item
@@ -129,37 +125,11 @@ public class Dklu_memory extends Dklu_internal {
 	}
 
 	/**
-	 * Wrapper around free routine.
+	 * Given an array p allocated by KLU_malloc, it changes the size of the
+	 * block pointed to by p to be MAX(1,nnew) in size.  It may return an
+	 * array different than p.  This should be used as:
 	 *
-	 * @param p block of memory to free
-	 * @param n size of block to free, in # of items
-	 * @param size size of each item
-	 * @param Common
-	 */
-//	public static void klu_free(Object p, int n, int size,
-//			KLU_common Common) {
-//		int s ;
-//		int ok = TRUE ;
-//		if (p != null && Common != null)
-//		{
-//			/* only free the object if the pointer is not null */
-//			/* call free, or its equivalent */
-//			(Common.free_memory) (p) ;
-//			s = klu_mult_size_t (MAX (1,n), size, &ok) ;
-//			Common.memusage -= s ;
-//		}
-//		/* return null, and the caller should assign this to p.  This avoids
-//		 * freeing the same pointer twice. */
-//		//return (null) ;
-//	}
-
-	/**
-	 * Wrapper around realloc routine (mxRealloc for a mexFunction).  Given a
-	 * pointer p to a block allocated by KLU_malloc, it changes the size of the
-	 * block pointed to by p to be MAX(1,nnew)*size in size.  It may return a
-	 * pointer different than p.  This should be used as (for a pointer to Int):
-	 *
-	 *      p = KLU_realloc (nnew, nold, sizeof (Int), p, Common) ;
+	 *      p = KLU_realloc (nnew, nold, p, Common) ;
 	 *
 	 * If p is null, this is the same as p = KLU_malloc (...).
 	 * A size of nnew=0 is treated as nnew=1.
@@ -168,36 +138,26 @@ public class Dklu_memory extends Dklu_internal {
 	 * to KLU_OUT_OF_MEMORY.  If successful, Common.status is not modified,
 	 * and p is returned (possibly changed) and pointing to a large block of memory.
 	 *
-	 * Uses a pointer to the realloc routine (or its equivalent) defined in Common.
-	 *
 	 * @param nnew requested # of items in reallocated block
 	 * @param nold old # of items
-	 * @param size size of each item
 	 * @param p block of memory to realloc
 	 * @param Common
 	 * @return pointer to reallocated block
 	 */
-	public static int[] klu_realloc(int nnew, int nold, int size,
-			int[] p, KLU_common Common)
+	public static double[] klu_realloc_dbl (int nnew, int nold,
+			double[] p, KLU_common Common)
 	{
-		Object pnew ;
+		double[] pnew ;
 		int snew, sold ;
-		int ok = TRUE ;
 
 		if (Common == null)
 		{
 			p = null ;
 		}
-		else if (size == 0)
-		{
-			/* size must be > 0 */
-			Common.status = KLU_INVALID ;
-			p = null ;
-		}
 		else if (p == null)
 		{
 			/* A fresh object is being allocated. */
-			p = klu_malloc_int (nnew, Common) ;
+			p = klu_malloc_dbl (nnew, Common) ;
 		}
 		else if (nnew >= INT_MAX)
 		{
@@ -208,20 +168,21 @@ public class Dklu_memory extends Dklu_internal {
 		{
 			/* The object exists, and is changing to some other nonzero size. */
 			/* call realloc, or its equivalent */
-			snew = klu_mult_size_t (MAX (1,nnew), size, &ok) ;
-			sold = klu_mult_size_t (MAX (1,nold), size, &ok) ;
-			pnew = ok != 0 ? ((Common.realloc_memory) (p, snew)) : null ;
-			if (pnew == null)
+			snew = MAX (1, nnew) ;
+			sold = MAX (1, nold) ;
+			try
+			{
+				pnew = new double[snew] ;
+				Runtime runtime = Runtime.getRuntime();
+				Common.memusage = runtime.totalMemory() - runtime.freeMemory();
+//				Common.memusage += (snew - sold) ;
+				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
+				p = pnew ;
+			}
+			catch (OutOfMemoryError e)
 			{
 				/* Do not change p, since it still points to allocated memory */
 				Common.status = KLU_OUT_OF_MEMORY ;
-			}
-			else
-			{
-				/* success: return the new p and change the size of the block */
-				Common.memusage += (snew - sold) ;
-				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
-				p = pnew ;
 			}
 		}
 		return (p) ;
