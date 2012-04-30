@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -61,10 +61,12 @@ public class Dklu_factor extends Dklu_internal
 			Lip, Uip, Llen, Ulen ;
 		double[] Offx, X, Udiag ;
 		double s ;
-		double[][] LUbx ;
+		double[] LUbx ;
 		int k1, k2, nk, k, block, oldcol, pend, oldrow, n, lnz, unz, p, newrow,
-			nblocks, poff, nzoff, lnz_block, unz_block, scale, max_lnz_block,
+			nblocks, poff, nzoff, scale, max_lnz_block,
 			max_unz_block ;
+		int[] lnz_block = new int [1] ;
+		int[] unz_block = new int [1] ;
 
 		/* ---------------------------------------------------------------------- */
 		/* initializations */
@@ -93,12 +95,12 @@ public class Dklu_factor extends Dklu_internal
 
 		Rs = Numeric.Rs ;
 		Pinv = Numeric.Pinv ;
-		X = new double [n] ;
-//		X = Numeric.Xwork ;              /* X is of size n */
-		Iwork = new int [5 * Symbolic.maxblock] ;
-//		Iwork = Numeric.Iwork ;		/* 5*maxblock for KLU_factor */
+		X = Numeric.Xwork ;              /* X is of size n */
+//		X = new double [n] ;
+		Iwork = Numeric.Iwork ;		/* 5*maxblock for KLU_factor */
+//		Iwork = new int [5 * Symbolic.maxblock] ;
+		//Pblock = Iwork + 5*((int) Symbolic.maxblock) ;  /* 1*maxblock for Pblock */
 		Pblock = new int [Symbolic.maxblock] ;
-//		Pblock = Iwork + 5*((int) Symbolic.maxblock) ;  /* 1*maxblock for Pblock */
 		Common.nrealloc = 0 ;
 		scale = Common.scale ;
 		max_lnz_block = 1 ;
@@ -279,8 +281,8 @@ public class Dklu_factor extends Dklu_internal
 				/* allocates 1 arrays: LUbx [block] */
 				Numeric.LUsize [block] = klu_kernel_factor (
 						nk, Ap, Ai, Ax, Q,
-						lsize, LUbx [block], Udiag + k1, Llen + k1, Ulen + k1,
-						Lip + k1, Uip + k1, Pblock, lnz_block, unz_block,
+						lsize, LUbx [block], Udiag, Llen, Ulen,
+						Lip, Uip, Pblock, lnz_block, unz_block,
 						X, Iwork, k1, Pinv, Rs, Offp, Offi, Offx, Common) ;
 
 				if (Common.status < KLU_OK ||
@@ -291,25 +293,25 @@ public class Dklu_factor extends Dklu_internal
 					return ;
 				}
 
-				PRINTF ("\n----------------------- L %d:\n", block) ;
-				ASSERT (klu_valid_LU (nk, TRUE, Lip+k1, Llen+k1, LUbx [block])) ;
-				PRINTF ("\n----------------------- U %d:\n", block) ;
-				ASSERT (klu_valid_LU (nk, FALSE, Uip+k1, Ulen+k1, LUbx [block])) ;
+//				PRINTF ("\n----------------------- L %d:\n", block) ;
+//				ASSERT (klu_valid_LU (nk, TRUE, Lip+k1, Llen+k1, LUbx [block])) ;
+//				PRINTF ("\n----------------------- U %d:\n", block) ;
+//				ASSERT (klu_valid_LU (nk, FALSE, Uip+k1, Ulen+k1, LUbx [block])) ;
 
 				/* -------------------------------------------------------------- */
 				/* get statistics */
 				/* -------------------------------------------------------------- */
 
-				lnz += lnz_block ;
-				unz += unz_block ;
-				max_lnz_block = MAX (max_lnz_block, lnz_block) ;
-				max_unz_block = MAX (max_unz_block, unz_block) ;
-
-				if (Lnz [block] == EMPTY)
-				{
-					/* revise estimate for subsequent factorization */
-					Lnz [block] = MAX (lnz_block, unz_block) ;
-				}
+//				lnz += lnz_block ;
+//				unz += unz_block ;
+//				max_lnz_block = MAX (max_lnz_block, lnz_block) ;
+//				max_unz_block = MAX (max_unz_block, unz_block) ;
+//
+//				if (Lnz [block] == EMPTY)
+//				{
+//					/* revise estimate for subsequent factorization */
+//					Lnz [block] = MAX (lnz_block, unz_block) ;
+//				}
 
 				/* -------------------------------------------------------------- */
 				/* combine the klu row ordering with the symbolic pre-ordering */
@@ -405,15 +407,15 @@ public class Dklu_factor extends Dklu_internal
 				{
 //					int[] Lip, Uip, Llen, Ulen ;
 					double[] LU ;
-					Lip = Numeric.Lip + k1 ;
-					Llen = Numeric.Llen + k1 ;
-					LU = (double[]) Numeric.LUbx [block] ;
-					PRINTF ("\n---- L block %d\n", block);
-					ASSERT (klu_valid_LU (nk, TRUE, Lip, Llen, LU)) ;
-					Uip = Numeric.Uip + k1 ;
-					Ulen = Numeric.Ulen + k1 ;
-					PRINTF ("\n---- U block %d\n", block) ;
-					ASSERT (klu_valid_LU (nk, FALSE, Uip, Ulen, LU)) ;
+//					Lip = Numeric.Lip + k1 ;
+//					Llen = Numeric.Llen + k1 ;
+//					LU = (double[]) Numeric.LUbx [block] ;
+//					PRINTF ("\n---- L block %d\n", block);
+//					ASSERT (klu_valid_LU (nk, TRUE, Lip, Llen, LU)) ;
+//					Uip = Numeric.Uip + k1 ;
+//					Ulen = Numeric.Ulen + k1 ;
+//					PRINTF ("\n---- U block %d\n", block) ;
+//					ASSERT (klu_valid_LU (nk, FALSE, Uip, Ulen, LU)) ;
 				}
 			}
 		}
@@ -508,12 +510,12 @@ public class Dklu_factor extends Dklu_internal
 		Numeric.LUsize = klu_malloc_int (nblocks, Common) ;
 
 //		Numeric.LUbx = klu_malloc (nblocks, sizeof (double[]), Common) ;
-		Numeric.LUbx = new double [nblocks][] ;
+		Numeric.LUbx = new double [nblocks] ;
 		if (Numeric.LUbx != null)
 		{
 			for (k = 0 ; k < nblocks ; k++)
 			{
-				Numeric.LUbx [k] = null ;
+				Numeric.LUbx [k] = 0.0 ;//null ;
 			}
 		}
 
@@ -538,22 +540,22 @@ public class Dklu_factor extends Dklu_internal
 		 *
 		 *    n*sizeof(double) + max (6*maxblock*sizeof(Int), 3*n*sizeof(double))
 		 */
-//		s = klu_mult_size_t (n, sizeof (double), ok) ;
+		//s = klu_mult_size_t (n, sizeof (double), ok) ;
 		s = n ;
-//		n3 = klu_mult_size_t (n, 3 * sizeof (double), ok) ;
+		//n3 = klu_mult_size_t (n, 3 * sizeof (double), ok) ;
 		n3 = 3 * n ;
-//		b6 = klu_mult_size_t (maxblock, 6 * sizeof (Int), ok) ;
+		//b6 = klu_mult_size_t (maxblock, 6 * sizeof (Int), ok) ;
 		b6 = 6 * maxblock ;
 		Numeric.worksize = klu_add_size_t (s, MAX (n3, b6), ok) ;
 		try
 		{
 			if (ok[0] == 0) throw new OutOfMemoryError() ;
 
+			//Numeric.Work = klu_malloc (Numeric.worksize, 1, Common) ;
 			Numeric.Work = new double [Numeric.worksize] ;
-//			Numeric.Work = klu_malloc (Numeric.worksize, 1, Common) ;
 			Numeric.Xwork = Numeric.Work ;
+			//Numeric.Iwork = (Int[]) ((double[]) Numeric.Xwork + n) ;
 			Numeric.Iwork = new int [b6] ;
-//			Numeric.Iwork = (Int[]) ((double[]) Numeric.Xwork + n) ;
 		}
 		catch (OutOfMemoryError e)
 		{

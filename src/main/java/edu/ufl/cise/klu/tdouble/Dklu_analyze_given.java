@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -129,7 +129,7 @@ public class Dklu_analyze_given extends Dklu_internal
 		/* ---------------------------------------------------------------------- */
 
 		try {
-//			Symbolic = klu_malloc (KLU_symbolic.class, 1, Common) ;
+			//Symbolic = klu_malloc (KLU_symbolic.class, 1, Common) ;
 			Symbolic = new KLU_symbolic();
 		} catch (OutOfMemoryError e) {
 			/* out of memory */

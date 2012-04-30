@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -115,13 +115,13 @@ public class Dklu extends Dklu_internal {
 	 */
 	public static int klu_kernel_factor(int n, int[] Ap, int[] Ai,
 			double[] Ax, int[] Q, double Lsize,
-			double[][] p_LU, double[] Udiag, int[] Llen, int[] Ulen, int[] Lip,
+			double p_LU, double[] Udiag, int[] Llen, int[] Ulen, int[] Lip,
 			int[] Uip, int P[], int[] lnz, int[] unz,
 			double[] X, int[] Work, int k1, int[] PSinv, double[] Rs,
 			int[] Offp, int[] Offi, double[] Offx, KLU_common Common)
 	{
 		double maxlnz, dunits ;
-		double[][] LU ;
+		double[] LU ;
 		int[] Pinv, Lpend, Stack, Flag, Ap_pos, W ;
 		int lsize, usize, anz, ok ;
 		int lusize ;
@@ -167,16 +167,21 @@ public class Dklu extends Dklu_internal {
 
 		/* these computations are safe from int overflow */
 		W = Work ;
-		Pinv = W ;      W += n ;
-		Stack = W ;     W += n ;
-		Flag = W ;      W += n ;
-		Lpend = W ;     W += n ;
-		Ap_pos = W ;    W += n ;
+		Pinv = W ;      //W += n ;
+		int Pinv_offset = n ;
+		Stack = W ;     //W += n ;
+		int Stack_offset = 2*n ;
+		Flag = W ;      //W += n ;
+		int Flag_offset = 3*n ;
+		Lpend = W ;     //W += n ;
+		int Lpend_offset = 4*n ;
+		Ap_pos = W ;    //W += n ;
+		int Ap_pos_offset = 5*n ;
 
-		dunits = DUNITS (Integer, lsize) + DUNITS (Double, lsize) +
-				 DUNITS (Integer, usize) + DUNITS (Double, usize) ;
-		lusize = (int) dunits ;
-		ok = INT_OVERFLOW (dunits) ? FALSE : TRUE ;
+//		dunits = DUNITS (Integer, lsize) + DUNITS (Double, lsize) +
+//				 DUNITS (Integer, usize) + DUNITS (Double, usize) ;
+//		lusize = (int) dunits ;
+//		ok = INT_OVERFLOW (dunits) ? FALSE : TRUE ;
 		LU = ok != 0 ? klu_malloc_dbl (lusize, Common) : null ;
 		if (LU == null)
 		{
@@ -192,7 +197,8 @@ public class Dklu extends Dklu_internal {
 
 		/* with pruning, and non-recursive depth-first-search */
 		lusize = klu_kernel (n, Ap, Ai, Ax, Q, lusize,
-				Pinv, P, LU, Udiag, Llen, Ulen, Lip, Uip, lnz, unz,
+				Pinv, P, LU, Udiag, k1, Llen, k1, Ulen, k1,
+				Lip, k1, Uip, k1, lnz, unz,
 				X, Stack, Flag, Ap_pos, Lpend,
 				k1, PSinv, Rs, Offp, Offi, Offx, Common) ;
 

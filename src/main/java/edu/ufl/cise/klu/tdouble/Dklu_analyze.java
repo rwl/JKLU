@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -166,7 +166,7 @@ public class Dklu_analyze extends Dklu_internal
 			}
 			Cp [nk] = pc ;
 			maxnz = MAX (maxnz, pc) ;
-			ASSERT (klu_valid (nk, Cp, Ci, null)) ;
+			if (!NDEBUG) ASSERT (klu_valid (nk, Cp, Ci, null)) ;
 
 			/* ------------------------------------------------------------------ */
 			/* order the block C */
@@ -250,7 +250,7 @@ public class Dklu_analyze extends Dklu_internal
 				ok = (lnz1 != 0) ? 1 : 0 ;
 			}
 
-			if (!(ok == 1))
+			if (ok != 1)
 			{
 				return (err) ;  /* ordering method failed */
 			}
@@ -311,8 +311,7 @@ public class Dklu_analyze extends Dklu_internal
 		double[] Lnz ;
 		int[] structural_rank = new int [1] ;
 		int[] Qbtf, Cp, Ci, Pinv, Pblk, Pbtf, P, Q, R ;
-		int nblocks, nz, block, maxblock, k1, k2, nk, do_btf, ordering, k,
-			Cilen ;
+		int nblocks, nz, block, maxblock, k1, k2, nk, do_btf, ordering, k, Cilen ;
 
 		/* ---------------------------------------------------------------------- */
 		/* allocate the Symbolic object, and check input matrix */
@@ -390,15 +389,15 @@ public class Dklu_analyze extends Dklu_internal
 
 		if (do_btf != 0)
 		{
-//			Work = klu_malloc_int (5*n, Common) ;
+			//Work = klu_malloc_int (5*n, Common) ;
 			if (Common.status < KLU_OK)
 			{
 				/* out of memory */
-//				klu_free (Pbtf, n, sizeof (int), Common) ;
+				//klu_free (Pbtf, n, sizeof (int), Common) ;
 				Pbtf = null;
-//				klu_free (Qbtf, n, sizeof (int), Common) ;
+				//klu_free (Qbtf, n, sizeof (int), Common) ;
 				Qbtf = null;
-//				klu_free_symbolic (Symbolic, Common) ;
+				//klu_free_symbolic (Symbolic, Common) ;
 				Symbolic = null;
 				return (null) ;
 			}
@@ -409,8 +408,7 @@ public class Dklu_analyze extends Dklu_internal
 			Common.structural_rank = Symbolic.structural_rank ;
 			Common.work += work[0] ;
 
-//			KLU_free (Work, 5*n, sizeof (int), Common) ;
-//			Work = null;
+			//KLU_free (Work, 5*n, sizeof (int), Common) ;
 
 			/* unflip Qbtf if the matrix does not have full structural rank */
 			if (Symbolic.structural_rank < n)
@@ -476,12 +474,12 @@ public class Dklu_analyze extends Dklu_internal
 		/* free all workspace */
 		/* ---------------------------------------------------------------------- */
 
-//		Dklu_memory.klu_free (Pblk, maxblock, sizeof (int), Common) ;
-//		Dklu_memory.klu_free (Cp, maxblock+1, sizeof (int), Common) ;
-//		Dklu_memory.klu_free (Ci, MAX (Cilen, nz+1), sizeof (int), Common) ;
-//		Dklu_memory.klu_free (Pinv, n, sizeof (int), Common) ;
-//		Dklu_memory.klu_free (Pbtf, n, sizeof (int), Common) ;
-//		Dklu_memory.klu_free (Qbtf, n, sizeof (int), Common) ;
+		//Dklu_memory.klu_free (Pblk, maxblock, sizeof (int), Common) ;
+		//Dklu_memory.klu_free (Cp, maxblock+1, sizeof (int), Common) ;
+		//Dklu_memory.klu_free (Ci, MAX (Cilen, nz+1), sizeof (int), Common) ;
+		//Dklu_memory.klu_free (Pinv, n, sizeof (int), Common) ;
+		//Dklu_memory.klu_free (Pbtf, n, sizeof (int), Common) ;
+		//Dklu_memory.klu_free (Qbtf, n, sizeof (int), Common) ;
 		Pblk = Cp = Ci = Pinv = Pbtf = Qbtf = null;
 
 		/* ---------------------------------------------------------------------- */
@@ -490,7 +488,7 @@ public class Dklu_analyze extends Dklu_internal
 
 		if (Common.status < KLU_OK)
 		{
-//			klu_free_symbolic (Symbolic, Common) ;
+			//klu_free_symbolic (Symbolic, Common) ;
 			Symbolic = null;
 		}
 		return (Symbolic) ;

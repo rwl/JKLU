@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -628,8 +628,10 @@ public class Dklu_kernel extends Dklu_internal {
 	 * @return final size of LU on output
 	 */
 	public static int klu_kernel(int n, int[] Ap, int[] Ai, double[] Ax,
-			int[] Q, int lusize, int[] Pinv, int[] P, double[][] p_LU,
-			double[] Udiag, int[] Llen, int[] Ulen, int[] Lip, int[] Uip,
+			int[] Q, int lusize, int[] Pinv, int[] P, double[] p_LU,
+			double[] Udiag, int Udiag_offset, int[] Llen, int Llen_offset,
+			int[] Ulen, int Ulen_offset, int[] Lip, int Lip_offset,
+			int[] Uip, int Uip_offset,
 			int[] lnz, int[] unz, double[] X, int[] Stack, int[] Flag,
 			int[] Ap_pos, int[] Lpend, int k1, int[] PSinv, double[] Rs,
 			int[] Offp, int[] Offi, double[] Offx, KLU_common Common)

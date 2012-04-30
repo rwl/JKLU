@@ -3,14 +3,16 @@
   <groupId>edu.ufl.cise</groupId>
   <artifactId>KLUJ</artifactId>
   <version>1.1.1-SNAPSHOT</version>
+
+  <licenses>
+    <license>
+      <name>Gnu LGPL</name>
+      <url>http://www.gnu.org/licenses/lgpl-2.1.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
   <dependencies>
-  	<dependency>
-  		<groupId>commons-lang</groupId>
-  		<artifactId>commons-lang</artifactId>
-  		<version>2.6</version>
-  		<type>jar</type>
-  		<scope>compile</scope>
-  	</dependency>
   	<dependency>
   		<groupId>edu.ufl.cise</groupId>
   		<artifactId>BTFJ</artifactId>
@@ -26,5 +28,39 @@
   		<artifactId>COLAMDJ</artifactId>
   		<version>2.7.3-SNAPSHOT</version>
   	</dependency>
+
+  	<dependency>
+  		<groupId>junit</groupId>
+  		<artifactId>junit</artifactId>
+  		<version>3.8.2</version>
+  		<scope>test</scope>
+  	</dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+
+       <plugin>
+         <!-- required for static imports -->
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-compiler-plugin</artifactId>
+         <configuration>
+           <source>1.5</source>
+           <target>1.5</target>
+         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/test/Dklu_*.java</include>
+          </includes>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
 </project>

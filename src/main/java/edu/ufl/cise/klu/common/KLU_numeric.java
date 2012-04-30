@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -47,7 +47,7 @@ public class KLU_numeric
 	public int[] Uip;         /* size n. pointers into LUbx[block] for U */
 	public int[] Llen;        /* size n. Llen [k] = # of entries in kth column of L */
 	public int[] Ulen;        /* size n. Ulen [k] = # of entries in kth column of U */
-	public double[][] LUbx;     /* L and U indices and entries (excl. diagonal of U) */
+	public double[] LUbx;     /* L and U indices and entries (excl. diagonal of U) */
 	public int[] LUsize;   /* size of each LUbx [block], in sizeof (Unit) */
 	public double[] Udiag;      /* diagonal of U */
 

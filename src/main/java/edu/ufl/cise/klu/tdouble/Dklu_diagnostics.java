@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -57,12 +57,17 @@ public class Dklu_diagnostics extends Dklu_internal
 	{
 		double temp, max_ai, max_ui, min_block_rgrowth ;
 		double aik ;
-		int[] Q, Ui, Pinv ;
-		int Ulen, Uip ;
-		double LU ;
+		int[] Q, Pinv ;
+		int[] Ulen, Uip ;
+		double[] LU ;
 		double[] Aentry, Ux, Ukk ;
 		double[] Rs ;
-		int i, newrow, oldrow, k1, k2, nk, j, oldcol, k, pend, len ;
+		int i, newrow, oldrow, k1, k2, nk, j, oldcol, k, pend ;
+		int LU_offset = 0, Uip_offset = 0, Ulen_offset = 0, Ukk_offset = 0 ;
+		int[] len = new int[1] ;
+		int[] Ui_offset = new int[1] ;
+		int[] Ux_offset = new int[1] ;
+		int[] Ui ;
 
 		/* ---------------------------------------------------------------------- */
 		/* check inputs */
@@ -107,12 +112,14 @@ public class Dklu_diagnostics extends Dklu_internal
 			{
 				continue ;      /* skip singleton blocks */
 			}
-			LU = Numeric.LUbx[i] ;
-//			Uip = Numeric.Uip + k1 ;
-			Uip = Numeric.Uip [k1] ;
-//			Ulen = Numeric.Ulen + k1 ;
-			Ulen = Numeric.Ulen [k1] ;
-			Ukk = ((double[]) Numeric.Udiag) + k1 ;
+			LU = Numeric.LUbx ;
+			LU_offset = i ;
+			Uip = Numeric.Uip ;
+			Uip_offset += k1 ;
+			Ulen = Numeric.Ulen ;
+			Ulen_offset += k1 ;
+			Ukk = Numeric.Udiag ;
+			Ukk_offset += k1 ;
 			min_block_rgrowth = 1 ;
 			for (j = 0 ; j < nk ; j++)
 			{
@@ -146,8 +153,13 @@ public class Dklu_diagnostics extends Dklu_internal
 					}
 				}
 
-				GET_POINTER (LU, Uip, Ulen, Ui, Ux, j, len) ;
-				for (k = 0 ; k < len ; k++)
+				GET_POINTER (LU, LU_offset,
+						Uip, Uip_offset,
+						Ulen, Ulen_offset,
+						Ui, Ui_offset,
+						Ux, Ux_offset,
+						j, len) ;
+				for (k = 0 ; k < len[0] ; k++)
 				{
 					temp = ABS (Ux [k]) ;
 					//ABS (temp, Ux [k]) ;

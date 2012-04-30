@@ -4,20 +4,18 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-import org.apache.commons.lang.mutable.MutableDouble;
-import org.apache.commons.lang.mutable.MutableInt;
-
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 import edu.ufl.cise.klu.common.KLU_version;
-import edu.ufl.cise.klu.tdouble.Dklu_analyze;
-import edu.ufl.cise.klu.tdouble.Dklu_defaults;
-import edu.ufl.cise.klu.tdouble.Dklu_diagnostics;
-import edu.ufl.cise.klu.tdouble.Dklu_factor;
-import edu.ufl.cise.klu.tdouble.Dklu_free_numeric;
-import edu.ufl.cise.klu.tdouble.Dklu_free_symbolic;
-import edu.ufl.cise.klu.tdouble.Dklu_solve;
+import static edu.ufl.cise.klu.tdouble.Dklu_analyze.klu_analyze;
+import static edu.ufl.cise.klu.tdouble.Dklu_defaults.klu_defaults;
+import static edu.ufl.cise.klu.tdouble.Dklu_diagnostics.klu_rgrowth;
+import static edu.ufl.cise.klu.tdouble.Dklu_diagnostics.klu_condest;
+import static edu.ufl.cise.klu.tdouble.Dklu_diagnostics.klu_rcond;
+import static edu.ufl.cise.klu.tdouble.Dklu_diagnostics.klu_flops;
+import static edu.ufl.cise.klu.tdouble.Dklu_factor.klu_factor;
+import static edu.ufl.cise.klu.tdouble.Dklu_solve.klu_solve;
 import edu.ufl.cise.klu.tdouble.io.MatrixInfo;
 import edu.ufl.cise.klu.tdouble.io.MatrixSize;
 import edu.ufl.cise.klu.tdouble.io.MatrixVectorReader;
@@ -37,20 +35,20 @@ public class Dklu_demo {
 		X[2*i + 1] = v;
 	}
 
-	private static double REAL (double[] X, int i)
-	{
-		return X[2*i] ;
-	}
-
-	private static double IMAG (double[] X, int i)
-	{
-		return X[2*i + 1] ;
-	}
-
-	private static double CABS (double[] X, int i)
-	{
-		return Math.sqrt(REAL(X, i) * REAL(X, i) + IMAG(X, i) * IMAG(X, i)) ;
-	}
+//	private static double REAL (double[] X, int i)
+//	{
+//		return X[2*i] ;
+//	}
+//
+//	private static double IMAG (double[] X, int i)
+//	{
+//		return X[2*i + 1] ;
+//	}
+//
+//	private static double CABS (double[] X, int i)
+//	{
+//		return Math.sqrt(REAL(X, i) * REAL(X, i) + IMAG(X, i) * IMAG(X, i)) ;
+//	}
 
 	private static double MAX (double a, double b)
 	{
@@ -67,28 +65,28 @@ public class Dklu_demo {
 	 * @param B size n, right-hand-side
 	 * @param X size n, solution to Ax=b
 	 * @param R size n, residual r = b-A*x
-	 * @param lunz nnz(L+U+F)
-	 * @param rnorm norm(b-A*x,1) / norm(A,1)
+	 * @param lunz size 1, nnz(L+U+F)
+	 * @param rnorm size 1, norm(b-A*x,1) / norm(A,1)
 	 * @param Common default parameters and statistics
 	 * @return 1 if successful, 0 otherwise
 	 */
 	public static int klu_backslash(int n, int[] Ap, int[] Ai, double[] Ax,
-			int isreal, double[] B, double[] X, double[] R, MutableInt lunz,
-			MutableDouble rnorm, KLU_common Common)
+			int isreal, double[] B, double[] X, double[] R, int[] lunz,
+			double[] rnorm, KLU_common Common)
 	{
 		double anorm = 0, asum;
 		KLU_symbolic Symbolic;
 		KLU_numeric Numeric;
 		int i, j, p;
 
-		if (Ap == null || Ai == null || Ax == null || B == null || X == null ||
-				B == null) return(0);
+		if (Ap == null || Ai == null || Ax == null || B == null || X == null || B == null)
+			return(0);
 
 		/* ---------------------------------------------------------------------- */
 		/* symbolic ordering and analysis */
 		/* ---------------------------------------------------------------------- */
 
-		Symbolic = Dklu_analyze.klu_analyze(n, Ap, Ai, Common);
+		Symbolic = klu_analyze(n, Ap, Ai, Common);
 		if (Symbolic == null) return(0);
 
 		if (isreal != 0)
@@ -98,10 +96,10 @@ public class Dklu_demo {
 			/* factorization */
 			/* ------------------------------------------------------------------ */
 
-			Numeric = Dklu_factor.klu_factor(Ap, Ai, Ax, Symbolic, Common);
+			Numeric = klu_factor(Ap, Ai, Ax, Symbolic, Common);
 			if (Numeric == null)
 			{
-				Dklu_free_symbolic.klu_free_symbolic(Symbolic, Common);
+				//Dklu_free_symbolic.klu_free_symbolic(Symbolic, Common);
 				return(0);
 			}
 
@@ -109,12 +107,12 @@ public class Dklu_demo {
 			/* statistics(not required to solve Ax=b) */
 			/* ------------------------------------------------------------------ */
 
-			Dklu_diagnostics.klu_rgrowth(Ap, Ai, Ax, Symbolic, Numeric, Common);
-			Dklu_diagnostics.klu_condest(Ap, Ax, Symbolic, Numeric, Common);
-			Dklu_diagnostics.klu_rcond(Symbolic, Numeric, Common);
-			Dklu_diagnostics.klu_flops(Symbolic, Numeric, Common);
-			lunz.setValue( Numeric.lnz + Numeric.unz - n +
-				((Numeric.Offp != null) ? (Numeric.Offp [n]) : 0) );
+			klu_rgrowth(Ap, Ai, Ax, Symbolic, Numeric, Common);
+			klu_condest(Ap, Ax, Symbolic, Numeric, Common);
+			klu_rcond(Symbolic, Numeric, Common);
+			klu_flops(Symbolic, Numeric, Common);
+			lunz[0] = Numeric.lnz + Numeric.unz - n +
+				(Numeric.Offp != null ? Numeric.Offp [n] : 0);
 
 			/* ------------------------------------------------------------------ */
 			/* solve Ax=b */
@@ -124,7 +122,7 @@ public class Dklu_demo {
 			{
 				X [i] = B [i];
 			}
-			Dklu_solve.klu_solve(Symbolic, Numeric, n, 1, X, Common);
+			klu_solve(Symbolic, Numeric, n, 1, X, Common);
 
 			/* ------------------------------------------------------------------ */
 			/* compute residual, rnorm = norm(b-Ax,1) / norm(A,1) */
@@ -145,17 +143,18 @@ public class Dklu_demo {
 				}
 				anorm = MAX (anorm, asum);
 			}
-			rnorm.setValue( 0 );
+			rnorm[0] = 0;
 			for(i = 0; i < n; i++)
 			{
-				rnorm.setValue( MAX (rnorm.doubleValue(), Math.abs(R [i])) );
+				rnorm[0] = MAX (rnorm[0], Math.abs(R [i]));
 			}
 
 			/* ------------------------------------------------------------------ */
 			/* free numeric factorization */
 			/* ------------------------------------------------------------------ */
 
-			Dklu_free_numeric.klu_free_numeric(Numeric, Common);
+			//klu_free_numeric(Numeric, Common);
+			Numeric = null;
 
 		}
 		else
@@ -166,10 +165,10 @@ public class Dklu_demo {
 			/* statistics(not required to solve Ax=b) */
 			/* ------------------------------------------------------------------ */
 
-//			Numeric = DZklu_factor.klu_z_factor(Ap, Ai, Ax, Symbolic, Common);
+//			Numeric = klu_z_factor(Ap, Ai, Ax, Symbolic, Common);
 //			if (Numeric == null)
 //			{
-//				DZklu_free_symbolic.klu_free_symbolic(Symbolic, Common);
+//				klu_free_symbolic(Symbolic, Common);
 //				return(0);
 //			}
 //
@@ -177,12 +176,12 @@ public class Dklu_demo {
 //			/* statistics */
 //			/* ------------------------------------------------------------------ */
 //
-//			DZklu_diagnostics.klu_z_rgrowth(Ap, Ai, Ax, Symbolic, Numeric, Common);
-//			DZklu_diagnostics.klu_z_condest(Ap, Ax, Symbolic, Numeric, Common);
-//			DZklu_diagnostics.klu_z_rcond(Symbolic, Numeric, Common);
-//			DZklu_diagnostics.klu_z_flops(Symbolic, Numeric, Common);
+//			klu_z_rgrowth(Ap, Ai, Ax, Symbolic, Numeric, Common);
+//			klu_z_condest(Ap, Ax, Symbolic, Numeric, Common);
+//			klu_z_rcond(Symbolic, Numeric, Common);
+//			klu_z_flops(Symbolic, Numeric, Common);
 //			lunz = Numeric.lnz + Numeric.unz - n +
-//				((Numeric.Offp != null) ? (Numeric.Offp [n]) : 0);
+//				(Numeric.Offp != null ? Numeric.Offp [n] : 0);
 //
 //			/* ------------------------------------------------------------------ */
 //			/* solve Ax=b */
@@ -192,7 +191,7 @@ public class Dklu_demo {
 //			{
 //				X [i] = B [i];
 //			}
-//			DZklu_solve.klu_z_solve(Symbolic, Numeric, n, 1, X, Common);
+//			klu_z_solve(Symbolic, Numeric, n, 1, X, Common);
 //
 //			/* ------------------------------------------------------------------ */
 //			/* compute residual, rnorm = norm(b-Ax,1) / norm(A,1) */
@@ -225,15 +224,17 @@ public class Dklu_demo {
 //			/* free numeric factorization */
 //			/* ------------------------------------------------------------------ */
 //
-//			DZklu_free_numeric.klu_z_free_numeric(&Numeric, Common);
+//			klu_z_free_numeric(&Numeric, Common);
 		}
 
 		/* ---------------------------------------------------------------------- */
 		/* free symbolic analysis, and residual */
 		/* ---------------------------------------------------------------------- */
 
-		Dklu_free_symbolic.klu_free_symbolic(Symbolic, Common);
-		return(1);
+		//klu_free_symbolic(Symbolic, Common);
+		Symbolic = null;
+
+		return (1);
 	}
 
 	/**
@@ -242,11 +243,11 @@ public class Dklu_demo {
 	public static void klu_demo(int n, int[] Ap, int[] Ai, double[] Ax,
 			int isreal)
 	{
-		MutableDouble rnorm = new MutableDouble();
 		KLU_common Common = new KLU_common();
 		double[] B, X, R;
 		int i;
-		MutableInt lunz = new MutableInt();
+		int[] lunz = new int[1];
+		double[] rnorm = new double[1];
 
 		System.out.printf("KLU: %s, version: %d.%d.%d\n",
 				KLU_version.KLU_DATE, KLU_version.KLU_MAIN_VERSION,
@@ -256,7 +257,7 @@ public class Dklu_demo {
 		/* set defaults */
 		/* ---------------------------------------------------------------------- */
 
-		Dklu_defaults.klu_defaults(Common);
+		klu_defaults(Common);
 
 		/* ---------------------------------------------------------------------- */
 		/* create a right-hand-side */
@@ -265,9 +266,6 @@ public class Dklu_demo {
 		if (isreal != 0)
 		{
 			/* B = 1 +(1:n)/n */
-//			B = klu_malloc(n, sizeof(Double), Common);
-//			X = klu_malloc(n, sizeof(Double), Common);
-//			R = klu_malloc(n, sizeof(Double), Common);
 			B = new double[n];
 			X = new double[n];
 			R = new double[n];
@@ -282,9 +280,6 @@ public class Dklu_demo {
 		else
 		{
 			/* real(B) = 1 +(1:n)/n, imag(B) = (n:-1:1)/n */
-//			B = klu_malloc(n, 2 * sizeof(Double), Common);
-//			X = klu_malloc(n, 2 * sizeof(Double), Common);
-//			R = klu_malloc(n, 2 * sizeof(Double), Common);
 			B = new double[2 * n];
 			X = new double[2 * n];
 			R = new double[2 * n];
@@ -310,7 +305,7 @@ public class Dklu_demo {
 		{
 			System.out.printf("n %d nnz(A) %d nnz(L+U+F) %d resid %g\n" +
 				"recip growth %g condest %g rcond %g flops %g\n",
-				n, Ap [n], lunz.intValue(), rnorm, Common.rgrowth, Common.condest,
+				n, Ap [n], lunz[0], rnorm, Common.rgrowth, Common.condest,
 				Common.rcond, Common.flops);
 		}
 
@@ -320,23 +315,17 @@ public class Dklu_demo {
 
 		if (isreal != 0)
 		{
-//			klu_free(B, n, sizeof(Double), Common);
-//			klu_free(X, n, sizeof(Double), Common);
-//			klu_free(R, n, sizeof(Double), Common);
 			B = null;
 			X = null;
 			R = null;
 		}
 		else
 		{
-//			klu_free(B, 2*n, sizeof(Double), Common);
-//			klu_free(X, 2*n, sizeof(Double), Common);
-//			klu_free(R, 2*n, sizeof(Double), Common);
 			B = null;
 			X = null;
 			R = null;
 		}
-		//System.out.printf("peak memory usage: %g bytes\n\n",(double)(Common.mempeak));
+//		System.out.printf("peak memory usage: %g bytes\n\n",(double)(Common.mempeak));
 	}
 
 	/**

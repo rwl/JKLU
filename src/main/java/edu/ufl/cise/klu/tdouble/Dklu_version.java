@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -41,44 +41,48 @@ public abstract class Dklu_version {
 
 	protected static final String INT_ID = "%d" ;
 
-	protected static int BYTES (Object type, double n)
-	{
-		return sizeof (type * n) ;
-	}
+//	protected static int BYTES (Object type, double n)
+//	{
+//		return sizeof (type * n) ;
+//	}
+//
+//	protected static double CEILING (double b, double u)
+//	{
+//		return (b+u-1) / u ;
+//	}
+//
+//	protected static double UNITS (Object type, double n)
+//	{
+//		return CEILING (BYTES (type, n), sizeof (double)) ;
+//	}
+//
+//	protected static double DUNITS (Object type, int n)
+//	{
+//		return Math.ceil(BYTES (type, (double) n) / sizeof (double)) ;
+//	}
+//
+//	protected static void GET_I_POINTER(double[] LU, int[] Xip, int[] Xi, int k)
+//	{
+//		Xi = (Int[]) (LU + Xip [k]) ;
+//	}
+//
+//	protected static void GET_X_POINTER(double[] LU, int[] Xip, int Xlen,
+//			double[] Xx, int k)
+//	{
+//		Xx = (double[]) (LU + Xip [k] + UNITS (Int, Xlen [k])) ;
+//	}
 
-	protected static double CEILING (double b, double u)
+	protected static void GET_POINTER(double[] LU, int LU_offset,
+			int[] Xip, int Xip_offset,
+			int[] Xlen, int Xlen_offset,
+			int[] Xi, int[] Xi_offset,
+			double[] Xx, int[] Xx_offset,
+			int k, int[] xlen)
 	{
-		return (b+u-1) / u ;
-	}
-
-	protected static double UNITS (Object type, double n)
-	{
-		return CEILING (BYTES (type, n), sizeof (double)) ;
-	}
-
-	protected static double DUNITS (Object type, int n)
-	{
-		return Math.ceil(BYTES (type, (double) n) / sizeof (double)) ;
-	}
-
-	protected static void GET_I_POINTER(LU, Xip, Xi, k)
-	{
-		Xi = (Int[]) (LU + Xip [k]) ;
-	}
-
-	protected static void GET_X_POINTER(double[] LU, int[] Xip, int Xlen,
-			double[] Xx, int k)
-	{
-		Xx = (double[]) (LU + Xip [k] + UNITS (Int, Xlen [k])) ;
-	}
-
-	protected static void GET_POINTER(double[] LU, int[] Xip, int Xlen,
-			int[] Xi, double[] Xx, int k, int xlen)
-	{
-		double xp = LU + Xip [k] ;
-		xlen = Xlen [k] ;
-		Xi = (Int[]) xp ;
-		Xx = (double[]) (xp + UNITS (Int, xlen)) ;
+		double xp = LU_offset + Xip [k] ;
+		xlen[0] = Xlen [k] ;
+		Xi_offset[0] = (int) xp ;
+		Xx_offset[0] = (int) (xp + xlen[0]) ;
 	}
 
 	protected static boolean SCALAR_IS_NAN (double x)
@@ -109,10 +113,12 @@ public abstract class Dklu_version {
 
 	protected static void PRINTF (String format, Object... args)
 	{
-		System.out.printf(format, args) ;
+		if (!NPRINT) {
+			System.out.printf(format, args) ;
+		}
 	}
 
-	protected static double PRINT_SCALAR (double a)
+	protected static void PRINT_SCALAR (double a)
 	{
 		if (!NPRINT) {
 

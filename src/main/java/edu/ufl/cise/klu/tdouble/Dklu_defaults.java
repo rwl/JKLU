@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -44,7 +44,7 @@ public class Dklu_defaults extends Dklu_internal
 
 		/* parameters */
 		Common.tol = 0.001 ;       /* pivot tolerance for diagonal */
-		Common.memgrow = 1.2;      /* realloc size ratio increase for LU factors */
+		Common.memgrow = 1.2 ;     /* realloc size ratio increase for LU factors */
 		Common.initmem_amd = 1.2 ; /* init. mem with AMD:  c*nnz(L) + n */
 		Common.initmem = 10 ;      /* init. mem otherwise: c*nnz(A) + n */
 		Common.btf = TRUE ;        /* use BTF pre-ordering, or not */
