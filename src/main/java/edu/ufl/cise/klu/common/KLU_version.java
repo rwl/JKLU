@@ -1,7 +1,7 @@
 /**
  * KLU: a sparse LU factorization algorithm.
  * Copyright (C) 2004-2009, Timothy A. Davis.
- * Copyright (C) 2011, Richard W. Lincoln.
+ * Copyright (C) 2011-2012, Richard W. Lincoln.
  * http://www.cise.ufl.edu/research/sparse/klu
  *
  * -------------------------------------------------------------------------
@@ -33,14 +33,14 @@ package edu.ufl.cise.klu.common;
 public class KLU_version
 {
 
-	public static String KLU_DATE = "Mar 24, 2009" ;
+	public static String KLU_DATE = "Jan 20, 2012" ;
 	public static int KLU_VERSION_CODE (int main, int sub)
 	{
 		return main * 1000 + sub ;
 	}
 	public static int KLU_MAIN_VERSION = 1 ;
 	public static int KLU_SUB_VERSION = 1 ;
-	public static int KLU_SUBSUB_VERSION = 0 ;
+	public static int KLU_SUBSUB_VERSION = 4 ;
 	public static int KLU_VERSION = KLU_VERSION_CODE (KLU_MAIN_VERSION,
 			KLU_SUB_VERSION) ;
 
