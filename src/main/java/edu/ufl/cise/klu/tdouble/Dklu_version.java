@@ -72,17 +72,18 @@ public abstract class Dklu_version {
 //		Xx = (double[]) (LU + Xip [k] + UNITS (Int, Xlen [k])) ;
 //	}
 
-	protected static void GET_POINTER(double[] LU, int LU_offset,
+	protected static double[] GET_POINTER(double[] LU,
 			int[] Xip, int Xip_offset,
 			int[] Xlen, int Xlen_offset,
-			int[] Xi, int[] Xi_offset,
-			double[] Xx, int[] Xx_offset,
+			int[] Xi_offset,
+			int[] Xx_offset,
 			int k, int[] xlen)
 	{
-		double xp = LU_offset + Xip [k] ;
-		xlen[0] = Xlen [k] ;
-		Xi_offset[0] = (int) xp ;
-		Xx_offset[0] = (int) (xp + xlen[0]) ;
+		int xp = Xip [Xip_offset + k] ;
+		xlen[0] = Xlen [Xlen_offset + k] ;
+		Xi_offset[0] = xp ;
+		Xx_offset[0] = xp + xlen[0] ;
+		return LU ;
 	}
 
 	protected static boolean SCALAR_IS_NAN (double x)

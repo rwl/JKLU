@@ -61,7 +61,7 @@ public class Dklu_factor extends Dklu_internal
 			Lip, Uip, Llen, Ulen ;
 		double[] Offx, X, Udiag ;
 		double s ;
-		double[] LUbx ;
+		double[][] LUbx ;
 		int k1, k2, nk, k, block, oldcol, pend, oldrow, n, lnz, unz, p, newrow,
 			nblocks, poff, nzoff, scale, max_lnz_block,
 			max_unz_block ;
@@ -186,8 +186,8 @@ public class Dklu_factor extends Dklu_internal
 				poff = Offp [k1] ;
 				oldcol = Q [k1] ;
 				pend = Ap [oldcol+1] ;
-				s = 0.0;
 				//CLEAR (s) ;
+				s = 0.0;
 
 				if (scale <= 0)
 				{
@@ -225,8 +225,8 @@ public class Dklu_factor extends Dklu_internal
 						if (newrow < k1)
 						{
 							Offi [poff] = oldrow ;
-							Offx [poff] = Ax [p] / Rs [oldrow] ;
 							//SCALE_DIV_ASSIGN (Offx [poff], Ax [p], Rs [oldrow]) ;
+							Offx [poff] = Ax [p] / Rs [oldrow] ;
 							poff++ ;
 						}
 						else
@@ -234,8 +234,8 @@ public class Dklu_factor extends Dklu_internal
 							ASSERT (newrow == k1) ;
 							PRINTF ("singleton block %d ", block) ;
 							PRINT_ENTRY (Ax[p]) ;
-							s = Ax [p] / Rs [oldrow] ;
 							//SCALE_DIV_ASSIGN (s, Ax [p], Rs [oldrow]) ;
+							s = Ax [p] / Rs [oldrow] ;
 						}
 					}
 				}
@@ -281,8 +281,8 @@ public class Dklu_factor extends Dklu_internal
 				/* allocates 1 arrays: LUbx [block] */
 				Numeric.LUsize [block] = klu_kernel_factor (
 						nk, Ap, Ai, Ax, Q,
-						lsize, LUbx [block], Udiag, Llen, Ulen,
-						Lip, Uip, Pblock, lnz_block, unz_block,
+						lsize, LUbx, block, Udiag, k1, Llen, k1,
+						Ulen, k1, Lip, k1, Uip, k1, Pblock, lnz_block, unz_block,
 						X, Iwork, k1, Pinv, Rs, Offp, Offi, Offx, Common) ;
 
 				if (Common.status < KLU_OK ||
@@ -293,10 +293,10 @@ public class Dklu_factor extends Dklu_internal
 					return ;
 				}
 
-//				PRINTF ("\n----------------------- L %d:\n", block) ;
-//				ASSERT (klu_valid_LU (nk, TRUE, Lip+k1, Llen+k1, LUbx [block])) ;
-//				PRINTF ("\n----------------------- U %d:\n", block) ;
-//				ASSERT (klu_valid_LU (nk, FALSE, Uip+k1, Ulen+k1, LUbx [block])) ;
+				PRINTF ("\n----------------------- L %d:\n", block) ;
+				ASSERT (klu_valid_LU (nk, TRUE, Lip, k1, Llen, k1, LUbx [block])) ;
+				PRINTF ("\n----------------------- U %d:\n", block) ;
+				ASSERT (klu_valid_LU (nk, FALSE, Uip, k1, Ulen, k1, LUbx [block])) ;
 
 				/* -------------------------------------------------------------- */
 				/* get statistics */
@@ -509,13 +509,13 @@ public class Dklu_factor extends Dklu_internal
 
 		Numeric.LUsize = klu_malloc_int (nblocks, Common) ;
 
-//		Numeric.LUbx = klu_malloc (nblocks, sizeof (double[]), Common) ;
-		Numeric.LUbx = new double [nblocks] ;
+		//Numeric.LUbx = klu_malloc (nblocks, sizeof (double[]), Common) ;
+		Numeric.LUbx = new double [nblocks][] ;
 		if (Numeric.LUbx != null)
 		{
 			for (k = 0 ; k < nblocks ; k++)
 			{
-				Numeric.LUbx [k] = 0.0 ;//null ;
+				Numeric.LUbx [k] = null ;
 			}
 		}
 

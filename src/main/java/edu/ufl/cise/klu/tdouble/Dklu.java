@@ -115,13 +115,15 @@ public class Dklu extends Dklu_internal {
 	 */
 	public static int klu_kernel_factor(int n, int[] Ap, int[] Ai,
 			double[] Ax, int[] Q, double Lsize,
-			double p_LU, double[] Udiag, int[] Llen, int[] Ulen, int[] Lip,
-			int[] Uip, int P[], int[] lnz, int[] unz,
+			double[][] p_LU, int block,
+			double[] Udiag, int Udiag_offset, int[] Llen, int Llen_offset,
+			int[] Ulen, int Ulen_offset, int[] Lip, int Lip_offset,
+			int[] Uip, int Uip_offset, int P[], int[] lnz, int[] unz,
 			double[] X, int[] Work, int k1, int[] PSinv, double[] Rs,
 			int[] Offp, int[] Offi, double[] Offx, KLU_common Common)
 	{
 		double maxlnz, dunits ;
-		double[] LU ;
+		double[][] LU = new double[1][] ;
 		int[] Pinv, Lpend, Stack, Flag, Ap_pos, W ;
 		int lsize, usize, anz, ok ;
 		int lusize ;
@@ -163,27 +165,33 @@ public class Dklu extends Dklu_internal {
 		/* ---------------------------------------------------------------------- */
 
 		/* return arguments are not yet assigned */
-		p_LU = null ;
+		p_LU [block] = null ;
 
 		/* these computations are safe from int overflow */
 		W = Work ;
-		Pinv = W ;      //W += n ;
-		int Pinv_offset = n ;
-		Stack = W ;     //W += n ;
-		int Stack_offset = 2*n ;
-		Flag = W ;      //W += n ;
-		int Flag_offset = 3*n ;
-		Lpend = W ;     //W += n ;
-		int Lpend_offset = 4*n ;
-		Ap_pos = W ;    //W += n ;
-		int Ap_pos_offset = 5*n ;
+//		Pinv = W ;      //W += n ;
+//		int Pinv_offset = n ;
+		Pinv = new int[n] ;
+//		Stack = W ;     //W += n ;
+//		int Stack_offset = 2*n ;
+		Stack = new int[n] ;
+//		Flag = W ;      //W += n ;
+//		int Flag_offset = 3*n ;
+		Flag = new int[n] ;
+//		Lpend = W ;     //W += n ;
+//		int Lpend_offset = 4*n ;
+		Lpend = new int[n] ;
+//		Ap_pos = W ;    //W += n ;
+//		int Ap_pos_offset = 5*n ;
+		Ap_pos = new int[n] ;
 
-//		dunits = DUNITS (Integer, lsize) + DUNITS (Double, lsize) +
-//				 DUNITS (Integer, usize) + DUNITS (Double, usize) ;
-//		lusize = (int) dunits ;
-//		ok = INT_OVERFLOW (dunits) ? FALSE : TRUE ;
-		LU = ok != 0 ? klu_malloc_dbl (lusize, Common) : null ;
-		if (LU == null)
+		//dunits = DUNITS (Integer, lsize) + DUNITS (Double, lsize) +
+		//		 DUNITS (Integer, usize) + DUNITS (Double, usize) ;
+		dunits = lsize + lsize + usize + usize ;
+		lusize = (int) dunits ;
+		ok = INT_OVERFLOW (dunits) ? FALSE : TRUE ;
+		LU [0] = ok != 0 ? klu_malloc_dbl (lusize, Common) : null ;
+		if (LU [0] == null)
 		{
 			/* out of memory, or problem too large */
 			Common.status = KLU_OUT_OF_MEMORY ;
@@ -197,9 +205,9 @@ public class Dklu extends Dklu_internal {
 
 		/* with pruning, and non-recursive depth-first-search */
 		lusize = klu_kernel (n, Ap, Ai, Ax, Q, lusize,
-				Pinv, P, LU, Udiag, k1, Llen, k1, Ulen, k1,
-				Lip, k1, Uip, k1, lnz, unz,
-				X, Stack, Flag, Ap_pos, Lpend,
+				Pinv, P, LU, Udiag, Udiag_offset, Llen, Llen_offset,
+				Ulen, Ulen_offset, Lip, Lip_offset, Uip, Uip_offset,
+				lnz, unz, X, Stack, Flag, Ap_pos, Lpend,
 				k1, PSinv, Rs, Offp, Offi, Offx, Common) ;
 
 		/* ---------------------------------------------------------------------- */
@@ -208,11 +216,11 @@ public class Dklu extends Dklu_internal {
 
 		if (Common.status < KLU_OK)
 		{
-			LU = null ;
 			//LU = KLU_free (LU, lusize, sizeof (double), Common) ;
+			LU [0] = null ;
 			lusize = 0 ;
 		}
-		p_LU = LU ;
+		p_LU [block] = LU [0] ;
 		PRINTF (" in klu noffdiag %d\n", Common.noffdiag) ;
 		return (lusize) ;
 	}

@@ -100,8 +100,9 @@ public class Dklu_dump extends Dklu_internal
 	 * test if Xip [0] = 0. This is not applicable for U. So when calling this
 	 * function for U, the flag should be set to false.  Only used when debugging.
 	 */
-	protected static int klu_valid_LU(int n, int flag_test_start_ptr, int[] Xip,
-			int[] Xlen, double[] LU)
+	protected static int klu_valid_LU(int n, int flag_test_start_ptr,
+			int[] Xip, int Xip_offset, int[] Xlen, int Xlen_offset,
+			double[] LU)
 	{
 		int[] Xi ;
 		double[] Xx ;
@@ -113,7 +114,7 @@ public class Dklu_dump extends Dklu_internal
 			PRINTF ("n must be >= 0: %d\n", n) ;
 			return (FALSE) ;
 		}
-		if (flag_test_start_ptr != 0 && Xip [0] != 0)
+		if (flag_test_start_ptr != 0 && Xip [Xip_offset + 0] != 0)
 		{
 			/* column pointers must start at Xip [0] = 0*/
 			PRINTF ("column 0 pointer bad\n") ;
@@ -122,8 +123,8 @@ public class Dklu_dump extends Dklu_internal
 
 		for (j = 0 ; j < n ; j++)
 		{
-			p1 = Xip [j] ;
-			p2 = Xip [j+1] ;
+			p1 = Xip [Xip_offset + j] ;
+			p2 = Xip [Xip_offset + j+1] ;
 			PRINTF ("\nColumn: %d p1: %d p2: %d\n", j, p1, p2) ;
 			if (p1 > p2)
 			{
@@ -131,7 +132,7 @@ public class Dklu_dump extends Dklu_internal
 				PRINTF ("column %d pointer bad\n", j) ;
 				return (FALSE) ;
 			}
-			GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len) ;
+			GET_POINTER (LU, Xip, Xip_offset, Xlen, Xlen_offset, Xi, Xx, j, len) ;
 			for (p = 0 ; p < len ; p++)
 			{
 				i = Xi [p] ;
