@@ -57,10 +57,10 @@ public class Dklu_kernel extends Dklu_internal {
 	public static int dfs(int j, int k, int[] Pinv, int[] Llen, int Llen_offset,
 			int[] Lip, int Lip_offset,
 			int[] Stack, int[] Flag, int[] Lpend, int top, double[] LU,
-			int[] Lik, int[] plength, int[] Ap_pos)
+			double[] Lik, int Lik_offset, int[] plength, int[] Ap_pos)
 	{
 		int i, pos, jnew, head, l_length;
-		int[] Li;
+		/*int[]*/double[] Li;
 
 		l_length = plength [0] ;
 
@@ -86,10 +86,11 @@ public class Dklu_kernel extends Dklu_internal {
 
 			/* add the adjacent nodes to the recursive stack by iterating through
 			 * until finding another non-visited pivotal node */
-			Li = (int[]) (LU + Lip [Lip_offset + jnew]) ;
+			Li = LU ;
+			int Li_offset = Lip [Lip_offset + jnew] ;
 			for (pos = --Ap_pos [head] ; pos >= 0 ; --pos)
 			{
-				i = Li [pos] ;
+				i = (int) Li [Li_offset + pos] ;
 				if (Flag [i] != k)
 				{
 					/* node i is not yet visited */
@@ -111,7 +112,7 @@ public class Dklu_kernel extends Dklu_internal {
 						/* Flag as visited and store directly into L,
 						 * and continue with current node j. */
 						Flag [i] = k ;
-						Lik [l_length] = i ;
+						Lik [Lik_offset + l_length] = i ;
 						l_length++ ;
 					}
 				}
@@ -160,13 +161,14 @@ public class Dklu_kernel extends Dklu_internal {
 			int[] Ap_pos, double[] LU, int lup, int[] Llen, int Llen_offset,
 			int[] Lip, int Lip_offset, int k1, int[] PSinv)
 	{
-		int[] Lik;
+		/*int[]*/double[] Lik;
 		int i, p, pend, oldcol, kglobal, top ;
 		int[] l_length;
 
 		top = n ;
 		l_length = new int[] {0} ;
-		Lik = (int[]) (LU + lup);
+		Lik = LU ;
+		int Lik_offset = lup ;
 
 		/* ---------------------------------------------------------------------- */
 		/* BTF factorization of A (k1:k2-1, k1:k2-1) */
@@ -186,14 +188,15 @@ public class Dklu_kernel extends Dklu_internal {
 			{
 				if (Pinv [i] >= 0)
 				{
-					top = dfs (i, k, Pinv, Llen, Llen_offset, Lip, Lip_offset,
-						Stack, Flag, Lpend, top, LU, Lik, l_length, Ap_pos) ;
+					top = dfs (i, k, Pinv, Llen, Llen_offset,
+						Lip, Lip_offset, Stack, Flag, Lpend, top,
+						LU, Lik, Lik_offset, l_length, Ap_pos) ;
 				}
 				else
 				{
 					/* i is not pivotal, and not flagged. Flag and put in L */
 					Flag [i] = k ;
-					Lik [l_length[0]] = i ;
+					Lik [Lik_offset + l_length[0]] = i ;
 					l_length[0]++;
 				}
 			}
@@ -311,8 +314,11 @@ public class Dklu_kernel extends Dklu_internal {
 	{
 		double xj;
 		double[] Lx;
-		int[] Li;
-		int p, s, j, jnew, len;
+		/*int[]*/double[] Li;
+		int p, s, j, jnew ;
+		int[] len = new int[1] ;
+		int[] Li_offset = new int [1] ;
+		int[] Lx_offset = new int [1] ;
 
 		/* solve Lx=b */
 		for (s = top ; s < n ; s++)
@@ -322,12 +328,13 @@ public class Dklu_kernel extends Dklu_internal {
 			jnew = Pinv [j] ;
 			ASSERT (jnew >= 0) ;
 			xj = X [j] ;
-			GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li, Lx, jnew, len) ;
+			Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+					Li_offset, Lx_offset, jnew, len) ;
 			ASSERT (Lip [Lip_offset + jnew] <= Lip [Lip_offset + jnew+1]) ;
-			for (p = 0 ; p < len ; p++)
+			for (p = 0 ; p < len[0] ; p++)
 			{
 				//MULT_SUB (X [Li [p]], Lx [p], xj) ;
-				X [Li [p]] -= Lx [p] * xj ;
+				X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * xj ;
 			}
 		}
 	}
@@ -358,11 +365,14 @@ public class Dklu_kernel extends Dklu_internal {
 			int k, int n, int[] Pinv , int[] p_firstrow,
 			KLU_common Common)
 	{
-		double x, pivot;
-		double[] Lx;
-		double abs_pivot, xabs;
-		int p, i, ppivrow, pdiag, pivrow, last_row_index, firstrow, len;
-		int[] Li;
+		double x, pivot ;
+		double[] Lx ;
+		double abs_pivot, xabs ;
+		int p, i, ppivrow, pdiag, pivrow, last_row_index, firstrow ;
+		/*int[]*/double[] Li ;
+		int[] len = new int[1] ;
+		int[] Li_offset = new int [1] ;
+		int[] Lx_offset = new int [1] ;
 
 		pivrow = EMPTY ;
 		if (Llen [Llen_offset + k] == 0)
@@ -396,22 +406,24 @@ public class Dklu_kernel extends Dklu_internal {
 		ppivrow = EMPTY ;
 		abs_pivot = EMPTY ;
 		i = Llen [Llen_offset + k] - 1 ;
-		GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li, Lx, k, len) ;
-		last_row_index = Li [i] ;
+		Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+				Li_offset, Lx_offset, k, len) ;
+		last_row_index = (int) Li [Li_offset[0] + i] ;
 
 		/* decrement the length by 1 */
 		Llen [Llen_offset + k] = i ;
-		GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li, Lx, k, len) ;
+		Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+				Li_offset, Lx_offset, k, len) ;
 
 		/* look in Li [0 ..Llen [k] - 1 ] for a pivot row */
-		for (p = 0 ; p < len ; p++)
+		for (p = 0 ; p < len[0] ; p++)
 		{
 			/* gather the entry from X and store in L */
-			i = Li [p] ;
+			i = (int) Li [Li_offset[0] + p] ;
 			x = X [i] ;
 			CLEAR (X, i) ;
 
-			Lx [p] = x ;
+			Lx [Lx_offset[0] + p] = x ;
 			//ABS (xabs, x) ;
 			xabs = ABS (x) ;
 
@@ -448,7 +460,7 @@ public class Dklu_kernel extends Dklu_internal {
 		}
 		else if (pdiag != EMPTY)
 		{
-			xabs = ABS (Lx [pdiag]) ;
+			xabs = ABS (Lx [Lx_offset[0] + pdiag]) ;
 			//ABS (xabs, Lx [pdiag]) ;
 			if (xabs >= tol * abs_pivot)
 			{
@@ -460,11 +472,11 @@ public class Dklu_kernel extends Dklu_internal {
 
 		if (ppivrow != EMPTY)
 		{
-			pivrow = Li [ppivrow] ;
-			pivot  = Lx [ppivrow] ;
+			pivrow = (int) Li [Li_offset[0] + ppivrow] ;
+			pivot  = Lx [Lx_offset[0] + ppivrow] ;
 			/* overwrite the ppivrow values with last index values */
-			Li [ppivrow] = last_row_index ;
-			Lx [ppivrow] = X [last_row_index] ;
+			Li [Li_offset[0] + ppivrow] = last_row_index ;
+			Lx [Lx_offset[0] + ppivrow] = X [last_row_index] ;
 		}
 		else
 		{
@@ -488,7 +500,7 @@ public class Dklu_kernel extends Dklu_internal {
 		for (p = 0 ; p < Llen [Llen_offset + k] ; p++)
 		{
 			//DIV (Lx [p], Lx [p], pivot) ;
-			Lx [p] /= pivot ;
+			Lx [Lx_offset[0] + p] /= pivot ;
 		}
 
 		return (TRUE) ;
@@ -512,26 +524,34 @@ public class Dklu_kernel extends Dklu_internal {
 			double[] LU, int[] Uip, int Uip_offset, int[] Lip, int Lip_offset,
 			int[] Ulen, int Ulen_offset, int[] Llen, int Llen_offset)
 	{
-		double x;
-		double[] Lx, Ux;
-		int[] Li, Ui;
-		int p, i, j, p2, phead, ptail, llen, ulen;
+		double x ;
+		double[] Lx ;
+		/*int[]*/double[] Li, Ui ;
+		int p, i, j, p2, phead, ptail ;
+		int[] llen = new int[1] ;
+		int[] ulen = new int[1] ;
+		int[] Li_offset = new int [1] ;
+		int[] Lx_offset = new int [1] ;
+		int[] Ui_offset = new int [1] ;
+		int[] Ux_offset = new int [1] ;
 
 		/* check to see if any column of L can be pruned */
-		GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui, Ux, k, ulen) ;
-		for (p = 0 ; p < ulen ; p++)
+		Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+				Ui_offset, Ux_offset, k, ulen) ;
+		for (p = 0 ; p < ulen[0] ; p++)
 		{
-			j = Ui [p] ;
+			j = (int) Ui [Ui_offset[0] + p] ;
 			ASSERT (j < k) ;
 			PRINTF ("%d is pruned: %d. Lpend[j] %d Lip[j+1] %d\n",
 				j, Lpend [j] != EMPTY, Lpend [j], Lip [Lip_offset + j+1]) ;
 			if (Lpend [j] == EMPTY)
 			{
 				/* scan column j of L for the pivot row */
-				GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li, Lx, j, llen) ;
-				for (p2 = 0 ; p2 < llen ; p2++)
+				Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+						Li_offset, Lx_offset, k, llen) ;
+				for (p2 = 0 ; p2 < llen[0] ; p2++)
 				{
-					if (pivrow == Li [p2])
+					if (pivrow == Li [Li_offset[0] + p2])
 					{
 						/* found it!  This column can be pruned */
 						if (!NDEBUG)
@@ -541,8 +561,8 @@ public class Dklu_kernel extends Dklu_internal {
 								int p3 ;
 								for (p3 = 0 ; p3 < Llen [Llen_offset + j] ; p3++)
 								{
-									PRINTF ("before: %i  pivotal: %d\n", Li [p3],
-												Pinv [Li [p3]] >= 0) ;
+									PRINTF ("before: %i  pivotal: %d\n", Li [Li_offset[0] + p3],
+												Pinv [(int) Li [Li_offset[0] + p3]] >= 0) ;
 								}
 							}
 						}
@@ -553,7 +573,7 @@ public class Dklu_kernel extends Dklu_internal {
 						ptail = Llen [Llen_offset + j] ;
 						while (phead < ptail)
 						{
-							i = Li [phead] ;
+							i = (int) Li [Li_offset[0] + phead] ;
 							if (Pinv [i] >= 0)
 							{
 								/* leave at the head */
@@ -563,11 +583,11 @@ public class Dklu_kernel extends Dklu_internal {
 							{
 								/* swap with the tail */
 								ptail-- ;
-								Li [phead] = Li [ptail] ;
-								Li [ptail] = i ;
-								x = Lx [phead] ;
-								Lx [phead] = Lx [ptail] ;
-								Lx [ptail] = x ;
+								Li [Li_offset[0] + phead] = Li [Li_offset[0] + ptail] ;
+								Li [Li_offset[0] + ptail] = i ;
+								x = Lx [Lx_offset[0] + phead] ;
+								Lx [Lx_offset[0] + phead] = Lx [Lx_offset[0] + ptail] ;
+								Lx [Lx_offset[0] + ptail] = x ;
 							}
 						}
 
@@ -585,8 +605,8 @@ public class Dklu_kernel extends Dklu_internal {
 							for (p3 = 0 ; p3 < Llen [Llen_offset + j] ; p3++)
 							{
 								if (p3 == Lpend [j]) PRINTF (("----\n")) ;
-								PRINTF ("after: %i  pivotal: %d\n", Li [p3],
-											Pinv [Li [p3]] >= 0) ;
+								PRINTF ("after: %i  pivotal: %d\n", Li [Li_offset[0] + p3],
+											Pinv [(int) Li [Li_offset[0] + p3]] >= 0) ;
 							}
 						}
 

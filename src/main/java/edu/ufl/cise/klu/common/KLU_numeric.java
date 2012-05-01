@@ -47,7 +47,7 @@ public class KLU_numeric
 	public int[] Uip;         /* size n. pointers into LUbx[block] for U */
 	public int[] Llen;        /* size n. Llen [k] = # of entries in kth column of L */
 	public int[] Ulen;        /* size n. Ulen [k] = # of entries in kth column of U */
-	public double[][] LUbx;     /* L and U indices and entries (excl. diagonal of U) */
+	public double[][] LUbx;     /* L and U indices and entries (excl. diagonal of U) */  // FIXME: indices are doubles and cast to integers
 	public int[] LUsize;   /* size of each LUbx [block], in sizeof (Unit) */
 	public double[] Udiag;      /* diagonal of U */
 
