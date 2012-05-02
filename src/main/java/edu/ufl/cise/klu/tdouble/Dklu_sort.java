@@ -42,14 +42,17 @@ public class Dklu_sort extends Dklu_internal {
 	/**
 	 * Sort L or U using a double-transpose.
 	 */
-	public static void sort(int n, int[] Xip, int[] Xlen, double[] LU, int[] Tp,
-			int[] Tj, double[] Tx, int[] W)
+	public static void sort(int n, int[] Xip, int Xip_offset, int[] Xlen, int Xlen_offset,
+			double[] LU, int[] Tp, int[] Tj, double[] Tx, int[] W)
 	{
-		int[] Xi ;
+		/*int[]*/double[] Xi ;
 		double[] Xx ;
-		int p, i, j, len, nz, tp, xlen, pend ;
+		int p, i, j, nz, tp, xlen, pend ;
+		int[] len = new int[1] ;
+		int[] Xi_offset = new int[1] ;
+		int[] Xx_offset = new int[1] ;
 
-		ASSERT (klu_valid_LU (n, FALSE, Xip, Xlen, LU)) ;
+		ASSERT (klu_valid_LU (n, FALSE, Xip, Xip_offset, Xlen, Xlen_offset, LU)) ;
 
 		/* count the number of entries in each row of L or U */
 		for (i = 0 ; i < n ; i++)
@@ -58,10 +61,10 @@ public class Dklu_sort extends Dklu_internal {
 		}
 		for (j = 0 ; j < n ; j++)
 		{
-			GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len) ;
-			for (p = 0 ; p < len ; p++)
+			Xi = Xx = GET_POINTER (LU, Xip, Xip_offset, Xlen, Xlen_offset, Xi_offset, Xx_offset, j, len) ;
+			for (p = 0 ; p < len[0] ; p++)
 			{
-				W [Xi [p]]++ ;
+				W [(int) Xi [Xi_offset[0] + p]]++ ;
 			}
 		}
 
@@ -81,12 +84,12 @@ public class Dklu_sort extends Dklu_internal {
 		/* transpose the matrix into Tp, Ti, Tx */
 		for (j = 0 ; j < n ; j++)
 		{
-			GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len) ;
-			for (p = 0 ; p < len ; p++)
+			Xi = Xx = GET_POINTER (LU, Xip, Xip_offset, Xlen, Xlen_offset, Xi_offset, Xx_offset, j, len) ;
+			for (p = 0 ; p < len[0] ; p++)
 			{
-				tp = W [Xi [p]]++ ;
+				tp = W [(int) Xi [Xi_offset[0] + p]]++ ;
 				Tj [tp] = j ;
-				Tx [tp] = Xx [p] ;
+				Tx [tp] = Xx [Xx_offset[0] + p] ;
 			}
 		}
 
@@ -101,14 +104,14 @@ public class Dklu_sort extends Dklu_internal {
 			for (p = Tp [i] ; p < pend ; p++)
 			{
 				j = Tj [p] ;
-				GET_POINTER (LU, Xip, Xlen, Xi, Xx, j, len) ;
+				Xi = Xx = GET_POINTER (LU, Xip, Xip_offset, Xlen, Xlen_offset, Xi_offset, Xx_offset, j, len) ;
 				xlen = W [j]++ ;
-				Xi [xlen] = i ;
-				Xx [xlen] = Tx [p] ;
+				Xi [Xi_offset[0] + xlen] = i ;
+				Xx [Xx_offset[0] + xlen] = Tx [p] ;
 			}
 		}
 
-		ASSERT (klu_valid_LU (n, FALSE, Xip, Xlen, LU)) ;
+		ASSERT (klu_valid_LU (n, FALSE, Xip, Xip_offset, Xlen, Xlen_offset, LU)) ;
 	}
 
 
@@ -118,7 +121,7 @@ public class Dklu_sort extends Dklu_internal {
 		int[] R, W, Tp, Ti, Lip, Uip, Llen, Ulen ;
 		double[] Tx ;
 		double[][] LUbx ;
-		int n, nk, nz, block, nblocks, maxblock, k1 ;
+		int nk, nz, block, nblocks, maxblock, k1 ;
 		int m1 ;
 
 		if (Common == null)
@@ -127,7 +130,6 @@ public class Dklu_sort extends Dklu_internal {
 		}
 		Common.status = KLU_OK ;
 
-		n = Symbolic.n ;
 		R = Symbolic.R ;
 		nblocks = Symbolic.nblocks ;
 		maxblock = Symbolic.maxblock ;
@@ -159,8 +161,8 @@ public class Dklu_sort extends Dklu_internal {
 				if (nk > 1)
 				{
 					PRINTF ("\n-------------------block: %d nk %d\n", block, nk) ;
-					sort (nk, Lip + k1, Llen + k1, LUbx [block], Tp, Ti, Tx, W) ;
-					sort (nk, Uip + k1, Ulen + k1, LUbx [block], Tp, Ti, Tx, W) ;
+					sort (nk, Lip, k1, Llen, k1, LUbx [block], Tp, Ti, Tx, W) ;
+					sort (nk, Uip, k1, Ulen, k1, LUbx [block], Tp, Ti, Tx, W) ;
 				}
 			}
 		}
@@ -168,14 +170,14 @@ public class Dklu_sort extends Dklu_internal {
 		PRINTF ("\n======================= sort done.\n") ;
 
 		/* free workspace */
-		W = null;
 		//KLU_free (W, maxblock, sizeof (Int), Common) ;
-		Tp = null;
+		W = null;
 		//KLU_free (Tp, m1, sizeof (Int), Common) ;
-		Ti = null;
+		Tp = null;
 		//KLU_free (Ti, nz, sizeof (Int), Common) ;
-		Tx = null;
+		Ti = null;
 		//KLU_free (Tx, nz, sizeof (double), Common) ;
+		Tx = null;
 
 		return (Common.status == KLU_OK ? 1 : 0) ;
 	}

@@ -122,7 +122,7 @@ public class Dklu_demo {
 			{
 				X [i] = B [i];
 			}
-			klu_solve(Symbolic, Numeric, n, 1, X, Common);
+			klu_solve(Symbolic, Numeric, n, 1, X, 0, Common);
 
 			/* ------------------------------------------------------------------ */
 			/* compute residual, rnorm = norm(b-Ax,1) / norm(A,1) */

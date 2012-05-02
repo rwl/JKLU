@@ -124,7 +124,7 @@ public class Dklu extends Dklu_internal {
 	{
 		double maxlnz, dunits ;
 		double[][] LU = new double[1][] ;
-		int[] Pinv, Lpend, Stack, Flag, Ap_pos, W ;
+		int[] Pinv, Lpend, Stack, Flag, Ap_pos ;
 		int lsize, usize, anz, ok ;
 		int lusize ;
 		ASSERT (Common != null) ;
@@ -168,7 +168,7 @@ public class Dklu extends Dklu_internal {
 		p_LU [block] = null ;
 
 		/* these computations are safe from int overflow */
-		W = Work ;
+//		W = Work ;
 //		Pinv = W ;      //W += n ;
 //		int Pinv_offset = n ;
 		Pinv = new int[n] ;
@@ -238,14 +238,18 @@ public class Dklu extends Dklu_internal {
 	 * @param nrhs
 	 * @param X right-hand-side on input, solution to Lx=b on output
 	 */
-	public static void klu_lsolve(int n, int[] Lip, int Llen, double[] LU,
-			int nrhs, double[] X)
+	public static void klu_lsolve(int n, int[] Lip, int Lip_offset,
+			int[] Llen, int Llen_offset, double[] LU, int nrhs,
+			double[] X, int X_offset)
 	{
 		double[] x = new double[4] ;
 		double lik ;
-		int[] Li ;
+		/*int[]*/double[] Li ;
 		double[] Lx ;
-		int k, p, len, i ;
+		int k, p, i ;
+		int[] len = new int[1] ;
+		int[] Li_offset = new int[1] ;
+		int[] Lx_offset = new int[1] ;
 
 		switch (nrhs)
 		{
@@ -253,13 +257,13 @@ public class Dklu extends Dklu_internal {
 			case 1:
 				for (k = 0 ; k < n ; k++)
 				{
-					x [0] = X [k] ;
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
+					x [0] = X [X_offset + k] ;
+					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
 					/* unit diagonal of L is not stored*/
-					for (p = 0 ; p < len ; p++)
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						X [Li [p]] -= Lx [p] * x [0] ;
 						//MULT_SUB (X [Li [p]], Lx [p], x [0]) ;
+						X [X_offset + (int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * x [0] ;
 					}
 				}
 				break ;
@@ -268,17 +272,17 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					x [0] = X [2*k    ] ;
-					x [1] = X [2*k + 1] ;
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
-					for (p = 0 ; p < len ; p++)
+					x [0] = X [X_offset + 2*k    ] ;
+					x [1] = X [X_offset + 2*k + 1] ;
+					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Li [p] ;
-						lik = Lx [p] ;
-						X [2*i] -= lik * x [0] ;
+						i = (int) Li [Li_offset[0] + p] ;
+						lik = Lx [Lx_offset[0] + p] ;
 						//MULT_SUB (X [2*i], lik, x [0]) ;
-						X [2*i + 1] -= lik * x [1] ;
+						X [X_offset + 2*i] -= lik * x [0] ;
 						//MULT_SUB (X [2*i + 1], lik, x [1]) ;
+						X [X_offset + 2*i + 1] -= lik * x [1] ;
 					}
 				}
 				break ;
@@ -287,20 +291,20 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					x [0] = X [3*k    ] ;
-					x [1] = X [3*k + 1] ;
-					x [2] = X [3*k + 2] ;
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
-					for (p = 0 ; p < len ; p++)
+					x [0] = X [X_offset + 3*k    ] ;
+					x [1] = X [X_offset + 3*k + 1] ;
+					x [2] = X [X_offset + 3*k + 2] ;
+					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Li [p] ;
-						lik = Lx [p] ;
-						X [3*i] -= lik * x [0] ;
+						i = (int) Li [Li_offset[0] + p] ;
+						lik = Lx [Lx_offset[0] + p] ;
 						//MULT_SUB (X [3*i], lik, x [0]) ;
-						X [3*i + 1] -= lik * x [1] ;
+						X [X_offset + 3*i] -= lik * x [0] ;
 						//MULT_SUB (X [3*i + 1], lik, x [1]) ;
-						X [3*i + 2] -= lik * x [2] ;
+						X [X_offset + 3*i + 1] -= lik * x [1] ;
 						//MULT_SUB (X [3*i + 2], lik, x [2]) ;
+						X [X_offset + 3*i + 2] -= lik * x [2] ;
 					}
 				}
 				break ;
@@ -309,23 +313,23 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					x [0] = X [4*k    ] ;
-					x [1] = X [4*k + 1] ;
-					x [2] = X [4*k + 2] ;
-					x [3] = X [4*k + 3] ;
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
-					for (p = 0 ; p < len ; p++)
+					x [0] = X [X_offset + 4*k    ] ;
+					x [1] = X [X_offset + 4*k + 1] ;
+					x [2] = X [X_offset + 4*k + 2] ;
+					x [3] = X [X_offset + 4*k + 3] ;
+					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Li [p] ;
-						lik = Lx [p] ;
-						X [4*i] -= lik * x [0] ;
+						i = (int) Li [Li_offset[0] + p] ;
+						lik = Lx [Lx_offset[0] + p] ;
 						//MULT_SUB (X [4*i], lik, x [0]) ;
-						X [4*i + 1] -= lik * x [1] ;
+						X [X_offset + 4*i] -= lik * x [0] ;
 						//MULT_SUB (X [4*i + 1], lik, x [1]) ;
-						X [4*i + 2] -= lik * x [2] ;
+						X [X_offset + 4*i + 1] -= lik * x [1] ;
 						//MULT_SUB (X [4*i + 2], lik, x [2]) ;
-						X [4*i + 3] -= lik * x [3] ;
+						X [X_offset + 4*i + 2] -= lik * x [2] ;
 						//MULT_SUB (X [4*i + 3], lik, x [3]) ;
+						X [X_offset + 4*i + 3] -= lik * x [3] ;
 					}
 				}
 				break ;
@@ -347,14 +351,19 @@ public class Dklu extends Dklu_internal {
 	 * @param nrhs
 	 * @param X right-hand-side on input, solution to Ux=b on output
 	 */
-	public static void klu_usolve(int n, int[] Uip, int[] Ulen, double[] LU,
-			double[] Udiag, int nrhs, double[] X)
+	public static void klu_usolve(int n, int[] Uip, int Uip_offset,
+			int[] Ulen, int Ulen_offset, double[] LU,
+			double[] Udiag, int Udiag_offset, int nrhs,
+			double[] X, int X_offset)
 	{
 		double[] x = new double[4] ;
 		double uik, ukk ;
-		int[] Ui ;
+		/*int[]*/double[] Ui ;
 		double[] Ux ;
-		int k, p, len, i ;
+		int k, p, i ;
+		int[] len = new int[1] ;
+		int[] Ui_offset = new int[1] ;
+		int[] Ux_offset = new int[1] ;
 
 		switch (nrhs)
 		{
@@ -363,14 +372,15 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					x [0] = X [k] / Udiag [k] ;
+					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+							Ui_offset, Ux_offset, k, len) ;
 					//DIV (x [0], X [k], Udiag [k]) ;
-					X [k] = x [0] ;
-					for (p = 0 ; p < len ; p++)
+					x [0] = X [X_offset + k] / Udiag [Udiag_offset + k] ;
+					X [X_offset + k] = x [0] ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						X [Ui [p]] -= Ux [p] * x [0] ;
 						//MULT_SUB (X [Ui [p]], Ux [p], x [0]) ;
+						X [X_offset + (int) Ui [Ui_offset[0] + p]] -= Ux [Ux_offset[0] + p] * x [0] ;
 
 					}
 				}
@@ -381,23 +391,24 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					ukk = Udiag [k] ;
-					x [0] = X [2*k    ] / ukk ;
+					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+							Ui_offset, Ux_offset, k, len) ;
+					ukk = Udiag [Udiag_offset + k] ;
 					//DIV (x [0], X [2*k], ukk) ;
-					x [1] = X [2*k + 1] / ukk ;
+					x [0] = X [X_offset + 2*k    ] / ukk ;
 					//DIV (x [1], X [2*k + 1], ukk) ;
+					x [1] = X [X_offset + 2*k + 1] / ukk ;
 
-					X [2*k    ] = x [0] ;
-					X [2*k + 1] = x [1] ;
-					for (p = 0 ; p < len ; p++)
+					X [X_offset + 2*k    ] = x [0] ;
+					X [X_offset + 2*k + 1] = x [1] ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Ui [p] ;
-						uik = Ux [p] ;
-						X [2*i    ] -= uik * x [0] ;
+						i = (int) Ui [Ui_offset[0] + p] ;
+						uik = Ux [Ux_offset[0] + p] ;
 						//MULT_SUB (X [2*i], uik, x [0]) ;
-						X [2*i + 1] -= uik * x [1] ;
+						X [X_offset + 2*i    ] -= uik * x [0] ;
 						//MULT_SUB (X [2*i + 1], uik, x [1]) ;
+						X [X_offset + 2*i + 1] -= uik * x [1] ;
 					}
 				}
 
@@ -407,29 +418,30 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					ukk = Udiag [k] ;
+					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+							Ui_offset, Ux_offset, k, len) ;
+					ukk = Udiag [Udiag_offset + k] ;
 
-					x [0] = X [3*k] / ukk ;
 					//DIV (x [0], X [3*k], ukk) ;
-					x [1] = X [3*k + 1] / ukk ;
+					x [0] = X [X_offset + 3*k] / ukk ;
 					//DIV (x [1], X [3*k + 1], ukk) ;
-					x [2] = X [3*k + 2] / ukk ;
+					x [1] = X [X_offset + 3*k + 1] / ukk ;
 					//DIV (x [2], X [3*k + 2], ukk) ;
+					x [2] = X [X_offset + 3*k + 2] / ukk ;
 
 					X [3*k    ] = x [0] ;
 					X [3*k + 1] = x [1] ;
 					X [3*k + 2] = x [2] ;
-					for (p = 0 ; p < len ; p++)
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Ui [p] ;
-						uik = Ux [p] ;
-						X [3*i] -= uik * x [0] ;
+						i = (int) Ui [Ui_offset[0] + p] ;
+						uik = Ux [Ux_offset[0] + p] ;
 						//MULT_SUB (X [3*i], uik, x [0]) ;
-						X [3*i + 1] -= uik * x [1] ;
+						X [X_offset + 3*i] -= uik * x [0] ;
 						//MULT_SUB (X [3*i + 1], uik, x [1]) ;
-						X [3*i + 2] -= uik * x [2] ;
+						X [X_offset + 3*i + 1] -= uik * x [1] ;
 						//MULT_SUB (X [3*i + 2], uik, x [2]) ;
+						X [X_offset + 3*i + 2] -= uik * x [2] ;
 					}
 				}
 
@@ -439,35 +451,36 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					ukk = Udiag [k] ;
+					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+							Ui_offset, Ux_offset, k, len) ;
+					ukk = Udiag [Udiag_offset + k] ;
 
-					x [0] = X [4*k] / ukk ;
 					//DIV (x [0], X [4*k], ukk) ;
-					x [1] = X [4*k + 1] / ukk ;
+					x [0] = X [X_offset + 4*k] / ukk ;
 					//DIV (x [1], X [4*k + 1], ukk) ;
-					x [2] = X [4*k + 2] / ukk ;
+					x [1] = X [X_offset + 4*k + 1] / ukk ;
 					//DIV (x [2], X [4*k + 2], ukk) ;
-					x [3] = X [4*k + 3] / ukk ;
+					x [2] = X [X_offset + 4*k + 2] / ukk ;
 					//DIV (x [3], X [4*k + 3], ukk) ;
+					x [3] = X [X_offset + 4*k + 3] / ukk ;
 
-					X [4*k    ] = x [0] ;
-					X [4*k + 1] = x [1] ;
-					X [4*k + 2] = x [2] ;
-					X [4*k + 3] = x [3] ;
-					for (p = 0 ; p < len ; p++)
+					X [X_offset + 4*k    ] = x [0] ;
+					X [X_offset + 4*k + 1] = x [1] ;
+					X [X_offset + 4*k + 2] = x [2] ;
+					X [X_offset + 4*k + 3] = x [3] ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Ui [p] ;
-						uik = Ux [p] ;
+						i = (int) Ui [Ui_offset[0] + p] ;
+						uik = Ux [Ux_offset[0] + p] ;
 
-						X [4*i] -= uik * x [0] ;
 						//MULT_SUB (X [4*i], uik, x [0]) ;
-						X [4*i + 1] -= uik * x [1] ;
+						X [X_offset + 4*i] -= uik * x [0] ;
 						//MULT_SUB (X [4*i + 1], uik, x [1]) ;
-						X [4*i + 2] -= uik * x [2] ;
+						X [X_offset + 4*i + 1] -= uik * x [1] ;
 						//MULT_SUB (X [4*i + 2], uik, x [2]) ;
-						X [4*i + 3] -= uik * x [3] ;
+						X [X_offset + 4*i + 2] -= uik * x [2] ;
 						//MULT_SUB (X [4*i + 3], uik, x [3]) ;
+						X [X_offset + 4*i + 3] -= uik * x [3] ;
 					}
 				}
 
@@ -489,14 +502,17 @@ public class Dklu extends Dklu_internal {
 	 * @param nrhs
 	 * @param X right-hand-side on input, solution to L'x=b on output
 	 */
-	public static void klu_ltsolve(int n, int[] Lip, int[] Llen, double[] LU,
-			int nrhs, double[] X)
+	public static void klu_ltsolve(int n, int[] Lip, int Lip_offset, int[] Llen, int Llen_offset,
+			double[] LU, int nrhs, double[] X, int X_offset)
 	{
 		double[] x = new double[4] ;
 		double lik ;
-		int[] Li ;
+		/*int[]*/double[] Li ;
 		double[] Lx ;
-		int k, p, len, i ;
+		int k, p, i ;
+		int[] len = new int[1] ;
+		int[] Li_offset = new int [1] ;
+		int[] Lx_offset = new int [1] ;
 
 		switch (nrhs)
 		{
@@ -505,16 +521,16 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
-					x [0] = X [k] ;
-					for (p = 0 ; p < len ; p++)
+					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					x [0] = X [X_offset + k] ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
 						{
-							x [0] -= Lx [p] * X [Li [p]] ;
 							//MULT_SUB (x [0], Lx [p], X [Li [p]]) ;
+							x [0] -= Lx [Lx_offset[0] + p] * X [X_offset + (int) Li [Li_offset[0] + p]] ;
 						}
 					}
-					X [k] = x [0] ;
+					X [X_offset + k] = x [0] ;
 				}
 				break ;
 
@@ -522,22 +538,22 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x [0] = X [2*k    ] ;
-					x [1] = X [2*k + 1] ;
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
-					for (p = 0 ; p < len ; p++)
+					x [0] = X [X_offset + 2*k    ] ;
+					x [1] = X [X_offset + 2*k + 1] ;
+					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Li [p] ;
+						i = (int) Li [Li_offset[0] + p] ;
 						{
-							lik = Lx [p] ;
+							lik = Lx [Lx_offset[0] + p] ;
 						}
-						x [0] -= lik * X [2*i] ;
 						//MULT_SUB (x [0], lik, X [2*i]) ;
-						x [1] -= lik * X [2*i + 1] ;
+						x [0] -= lik * X [X_offset + 2*i] ;
 						//MULT_SUB (x [1], lik, X [2*i + 1]) ;
+						x [1] -= lik * X [X_offset + 2*i + 1] ;
 					}
-					X [2*k    ] = x [0] ;
-					X [2*k + 1] = x [1] ;
+					X [X_offset + 2*k    ] = x [0] ;
+					X [X_offset + 2*k + 1] = x [1] ;
 				}
 				break ;
 
@@ -545,26 +561,26 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x [0] = X [3*k    ] ;
-					x [1] = X [3*k + 1] ;
-					x [2] = X [3*k + 2] ;
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
-					for (p = 0 ; p < len ; p++)
+					x [0] = X [X_offset + 3*k    ] ;
+					x [1] = X [X_offset + 3*k + 1] ;
+					x [2] = X [X_offset + 3*k + 2] ;
+					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Li [p] ;
+						i = (int) Li [Li_offset[0] + p] ;
 						{
-							lik = Lx [p] ;
+							lik = Lx [Lx_offset[0] + p] ;
 						}
-						x [0] -= lik * X [3*i] ;
 						//MULT_SUB (x [0], lik, X [3*i]) ;
-						x [1] -= lik * X [3*i + 1] ;
+						x [0] -= lik * X [X_offset + 3*i] ;
 						//MULT_SUB (x [1], lik, X [3*i + 1]) ;
-						x [2] -= lik * X [3*i + 2] ;
+						x [1] -= lik * X [X_offset + 3*i + 1] ;
 						//MULT_SUB (x [2], lik, X [3*i + 2]) ;
+						x [2] -= lik * X [X_offset + 3*i + 2] ;
 					}
-					X [3*k    ] = x [0] ;
-					X [3*k + 1] = x [1] ;
-					X [3*k + 2] = x [2] ;
+					X [X_offset + 3*k    ] = x [0] ;
+					X [X_offset + 3*k + 1] = x [1] ;
+					X [X_offset + 3*k + 2] = x [2] ;
 				}
 				break ;
 
@@ -572,30 +588,30 @@ public class Dklu extends Dklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x [0] = X [4*k    ] ;
-					x [1] = X [4*k + 1] ;
-					x [2] = X [4*k + 2] ;
-					x [3] = X [4*k + 3] ;
-					GET_POINTER (LU, Lip, Llen, Li, Lx, k, len) ;
-					for (p = 0 ; p < len ; p++)
+					x [0] = X [X_offset + 4*k    ] ;
+					x [1] = X [X_offset + 4*k + 1] ;
+					x [2] = X [X_offset + 4*k + 2] ;
+					x [3] = X [X_offset + 4*k + 3] ;
+					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Li [p] ;
+						i = (int) Li [Li_offset[0] + p] ;
 						{
-							lik = Lx [p] ;
+							lik = Lx [Lx_offset[0] + p] ;
 						}
-						x [0] -= lik * X [4*i] ;
 						//MULT_SUB (x [0], lik, X [4*i]) ;
-						x [1] -= lik * X [4*i + 1] ;
+						x [0] -= lik * X [X_offset + 4*i] ;
 						//MULT_SUB (x [1], lik, X [4*i + 1]) ;
-						x [2] -= lik * X [4*i + 2] ;
+						x [1] -= lik * X [X_offset + 4*i + 1] ;
 						//MULT_SUB (x [2], lik, X [4*i + 2]) ;
-						x [3] -= lik * X [4*i + 3] ;
+						x [2] -= lik * X [X_offset + 4*i + 2] ;
 						//MULT_SUB (x [3], lik, X [4*i + 3]) ;
+						x [3] -= lik * X [X_offset + 4*i + 3] ;
 					}
-					X [4*k    ] = x [0] ;
-					X [4*k + 1] = x [1] ;
-					X [4*k + 2] = x [2] ;
-					X [4*k + 3] = x [3] ;
+					X [X_offset + 4*k    ] = x [0] ;
+					X [X_offset + 4*k + 1] = x [1] ;
+					X [X_offset + 4*k + 2] = x [2] ;
+					X [X_offset + 4*k + 3] = x [3] ;
 				}
 				break ;
 		}
@@ -615,14 +631,19 @@ public class Dklu extends Dklu_internal {
 	 * @param nrhs
 	 * @param X right-hand-side on input, solution to Ux=b on output
 	 */
-	public static void klu_utsolve(int n, int[] Uip, int[] Ulen, double[] LU,
-			double[] Udiag, int nrhs, double[] X)
+	public static void klu_utsolve(int n, int[] Uip, int Uip_offset,
+			int[] Ulen, int Ulen_offset, double[] LU,
+			double[] Udiag, int Udiag_offset, int nrhs,
+			double[] X, int X_offset)
 	{
 		double[] x = new double[4] ;
 		double uik, ukk ;
-		int k, p, len, i ;
-		int[] Ui ;
+		int k, p, i ;
+		/*int[]*/double[] Ui ;
 		double[] Ux ;
+		int[] len = new int[1] ;
+		int[] Ui_offset = new int [1] ;
+		int[] Ux_offset = new int [1] ;
 
 		switch (nrhs)
 		{
@@ -631,20 +652,20 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					x [0] = X [k] ;
-					for (p = 0 ; p < len ; p++)
+					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
+					x [0] = X [X_offset + k] ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
 						{
-							x [0] -= Ux [p] * X [Ui [p]] ;
 							//MULT_SUB (x [0], Ux [p], X [Ui [p]]) ;
+							x [0] -= Ux [Ux_offset[0] + p] * X [X_offset + (int) Ui [Ui_offset[0] + p]] ;
 						}
 					}
 					{
 						ukk = Udiag [k] ;
 					}
-					X [k] = x [0] / ukk ;
 					//DIV (X [k], x [0], ukk) ;
+					X [X_offset + k] = x [0] / ukk ;
 				}
 				break ;
 
@@ -652,27 +673,27 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					x [0] = X [2*k    ] ;
-					x [1] = X [2*k + 1] ;
-					for (p = 0 ; p < len ; p++)
+					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
+					x [0] = X [X_offset + 2*k    ] ;
+					x [1] = X [X_offset + 2*k + 1] ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Ui [p] ;
+						i = (int) Ui [Ui_offset[0] + p] ;
 						{
-							uik = Ux [p] ;
+							uik = Ux [Ux_offset[0] + p] ;
 						}
-						x [0] -= uik * X [2*i] ;
 						//MULT_SUB (x [0], uik, X [2*i]) ;
-						x [1] -= uik * X [2*i + 1] ;
+						x [0] -= uik * X [X_offset + 2*i] ;
 						//MULT_SUB (x [1], uik, X [2*i + 1]) ;
+						x [1] -= uik * X [X_offset + 2*i + 1] ;
 					}
 					{
 						ukk = Udiag [k] ;
 					}
-					X [2*k] = x [0] / ukk ;
 					//DIV (X [2*k], x [0], ukk) ;
-					X [2*k + 1] = x [1] / ukk ;
+					X [X_offset + 2*k] = x [0] / ukk ;
 					//DIV (X [2*k + 1], x [1], ukk) ;
+					X [X_offset + 2*k + 1] = x [1] / ukk ;
 				}
 				break ;
 
@@ -680,32 +701,32 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					x [0] = X [3*k    ] ;
-					x [1] = X [3*k + 1] ;
-					x [2] = X [3*k + 2] ;
-					for (p = 0 ; p < len ; p++)
+					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
+					x [0] = X [X_offset + 3*k    ] ;
+					x [1] = X [X_offset + 3*k + 1] ;
+					x [2] = X [X_offset + 3*k + 2] ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Ui [p] ;
+						i = (int) Ui [Ui_offset[0] + p] ;
 						{
-							uik = Ux [p] ;
+							uik = Ux [Ux_offset[0] + p] ;
 						}
-						x [0] -= uik * X [3*i] ;
 						//MULT_SUB (x [0], uik, X [3*i]) ;
-						x [1] -= uik * X [3*i + 1] ;
+						x [0] -= uik * X [X_offset + 3*i] ;
 						//MULT_SUB (x [1], uik, X [3*i + 1]) ;
-						x [2] -= uik * X [3*i + 2] ;
+						x [1] -= uik * X [X_offset + 3*i + 1] ;
 						//MULT_SUB (x [2], uik, X [3*i + 2]) ;
+						x [2] -= uik * X [X_offset + 3*i + 2] ;
 					}
 					{
 						ukk = Udiag [k] ;
 					}
-					X [3*k] = x [0] / ukk ;
 					//DIV (X [3*k], x [0], ukk) ;
-					X [3*k + 1] = x [1] / ukk ;
+					X [X_offset + 3*k] = x [0] / ukk ;
 					//DIV (X [3*k + 1], x [1], ukk) ;
-					X [3*k + 2] = x [2] / ukk ;
+					X [X_offset + 3*k + 1] = x [1] / ukk ;
 					//DIV (X [3*k + 2], x [2], ukk) ;
+					X [X_offset + 3*k + 2] = x [2] / ukk ;
 				}
 				break ;
 
@@ -713,37 +734,37 @@ public class Dklu extends Dklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
-					x [0] = X [4*k    ] ;
-					x [1] = X [4*k + 1] ;
-					x [2] = X [4*k + 2] ;
-					x [3] = X [4*k + 3] ;
-					for (p = 0 ; p < len ; p++)
+					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
+					x [0] = X [X_offset + 4*k    ] ;
+					x [1] = X [X_offset + 4*k + 1] ;
+					x [2] = X [X_offset + 4*k + 2] ;
+					x [3] = X [X_offset + 4*k + 3] ;
+					for (p = 0 ; p < len[0] ; p++)
 					{
-						i = Ui [p] ;
+						i = (int) Ui [Ui_offset[0] + p] ;
 						{
-							uik = Ux [p] ;
+							uik = Ux [Ux_offset[0] + p] ;
 						}
-						x [0] -= uik * X [4*i] ;
 						//MULT_SUB (x [0], uik, X [4*i]) ;
-						x [1] -= uik * X [4*i + 1] ;
+						x [0] -= uik * X [X_offset + 4*i] ;
 						//MULT_SUB (x [1], uik, X [4*i + 1]) ;
-						x [2] -= uik * X [4*i + 2] ;
+						x [1] -= uik * X [X_offset + 4*i + 1] ;
 						//MULT_SUB (x [2], uik, X [4*i + 2]) ;
-						x [3] -= uik * X [4*i + 3] ;
+						x [2] -= uik * X [X_offset + 4*i + 2] ;
 						//MULT_SUB (x [3], uik, X [4*i + 3]) ;
+						x [3] -= uik * X [X_offset + 4*i + 3] ;
 					}
 					{
 						ukk = Udiag [k] ;
 					}
-					X [4*k] = x [0] / ukk ;
 					//DIV (X [4*k], x [0], ukk) ;
-					X [4*k + 1] = x [1] / ukk ;
+					X [X_offset + 4*k] = x [0] / ukk ;
 					//DIV (X [4*k + 1], x [1], ukk) ;
-					X [4*k + 2] = x [2] / ukk ;
+					X [X_offset + 4*k + 1] = x [1] / ukk ;
 					//DIV (X [4*k + 2], x [2], ukk) ;
-					X [4*k + 3] = x [3] / ukk ;
+					X [X_offset + 4*k + 2] = x [2] / ukk ;
 					//DIV (X [4*k + 3], x [3], ukk) ;
+					X [X_offset + 4*k + 3] = x [3] / ukk ;
 				}
 				break ;
 		}

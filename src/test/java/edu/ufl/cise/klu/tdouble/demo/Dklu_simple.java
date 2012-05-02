@@ -35,7 +35,7 @@ public class Dklu_simple extends TestCase {
 		klu_defaults (Common);
 		Symbolic = klu_analyze (n, Ap, Ai, Common);
 		Numeric = klu_factor (Ap, Ai, Ax, Symbolic, Common);
-		klu_solve (Symbolic, Numeric, 5, 1, b, Common);
+		klu_solve (Symbolic, Numeric, 5, 1, b, 0, Common);
 
 		for (i = 0 ; i < n ; i++) {
 			System.out.printf("x [%d] = %g\n", i, b [i]) ;

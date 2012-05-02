@@ -29,6 +29,8 @@ import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 
 import static edu.ufl.cise.klu.tdouble.Dklu_dump.klu_valid;
+import static edu.ufl.cise.klu.tdouble.Dklu.klu_ltsolve;
+import static edu.ufl.cise.klu.tdouble.Dklu.klu_utsolve;
 
 /**
  * Solve A'x=b using the symbolic and numeric objects from KLU_analyze
@@ -343,10 +345,10 @@ public class Dklu_tsolve extends Dklu_internal {
 				}
 				else
 				{
-					KLU_utsolve (nk, Uip + k1, Ulen + k1, LUbx [block],
-							Udiag + k1, nr, X + nr*k1) ;
-					KLU_ltsolve (nk, Lip + k1, Llen + k1, LUbx [block], nr,
-							X + nr*k1) ;
+					klu_utsolve (nk, Uip, k1, Ulen, k1, LUbx [block],
+							Udiag, k1, nr, X, nr*k1) ;
+					klu_ltsolve (nk, Lip, k1, Llen, k1, LUbx [block], nr,
+							X, nr*k1) ;
 				}
 			}
 
