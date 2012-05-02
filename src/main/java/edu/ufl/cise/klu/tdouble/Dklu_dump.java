@@ -31,7 +31,6 @@ package edu.ufl.cise.klu.tdouble;
 public class Dklu_dump extends Dklu_internal
 {
 
-
 	/**
 	 * Check if a column-form matrix is valid or not.  The matrix A is
 	 * n-by-n.  The row indices of entries in column j are in
@@ -104,9 +103,12 @@ public class Dklu_dump extends Dklu_internal
 			int[] Xip, int Xip_offset, int[] Xlen, int Xlen_offset,
 			double[] LU)
 	{
-		int[] Xi ;
+		/*int[]*/double[] Xi ;
 		double[] Xx ;
-		int j, p1, p2, i, p, len ;
+		int j, p1, p2, i, p ;
+		int[] len = new int[1] ;
+		int[] Xi_offset = new int[1] ;
+		int[] Xx_offset = new int[1] ;
 
 		PRINTF ("\ncolumn oriented matrix, n = %d\n", n) ;
 		if (n <= 0)
@@ -132,10 +134,11 @@ public class Dklu_dump extends Dklu_internal
 				PRINTF ("column %d pointer bad\n", j) ;
 				return (FALSE) ;
 			}
-			GET_POINTER (LU, Xip, Xip_offset, Xlen, Xlen_offset, Xi, Xx, j, len) ;
-			for (p = 0 ; p < len ; p++)
+			Xi = Xx = GET_POINTER (LU, Xip, Xip_offset, Xlen, Xlen_offset,
+					Xi_offset, Xx_offset, j, len) ;
+			for (p = 0 ; p < len[0] ; p++)
 			{
-				i = Xi [p] ;
+				i = (int) Xi [Xi_offset[0] + p] ;
 				PRINTF ("row: %d", i) ;
 				if (i < 0 || i >= n)
 				{
@@ -145,7 +148,7 @@ public class Dklu_dump extends Dklu_internal
 				}
 				if (Xx != null)
 				{
-					PRINT_ENTRY (Xx [p]) ;
+					PRINT_ENTRY (Xx [Xx_offset[0] + p]) ;
 				}
 				PRINTF ("\n") ;
 			}

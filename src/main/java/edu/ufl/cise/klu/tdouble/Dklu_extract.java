@@ -63,10 +63,18 @@ public class Dklu_extract extends Dklu_internal
 			int[] Fp, int[] Fi, double[] Fx, int[] P, int[] Q, double[] Rs,
 			int[] R, KLU_common Common)
 	{
-		int[] Lip, Llen, Uip, Ulen, Li2, Ui2 ;
+		int[] Lip, Llen, Uip, Ulen ;
+		/*int[]*/double[] Li2, Ui2 ;
 		double[] LU ;
 		double[] Lx2, Ux2, Ukk ;
-		int i, k, block, nblocks, n, nz, k1, k2, nk, len, kk, p ;
+		int i, k, block, nblocks, n, nz, k1, k2, nk, kk, p ;
+		int Lip_offset = 0, Llen_offset = 0, Ukk_offset = 0 ;
+		int Uip_offset = 0, Ulen_offset = 0 ;
+		int[] len = new int[1] ;
+		int[] Li2_offset = new int[1] ;
+		int[] Lx2_offset = new int[1] ;
+		int[] Ui2_offset = new int[1] ;
+		int[] Ux2_offset = new int[1] ;
 
 		if (Common == null)
 		{
@@ -166,8 +174,10 @@ public class Dklu_extract extends Dklu_internal
 				{
 					/* non-singleton block */
 					LU = Numeric.LUbx [block] ;
-					Lip = Numeric.Lip + k1 ;
-					Llen = Numeric.Llen + k1 ;
+					Lip = Numeric.Lip ;
+					Lip_offset += k1 ;
+					Llen = Numeric.Llen ;
+					Llen_offset += k1 ;
 					for (kk = 0 ; kk < nk ; kk++)
 					{
 						Lp [k1+kk] = nz ;
@@ -175,11 +185,13 @@ public class Dklu_extract extends Dklu_internal
 						Li [nz] = k1 + kk ;
 						Lx [nz] = 1 ;
 						nz++ ;
-						GET_POINTER (LU, Lip, Llen, Li2, Lx2, kk, len) ;
-						for (p = 0 ; p < len ; p++)
+						Li2 = Lx2 = GET_POINTER (LU, Lip, Lip_offset,
+								Llen, Llen_offset,
+								Li2_offset, Lx2_offset, kk, len) ;
+						for (p = 0 ; p < len[0] ; p++)
 						{
-							Li [nz] = k1 + Li2 [p] ;
-							Lx [nz] = Lx2 [p] ; //REAL (Lx2 [p]) ;
+							Li [nz] = k1 + (int) Li2 [Li2_offset[0] + p] ;
+							Lx [nz] = Lx2 [Lx2_offset[0] + p] ; //REAL (Lx2 [p]) ;
 							nz++ ;
 						}
 					}
@@ -201,34 +213,37 @@ public class Dklu_extract extends Dklu_internal
 				k1 = Symbolic.R [block] ;
 				k2 = Symbolic.R [block+1] ;
 				nk = k2 - k1 ;
-				Ukk = ((double[]) Numeric.Udiag) + k1 ;
+				Ukk = Numeric.Udiag ;
+				Ukk_offset += k1 ;
 				if (nk == 1)
 				{
 					/* singleton block */
 					Up [k1] = nz ;
 					Ui [nz] = k1 ;
-					Ux [nz] = Ukk [0] ; //REAL (Ukk [0]) ;
+					Ux [nz] = Ukk [Ukk_offset + 0] ; //REAL (Ukk [0]) ;
 					nz++ ;
 				}
 				else
 				{
 					/* non-singleton block */
 					LU = Numeric.LUbx [block] ;
-					Uip = Numeric.Uip + k1 ;
-					Ulen = Numeric.Ulen + k1 ;
+					Uip = Numeric.Uip ;
+					Uip_offset += k1 ;
+					Ulen = Numeric.Ulen ;
+					Ulen_offset += k1 ;
 					for (kk = 0 ; kk < nk ; kk++)
 					{
 						Up [k1+kk] = nz ;
-						GET_POINTER (LU, Uip, Ulen, Ui2, Ux2, kk, len) ;
-						for (p = 0 ; p < len ; p++)
+						Ui2 = Ux2 = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui2_offset, Ux2_offset, kk, len) ;
+						for (p = 0 ; p < len[0] ; p++)
 						{
-							Ui [nz] = k1 + Ui2 [p] ;
-							Ux [nz] = Ux2 [p] ; //REAL (Ux2 [p]) ;
+							Ui [nz] = k1 + (int) Ui2 [Ui2_offset[0] + p] ;
+							Ux [nz] = Ux2 [Ux2_offset[0] + p] ; //REAL (Ux2 [p]) ;
 							nz++ ;
 						}
 						/* add the diagonal entry */
 						Ui [nz] = k1 + kk ;
-						Ux [nz] = Ukk [kk] ; //REAL (Ukk [kk]) ;
+						Ux [nz] = Ukk [Ukk_offset+ kk] ; //REAL (Ukk [kk]) ;
 						nz++ ;
 					}
 				}

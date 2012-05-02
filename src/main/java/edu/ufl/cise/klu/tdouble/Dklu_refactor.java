@@ -57,11 +57,18 @@ public class Dklu_refactor extends Dklu_internal {
 		double ukk, ujk, s ;
 		double[] Offx, Lx, Ux, X, Az, Udiag ;
 		double[] Rs ;
-		int[] P, Q, R, Pnum, Offp, Offi, Ui, Li, Pinv, Lip, Uip, Llen, Ulen ;
+		int[] Q, R, Pnum, Offp, Offi, Pinv, Lip, Uip, Llen, Ulen ;
+		/*int[]*/double[] Ui, Li ;
 		double[][] LUbx ;
 		double[] LU ;
 		int k1, k2, nk, k, block, oldcol, pend, oldrow, n, p, newrow, scale,
-			nblocks, poff, i, j, up, ulen, llen, maxblock, nzoff ;
+			nblocks, poff, i, j, up, maxblock, nzoff ;
+		int[] ulen = new int[1] ;
+		int[] Ui_offset = new int[1] ;
+		int[] Ux_offset = new int[1] ;
+		int[] llen = new int[1] ;
+		int[] Li_offset = new int[1] ;
+		int[] Lx_offset = new int[1] ;
 
 		/* ---------------------------------------------------------------------- */
 		/* check inputs */
@@ -90,7 +97,6 @@ public class Dklu_refactor extends Dklu_internal {
 		/* ---------------------------------------------------------------------- */
 
 		n = Symbolic.n ;
-		P = Symbolic.P ;
 		Q = Symbolic.Q ;
 		R = Symbolic.R ;
 		nblocks = Symbolic.nblocks ;
@@ -219,10 +225,14 @@ public class Dklu_refactor extends Dklu_internal {
 					/* construct and factor the kth block */
 					/* ---------------------------------------------------------- */
 
-					Lip  = Numeric.Lip  + k1 ;
-					Llen = Numeric.Llen + k1 ;
-					Uip  = Numeric.Uip  + k1 ;
-					Ulen = Numeric.Ulen + k1 ;
+					Lip  = Numeric.Lip ;
+					int Lip_offset = k1 ;
+					Llen = Numeric.Llen ;
+					int Llen_offset = k1 ;
+					Uip  = Numeric.Uip ;
+					int Uip_offset = k1 ;
+					Ulen = Numeric.Ulen ;
+					int Ulen_offset = k1 ;
 					LU = LUbx [block] ;
 
 					for (k = 0 ; k < nk ; k++)
@@ -254,19 +264,21 @@ public class Dklu_refactor extends Dklu_internal {
 						/* compute kth column of U, and update kth column of A */
 						/* ------------------------------------------------------ */
 
-						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen) ;
-						for (up = 0 ; up < ulen ; up++)
+						Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+								Ui_offset, Ux_offset, k, ulen) ;
+						for (up = 0 ; up < ulen[0] ; up++)
 						{
-							j = Ui [up] ;
+							j = (int) Ui [Ui_offset[0] + up] ;
 							ujk = X [j] ;
 							/* X [j] = 0 ; */
 							CLEAR (X, j) ;
-							Ux [up] = ujk ;
-							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen) ;
-							for (p = 0 ; p < llen ; p++)
+							Ux [Ux_offset[0] + up] = ujk ;
+							Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+									Li_offset, Lx_offset, j, llen) ;
+							for (p = 0 ; p < llen[0] ; p++)
 							{
-								X [Li [p]] -= Lx [p] * ujk ;
 								//MULT_SUB (X [Li [p]], Lx [p], ujk) ;
+								X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * ujk ;
 							}
 						}
 						/* get the diagonal entry of U */
@@ -291,12 +303,13 @@ public class Dklu_refactor extends Dklu_internal {
 						}
 						Udiag [k+k1] = ukk ;
 						/* gather and divide by pivot to get kth column of L */
-						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen) ;
-						for (p = 0 ; p < llen ; p++)
+						Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+								Li_offset, Lx_offset, k, llen) ;
+						for (p = 0 ; p < llen[0] ; p++)
 						{
-							i = Li [p] ;
-							Lx [p] = X [i] / ukk ;
+							i = (int) Li [Li_offset[0] + p] ;
 							//DIV (Lx [p], X [i], ukk) ;
+							Lx [Lx_offset[0] + p] = X [i] / ukk ;
 							CLEAR (X, i) ;
 						}
 
@@ -361,10 +374,14 @@ public class Dklu_refactor extends Dklu_internal {
 					/* construct and factor the kth block */
 					/* ---------------------------------------------------------- */
 
-					Lip  = Numeric.Lip  + k1 ;
-					Llen = Numeric.Llen + k1 ;
-					Uip  = Numeric.Uip  + k1 ;
-					Ulen = Numeric.Ulen + k1 ;
+					Lip  = Numeric.Lip ;
+					int Lip_offset = k1 ;
+					Llen = Numeric.Llen ;
+					int Llen_offset = k1 ;
+					Uip  = Numeric.Uip ;
+					int Uip_offset = k1 ;
+					Ulen = Numeric.Ulen ;
+					int Ulen_offset = k1 ;
 					LU = LUbx [block] ;
 
 					for (k = 0 ; k < nk ; k++)
@@ -399,19 +416,22 @@ public class Dklu_refactor extends Dklu_internal {
 						/* compute kth column of U, and update kth column of A */
 						/* ------------------------------------------------------ */
 
-						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen) ;
-						for (up = 0 ; up < ulen ; up++)
+						Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+								Ui_offset, Ux_offset, k, ulen) ;
+//						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen) ;
+						for (up = 0 ; up < ulen[0] ; up++)
 						{
-							j = Ui [up] ;
+							j = (int) Ui [Ui_offset[0] + up] ;
 							ujk = X [j] ;
 							/* X [j] = 0 ; */
 							CLEAR (X, j) ;
-							Ux [up] = ujk ;
-							GET_POINTER (LU, Lip, Llen, Li, Lx, j, llen) ;
-							for (p = 0 ; p < llen ; p++)
+							Ux [Ux_offset[0] + up] = ujk ;
+							Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+									Li_offset, Lx_offset, j, llen) ;
+							for (p = 0 ; p < llen[0] ; p++)
 							{
-								X [Li [p]] -= Lx [p] * ujk ;
 								//MULT_SUB (X [Li [p]], Lx [p], ujk) ;
+								X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * ujk ;
 							}
 						}
 						/* get the diagonal entry of U */
@@ -436,12 +456,14 @@ public class Dklu_refactor extends Dklu_internal {
 						}
 						Udiag [k+k1] = ukk ;
 						/* gather and divide by pivot to get kth column of L */
-						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen) ;
-						for (p = 0 ; p < llen ; p++)
+						Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+								Li_offset, Lx_offset, k, llen) ;
+//						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen) ;
+						for (p = 0 ; p < llen[0] ; p++)
 						{
-							i = Li [p] ;
-							Lx [p] = X [i] / ukk ;
+							i = (int) Li [Li_offset[0] + p] ;
 							//DIV (Lx [p], X [i], ukk) ;
+							Lx [Lx_offset[0] + p] = X [i] / ukk ;
 							CLEAR (X, i) ;
 						}
 					}
@@ -492,15 +514,19 @@ public class Dklu_refactor extends Dklu_internal {
 					}
 					else
 					{
-						Lip = Numeric.Lip + k1 ;
-						Llen = Numeric.Llen + k1 ;
+						Lip = Numeric.Lip ;
+						int Lip_offset = k1 ;
+						Llen = Numeric.Llen ;
+						int Llen_offset = k1 ;
 						LU = (double[]) Numeric.LUbx [block] ;
 						PRINTF ("\n---- L block %d\n", block) ;
-						ASSERT (klu_valid_LU (nk, TRUE, Lip, Llen, LU)) ;
-						Uip = Numeric.Uip + k1 ;
-						Ulen = Numeric.Ulen + k1 ;
+						ASSERT (klu_valid_LU (nk, TRUE, Lip, Lip_offset, Llen, Llen_offset, LU)) ;
+						Uip = Numeric.Uip ;
+						int Uip_offset = k1 ;
+						Ulen = Numeric.Ulen ;
+						int Ulen_offset = k1 ;
 						PRINTF ("\n---- U block %d\n", block) ;
-						ASSERT (klu_valid_LU (nk, FALSE, Uip, Ulen, LU)) ;
+						ASSERT (klu_valid_LU (nk, FALSE, Uip, Uip_offset, Ulen, Ulen_offset, LU)) ;
 					}
 				}
 			}

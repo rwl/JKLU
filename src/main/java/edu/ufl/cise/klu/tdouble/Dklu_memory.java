@@ -148,7 +148,8 @@ public class Dklu_memory extends Dklu_internal {
 			double[] p, KLU_common Common)
 	{
 		double[] pnew ;
-		int snew, sold ;
+		int snew ;
+//		int sold ;
 
 		if (Common == null)
 		{
@@ -169,7 +170,7 @@ public class Dklu_memory extends Dklu_internal {
 			/* The object exists, and is changing to some other nonzero size. */
 			/* call realloc, or its equivalent */
 			snew = MAX (1, nnew) ;
-			sold = MAX (1, nold) ;
+//			sold = MAX (1, nold) ;
 			try
 			{
 				pnew = new double[snew] ;

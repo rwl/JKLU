@@ -63,11 +63,10 @@ public class Dklu_diagnostics extends Dklu_internal
 		double[] Aentry, Ux, Ukk ;
 		double[] Rs ;
 		int i, newrow, oldrow, k1, k2, nk, j, oldcol, k, pend ;
-		int LU_offset = 0, Uip_offset = 0, Ulen_offset = 0, Ukk_offset = 0 ;
+		int Uip_offset = 0, Ulen_offset = 0, Ukk_offset = 0 ;
 		int[] len = new int[1] ;
 		int[] Ui_offset = new int[1] ;
 		int[] Ux_offset = new int[1] ;
-		int[] Ui ;
 
 		/* ---------------------------------------------------------------------- */
 		/* check inputs */
@@ -112,8 +111,7 @@ public class Dklu_diagnostics extends Dklu_internal
 			{
 				continue ;      /* skip singleton blocks */
 			}
-			LU = Numeric.LUbx ;
-			LU_offset = i ;
+			LU = Numeric.LUbx[i] ;
 			Uip = Numeric.Uip ;
 			Uip_offset += k1 ;
 			Ulen = Numeric.Ulen ;
@@ -138,8 +136,8 @@ public class Dklu_diagnostics extends Dklu_internal
 					ASSERT (newrow < k2) ;
 					if (Rs != null)
 					{
-						aik = Aentry [k] / Rs [newrow] ;
 						//SCALE_DIV_ASSIGN (aik, Aentry [k], Rs [newrow]) ;
+						aik = Aentry [k] / Rs [newrow] ;
 					}
 					else
 					{
@@ -153,15 +151,11 @@ public class Dklu_diagnostics extends Dklu_internal
 					}
 				}
 
-				GET_POINTER (LU, LU_offset,
-						Uip, Uip_offset,
-						Ulen, Ulen_offset,
-						Ui, Ui_offset,
-						Ux, Ux_offset,
-						j, len) ;
+				Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+						Ui_offset, Ux_offset, j, len) ;
 				for (k = 0 ; k < len[0] ; k++)
 				{
-					temp = ABS (Ux [k]) ;
+					temp = ABS (Ux [Ux_offset[0] + k]) ;
 					//ABS (temp, Ux [k]) ;
 					if (temp > max_ui)
 					{
@@ -169,7 +163,7 @@ public class Dklu_diagnostics extends Dklu_internal
 					}
 				}
 				/* consider the diagonal element */
-				temp = ABS (Ukk [j]) ;
+				temp = ABS (Ukk [Ukk_offset + j]) ;
 				//ABS (temp, Ukk [j]) ;
 				if (temp > max_ui)
 				{
@@ -215,8 +209,7 @@ public class Dklu_diagnostics extends Dklu_internal
 	{
 		double xj, Xmax, csum, anorm, ainv_norm, est_old, est_new, abs_value ;
 		double[] Udiag, Aentry, X, S ;
-		int[] R ;
-		int nblocks, i, j, jmax, jnew, pend, n ;
+		int i, j, jmax, jnew, pend, n ;
 		int unchanged ;
 
 		/* ---------------------------------------------------------------------- */
@@ -247,8 +240,6 @@ public class Dklu_diagnostics extends Dklu_internal
 		/* ---------------------------------------------------------------------- */
 
 		n = Symbolic.n ;
-		nblocks = Symbolic.nblocks ;
-		R = Symbolic.R ;
 		Udiag = Numeric.Udiag ;
 
 		/* ---------------------------------------------------------------------- */
@@ -257,8 +248,8 @@ public class Dklu_diagnostics extends Dklu_internal
 
 		for (i = 0 ; i < n ; i++)
 		{
-			abs_value = ABS (Udiag [i]) ;
 			//ABS (abs_value, Udiag [i]) ;
+			abs_value = ABS (Udiag [i]) ;
 			if (SCALAR_IS_ZERO (abs_value))
 			{
 				Common.condest = 1 / abs_value ;
@@ -279,8 +270,8 @@ public class Dklu_diagnostics extends Dklu_internal
 			csum = 0.0 ;
 			for (j = Ap [i] ; j < pend ; j++)
 			{
-				abs_value = ABS (Aentry [j]) ;
 				//ABS (abs_value, Aentry [j]) ;
+				abs_value = ABS (Aentry [j]) ;
 				csum += abs_value ;
 			}
 			if (csum > anorm)
@@ -296,16 +287,17 @@ public class Dklu_diagnostics extends Dklu_internal
 		/* get workspace (size 2*n double's) */
 		X = Numeric.Xwork ;            /* size n space used in KLU_solve, tsolve */
 		//X += n ;                       /* X is size n */
-		X = new double [n] ;
+		int X_offset = n ;
 		//S = X + n ;                    /* S is size n */
-		S = new double [n] ;
+		S = X ;
+		int S_offset = 2*n ;
 
 		for (i = 0 ; i < n ; i++)
 		{
-			CLEAR (S, i) ;
-			CLEAR (X, i) ;
-			X [i] = 1.0 / ((double) n);
+			CLEAR (S, S_offset + i) ;
+			CLEAR (X, X_offset + i) ;
 			//REAL (X [i]) = 1.0 / ((double) n) ;
+			X [X_offset + i] = 1.0 / ((double) n);
 		}
 		jmax = 0 ;
 
@@ -317,21 +309,21 @@ public class Dklu_diagnostics extends Dklu_internal
 				/* X [jmax] is the largest entry in X */
 				for (j = 0 ; j < n ; j++)
 				{
-					CLEAR (X, j) ;
+					CLEAR (X, X_offset + j) ;
 				}
-				X [jmax] = 1 ;
 				//REAL (X [jmax]) = 1 ;
+				X [X_offset + jmax] = 1 ;
 			}
 
-			Dklu_solve.klu_solve (Symbolic, Numeric, n, 1, (double[]) X, Common) ;
+			klu_solve (Symbolic, Numeric, n, 1, (double[]) X, X_offset, Common) ;
 			est_old = ainv_norm ;
 			ainv_norm = 0.0 ;
 
 			for (j = 0 ; j < n ; j++)
 			{
 				/* ainv_norm += ABS (X [j]) ;*/
-				abs_value = ABS (X [j]) ;
 				//ABS (abs_value, X [j]) ;
+				abs_value = ABS (X [X_offset + j]) ;
 				ainv_norm += abs_value ;
 			}
 
@@ -339,10 +331,10 @@ public class Dklu_diagnostics extends Dklu_internal
 
 			for (j = 0 ; j < n ; j++)
 			{
-				double s = (X [j] >= 0) ? 1 : -1 ;
-				if (s != S [j])  // s != REAL (S [j])
+				double s = (X [X_offset + j] >= 0) ? 1 : -1 ;
+				if (s != S [S_offset + j])  // s != REAL (S [j])
 				{
-					S [j] = s ;
+					S [S_offset + j] = s ;
 					unchanged = FALSE ;
 				}
 			}
@@ -354,19 +346,19 @@ public class Dklu_diagnostics extends Dklu_internal
 
 			for (j = 0 ; j < n ; j++)
 			{
-				X [j] = S [j] ;
+				X [j] = S [S_offset + j] ;
 			}
 
 			/* do a transpose solve */
-			klu_tsolve (Symbolic, Numeric, n, 1, X, Common) ;
+			klu_tsolve (Symbolic, Numeric, n, 1, X, X_offset, Common) ;
 
 			/* jnew = the position of the largest entry in X */
 			jnew = 0 ;
 			Xmax = 0 ;
 			for (j = 0 ; j < n ; j++)
 			{
-				xj = ABS (X [j]) ;
 				//ABS (xj, X [j]) ;
+				xj = ABS (X [X_offset + j]) ;
 				if (xj > Xmax)
 				{
 					Xmax = xj ;
@@ -388,27 +380,27 @@ public class Dklu_diagnostics extends Dklu_internal
 
 		for (j = 0 ; j < n ; j++)
 		{
-			CLEAR (X, j) ;
+			CLEAR (X, X_offset + j) ;
 			if (j % 2 != 0)
 			{
-				X [j] = 1 + ((double) j) / ((double) (n-1)) ;
 				//REAL (X [j]) = 1 + ((double) j) / ((double) (n-1)) ;
+				X [X_offset + j] = 1 + ((double) j) / ((double) (n-1)) ;
 			}
 			else
 			{
-				X [j] = -1 - ((double) j) / ((double) (n-1)) ;
 				//REAL (X [j]) = -1 - ((double) j) / ((double) (n-1)) ;
+				X [X_offset + j] = -1 - ((double) j) / ((double) (n-1)) ;
 			}
 		}
 
-		klu_solve (Symbolic, Numeric, n, 1, (double[]) X, Common) ;
+		klu_solve (Symbolic, Numeric, n, 1, (double[]) X, X_offset, Common) ;
 
 		est_new = 0.0 ;
 		for (j = 0 ; j < n ; j++)
 		{
 			/* est_new += ABS (X [j]) ;*/
-			abs_value = ABS (X [j]) ;
 			//ABS (abs_value, X [j]) ;
+			abs_value = ABS (X [X_offset + j]) ;
 			est_new += abs_value ;
 		}
 		est_new = 2 * est_new / (3 * n) ;
@@ -434,10 +426,12 @@ public class Dklu_diagnostics extends Dklu_internal
 			KLU_common Common)
 	{
 		double flops = 0 ;
-		int[] R, Ui, Uip, Llen, Ulen ;
+		int[] R, Uip, Llen, Ulen ;
+		/*int[]*/double[] Ui ;
 		double[][] LUbx ;
 		double[] LU ;
-		int k, ulen, p, n, nk, block, nblocks, k1 ;
+		int k, ulen, p, nk, block, nblocks, k1 ;
+		int Llen_offset = 0, Uip_offset = 0, Ulen_offset = 0 ;
 
 		/* ---------------------------------------------------------------------- */
 		/* check inputs */
@@ -459,7 +453,6 @@ public class Dklu_diagnostics extends Dklu_internal
 		/* get the contents of the Symbolic object */
 		/* ---------------------------------------------------------------------- */
 
-		n = Symbolic.n ;
 		R = Symbolic.R ;
 		nblocks = Symbolic.nblocks ;
 
@@ -479,21 +472,25 @@ public class Dklu_diagnostics extends Dklu_internal
 			nk = R [block+1] - k1 ;
 			if (nk > 1)
 			{
-				Llen = Numeric.Llen + k1 ;
-				Uip  = Numeric.Uip  + k1 ;
-				Ulen = Numeric.Ulen + k1 ;
+				Llen = Numeric.Llen ;
+				Llen_offset += k1 ;
+				Uip  = Numeric.Uip ;
+				Uip_offset += k1 ;
+				Ulen = Numeric.Ulen ;
+				Ulen_offset += k1 ;
 				LU = LUbx [block] ;
+				int[] Ui_offset = new int[1] ;
 				for (k = 0 ; k < nk ; k++)
 				{
 					/* compute kth column of U, and update kth column of A */
-					GET_I_POINTER (LU, Uip, Ui, k) ;
-					ulen = Ulen [k] ;
+					Ui = GET_I_POINTER (LU, Uip, Uip_offset, Ui_offset, k) ;
+					ulen = Ulen [Ulen_offset + k] ;
 					for (p = 0 ; p < ulen ; p++)
 					{
-						flops += 2 * Llen [Ui [p]] ;
+						flops += 2 * Llen [Llen_offset + (int) Ui [Ui_offset[0] + p]] ;
 					}
 					/* gather and divide by pivot to get kth column of L */
-					flops += Llen [k] ;
+					flops += Llen [Llen_offset + k] ;
 				}
 			}
 		}
@@ -548,8 +545,8 @@ public class Dklu_diagnostics extends Dklu_internal
 		for (j = 0 ; j < n ; j++)
 		{
 			/* get the magnitude of the pivot */
-			ukk = ABS (Udiag [j]) ;
 			//ABS (ukk, Udiag [j]) ;
+			ukk = ABS (Udiag [j]) ;
 			if (SCALAR_IS_NAN (ukk) || SCALAR_IS_ZERO (ukk))
 			{
 				/* if NaN, or zero, the rcond is zero */

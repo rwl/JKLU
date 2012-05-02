@@ -51,7 +51,7 @@ public class Dklu_solve extends Dklu_internal {
 	 * @return
 	 */
 	public static int klu_solve(KLU_symbolic Symbolic, KLU_numeric Numeric,
-			int d, int nrhs, double[] B, KLU_common Common)
+			int d, int nrhs, double[] B, int B_offset, KLU_common Common)
 	{
 		double offik, s ;
 		double[] x = new double[4] ;
@@ -137,7 +137,7 @@ public class Dklu_solve extends Dklu_internal {
 
 						for (k = 0 ; k < n ; k++)
 						{
-							X [k] = Bz [Pnum [k]] ;
+							X [k] = Bz [B_offset + Pnum [k]] ;
 						}
 						break ;
 
@@ -146,8 +146,8 @@ public class Dklu_solve extends Dklu_internal {
 						for (k = 0 ; k < n ; k++)
 						{
 							i = Pnum [k] ;
-							X [2*k    ] = Bz [i      ] ;
-							X [2*k + 1] = Bz  [i + d  ] ;
+							X [2*k    ] = Bz [B_offset + i] ;
+							X [2*k + 1] = Bz [B_offset + i + d] ;
 						}
 						break ;
 
@@ -156,9 +156,9 @@ public class Dklu_solve extends Dklu_internal {
 						for (k = 0 ; k < n ; k++)
 						{
 							i = Pnum [k] ;
-							X [3*k    ] = Bz [i      ] ;
-							X [3*k + 1] = Bz [i + d  ] ;
-							X [3*k + 2] = Bz [i + d*2] ;
+							X [3*k    ] = Bz [B_offset + i      ] ;
+							X [3*k + 1] = Bz [B_offset + i + d  ] ;
+							X [3*k + 2] = Bz [B_offset + i + d*2] ;
 						}
 						break ;
 
@@ -167,10 +167,10 @@ public class Dklu_solve extends Dklu_internal {
 						for (k = 0 ; k < n ; k++)
 						{
 							i = Pnum [k] ;
-							X [4*k    ] = Bz [i      ] ;
-							X [4*k + 1] = Bz [i + d  ] ;
-							X [4*k + 2] = Bz [i + d*2] ;
-							X [4*k + 3] = Bz [i + d*3] ;
+							X [4*k    ] = Bz [B_offset + i      ] ;
+							X [4*k + 1] = Bz [B_offset + i + d  ] ;
+							X [4*k + 2] = Bz [B_offset + i + d*2] ;
+							X [4*k + 3] = Bz [B_offset + i + d*3] ;
 						}
 						break ;
 				}
@@ -186,7 +186,7 @@ public class Dklu_solve extends Dklu_internal {
 
 						for (k = 0 ; k < n ; k++)
 						{
-							X [k] = Bz  [Pnum [k]] / Rs [k] ;
+							X [k] = Bz  [B_offset + Pnum [k]] / Rs [k] ;
 							//SCALE_DIV_ASSIGN (X [k], Bz  [Pnum [k]], Rs [k]) ;
 						}
 						break ;
@@ -197,9 +197,9 @@ public class Dklu_solve extends Dklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							X [2*k] =  Bz [i] / rs ;
+							X [2*k] =  Bz [B_offset + i] / rs ;
 							//SCALE_DIV_ASSIGN (X [2*k], Bz [i], rs) ;
-							X [2*k + 1] = Bz [i + d] / rs ;
+							X [2*k + 1] = Bz [B_offset + i + d] / rs ;
 							//SCALE_DIV_ASSIGN (X [2*k + 1], Bz [i + d], rs) ;
 						}
 						break ;
@@ -210,11 +210,11 @@ public class Dklu_solve extends Dklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							X [3*k] = Bz [i] / rs ;
+							X [3*k] = Bz [B_offset + i] / rs ;
 							//SCALE_DIV_ASSIGN (X [3*k], Bz [i], rs) ;
-							X [3*k + 1] = Bz [i + d] / rs ;
+							X [3*k + 1] = Bz [B_offset + i + d] / rs ;
 							//SCALE_DIV_ASSIGN (X [3*k + 1], Bz [i + d], rs) ;
-							X [3*k + 2] = Bz [i + d*2] / rs ;
+							X [3*k + 2] = Bz [B_offset + i + d*2] / rs ;
 							//SCALE_DIV_ASSIGN (X [3*k + 2], Bz [i + d*2], rs) ;
 						}
 						break ;
@@ -225,13 +225,13 @@ public class Dklu_solve extends Dklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							X [4*k] = Bz [i] / rs ;
+							X [4*k] = Bz [B_offset + i] / rs ;
 							//SCALE_DIV_ASSIGN (X [4*k], Bz [i], rs) ;
-							X [4*k + 1] = Bz [i + d] / rs ;
+							X [4*k + 1] = Bz [B_offset + i + d] / rs ;
 							//SCALE_DIV_ASSIGN (X [4*k + 1], Bz [i + d], rs) ;
-							X [4*k + 2] = Bz [i + d*2] / rs ;
+							X [4*k + 2] = Bz [B_offset + i + d*2] / rs ;
 							//SCALE_DIV_ASSIGN (X [4*k + 2], Bz [i + d*2], rs) ;
-							X [4*k + 3] = Bz [i + d*3] / rs ;
+							X [4*k + 3] = Bz [B_offset + i + d*3] / rs ;
 							//SCALE_DIV_ASSIGN (X [4*k + 3], Bz [i + d*3], rs) ;
 						}
 						break ;
@@ -406,7 +406,7 @@ public class Dklu_solve extends Dklu_internal {
 
 					for (k = 0 ; k < n ; k++)
 					{
-						Bz  [Q [k]] = X [k] ;
+						Bz  [B_offset + Q [k]] = X [k] ;
 					}
 					break ;
 
@@ -415,8 +415,8 @@ public class Dklu_solve extends Dklu_internal {
 					for (k = 0 ; k < n ; k++)
 					{
 						i = Q [k] ;
-						Bz  [i      ] = X [2*k    ] ;
-						Bz  [i + d  ] = X [2*k + 1] ;
+						Bz  [B_offset + i      ] = X [2*k    ] ;
+						Bz  [B_offset + i + d  ] = X [2*k + 1] ;
 					}
 					break ;
 
@@ -425,9 +425,9 @@ public class Dklu_solve extends Dklu_internal {
 					for (k = 0 ; k < n ; k++)
 					{
 						i = Q [k] ;
-						Bz  [i      ] = X [3*k    ] ;
-						Bz  [i + d  ] = X [3*k + 1] ;
-						Bz  [i + d*2] = X [3*k + 2] ;
+						Bz  [B_offset + i      ] = X [3*k    ] ;
+						Bz  [B_offset + i + d  ] = X [3*k + 1] ;
+						Bz  [B_offset + i + d*2] = X [3*k + 2] ;
 					}
 					break ;
 
@@ -436,10 +436,10 @@ public class Dklu_solve extends Dklu_internal {
 					for (k = 0 ; k < n ; k++)
 					{
 						i = Q [k] ;
-						Bz  [i      ] = X [4*k    ] ;
-						Bz  [i + d  ] = X [4*k + 1] ;
-						Bz  [i + d*2] = X [4*k + 2] ;
-						Bz  [i + d*3] = X [4*k + 3] ;
+						Bz  [B_offset + i      ] = X [4*k    ] ;
+						Bz  [B_offset + i + d  ] = X [4*k + 1] ;
+						Bz  [B_offset + i + d*2] = X [4*k + 2] ;
+						Bz  [B_offset + i + d*3] = X [4*k + 3] ;
 					}
 					break ;
 			}
@@ -448,7 +448,7 @@ public class Dklu_solve extends Dklu_internal {
 			/* go to the next chunk of B */
 			/* ------------------------------------------------------------------ */
 
-			Bz += d*4 ;
+			B_offset += d*4 ;
 		}
 		return (TRUE) ;
 	}

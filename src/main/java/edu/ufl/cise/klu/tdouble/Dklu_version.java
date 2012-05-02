@@ -60,12 +60,14 @@ public abstract class Dklu_version {
 //	{
 //		return Math.ceil(BYTES (type, (double) n) / sizeof (double)) ;
 //	}
-//
-//	protected static void GET_I_POINTER(double[] LU, int[] Xip, int[] Xi, int k)
-//	{
-//		Xi = (Int[]) (LU + Xip [k]) ;
-//	}
-//
+
+	protected static double[] GET_I_POINTER(double[] LU, int[] Xip,
+			int Xip_offset, int[] Xi_offset, int k)
+	{
+		Xi_offset[0] = Xip [Xip_offset + k] ;
+		return LU ;
+	}
+
 //	protected static void GET_X_POINTER(double[] LU, int[] Xip, int Xlen,
 //			double[] Xx, int k)
 //	{

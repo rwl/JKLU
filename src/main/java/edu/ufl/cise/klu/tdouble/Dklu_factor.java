@@ -405,17 +405,20 @@ public class Dklu_factor extends Dklu_internal
 				}
 				else
 				{
-//					int[] Lip, Uip, Llen, Ulen ;
 					double[] LU ;
-//					Lip = Numeric.Lip + k1 ;
-//					Llen = Numeric.Llen + k1 ;
-//					LU = (double[]) Numeric.LUbx [block] ;
-//					PRINTF ("\n---- L block %d\n", block);
-//					ASSERT (klu_valid_LU (nk, TRUE, Lip, Llen, LU)) ;
-//					Uip = Numeric.Uip + k1 ;
-//					Ulen = Numeric.Ulen + k1 ;
-//					PRINTF ("\n---- U block %d\n", block) ;
-//					ASSERT (klu_valid_LU (nk, FALSE, Uip, Ulen, LU)) ;
+					Lip = Numeric.Lip ;
+					int Lip_offset = k1 ;
+					Llen = Numeric.Llen ;
+					int Llen_offset = k1 ;
+					LU = (double[]) Numeric.LUbx [block] ;
+					PRINTF ("\n---- L block %d\n", block);
+					ASSERT (klu_valid_LU (nk, TRUE, Lip, Lip_offset, Llen, Llen_offset, LU)) ;
+					Uip = Numeric.Uip ;
+					int Uip_offset = k1 ;
+					Ulen = Numeric.Ulen ;
+					int Ulen_offset = k1 ;
+					PRINTF ("\n---- U block %d\n", block) ;
+					ASSERT (klu_valid_LU (nk, FALSE, Uip, Uip_offset, Ulen, Ulen_offset, LU)) ;
 				}
 			}
 		}
@@ -435,7 +438,6 @@ public class Dklu_factor extends Dklu_internal
 	{
 		int n, nzoff, nblocks, maxblock, k ;
 		int[] ok = new int [] {TRUE} ;
-		int[] R ;
 		KLU_numeric Numeric ;
 		int n1, nzoff1, s, b6, n3 ;
 
@@ -462,7 +464,6 @@ public class Dklu_factor extends Dklu_internal
 		nzoff = Symbolic.nzoff ;
 		nblocks = Symbolic.nblocks ;
 		maxblock = Symbolic.maxblock ;
-		R = Symbolic.R ;
 		PRINTF ("KLU_factor:  n %d nzoff %d nblocks %d maxblock %d\n",
 			n, nzoff, nblocks, maxblock) ;
 
@@ -579,7 +580,7 @@ public class Dklu_factor extends Dklu_internal
 		if (Common.status < KLU_OK)
 		{
 			/* out of memory or inputs invalid */
-//			klu_free_numeric (Numeric, Common) ;
+			//klu_free_numeric (Numeric, Common) ;
 			Numeric = null ;
 		}
 		else if (Common.status == KLU_SINGULAR)
@@ -589,8 +590,8 @@ public class Dklu_factor extends Dklu_internal
 				/* Matrix is singular, and the Numeric object is only partially
 				 * defined because we halted early.  This is the default case for
 				 * a singular matrix. */
+				//klu_free_numeric (Numeric, Common) ;
 				Numeric = null ;
-//				klu_free_numeric (Numeric, Common) ;
 
 			}
 		}
