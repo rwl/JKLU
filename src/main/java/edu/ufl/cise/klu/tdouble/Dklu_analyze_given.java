@@ -254,16 +254,16 @@ public class Dklu_analyze_given extends Dklu_internal
 			if (Common.status < KLU_OK)
 			{
 				/* out of memory */
-//				klu_free (Work, 4*n, sizeof (int), Common) ;
+				//klu_free (Work, 4*n, sizeof (int), Common) ;
 				Work = null;
-//				klu_free (Pinv, n, sizeof (int), Common) ;
+				//klu_free (Pinv, n, sizeof (int), Common) ;
 				Pinv = null;
 				if (Puser != null)
 				{
-//					klu_free (Bi, nz+1, sizeof (int), Common) ;
+					//klu_free (Bi, nz+1, sizeof (int), Common) ;
 					Bi = null;
 				}
-//				klu_free_symbolic (Symbolic, Common) ;
+				//klu_free_symbolic (Symbolic, Common) ;
 				Symbolic = null;
 				Common.status = KLU_OUT_OF_MEMORY ;
 				return (null) ;
@@ -362,13 +362,13 @@ public class Dklu_analyze_given extends Dklu_internal
 			/* free all workspace */
 			/* ------------------------------------------------------------------ */
 
-//			klu_free (Work, 4*n, sizeof (int), Common) ;
+			//klu_free (Work, 4*n, sizeof (int), Common) ;
 			Work = null;
-//			klu_free (Pinv, n, sizeof (int), Common) ;
+			//klu_free (Pinv, n, sizeof (int), Common) ;
 			Pinv = null;
 			if (Puser != null)
 			{
-//				klu_free (Bi, nz+1, sizeof (int), Common) ;
+				//klu_free (Bi, nz+1, sizeof (int), Common) ;
 				Bi = null;
 			}
 

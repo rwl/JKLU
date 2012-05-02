@@ -63,7 +63,6 @@ public class Dklu_diagnostics extends Dklu_internal
 		double[] Aentry, Ux, Ukk ;
 		double[] Rs ;
 		int i, newrow, oldrow, k1, k2, nk, j, oldcol, k, pend ;
-		int Uip_offset = 0, Ulen_offset = 0, Ukk_offset = 0 ;
 		int[] len = new int[1] ;
 		int[] Ui_offset = new int[1] ;
 		int[] Ux_offset = new int[1] ;
@@ -113,11 +112,11 @@ public class Dklu_diagnostics extends Dklu_internal
 			}
 			LU = Numeric.LUbx[i] ;
 			Uip = Numeric.Uip ;
-			Uip_offset += k1 ;
+			int Uip_offset = k1 ;
 			Ulen = Numeric.Ulen ;
-			Ulen_offset += k1 ;
+			int Ulen_offset = k1 ;
 			Ukk = Numeric.Udiag ;
-			Ukk_offset += k1 ;
+			int Ukk_offset = k1 ;
 			min_block_rgrowth = 1 ;
 			for (j = 0 ; j < nk ; j++)
 			{
@@ -143,8 +142,8 @@ public class Dklu_diagnostics extends Dklu_internal
 					{
 						aik = Aentry [k] ;
 					}
-					temp = ABS ( aik ) ;
 					//ABS (temp, aik) ;
+					temp = ABS ( aik ) ;
 					if (temp > max_ai)
 					{
 						max_ai = temp ;
@@ -155,16 +154,16 @@ public class Dklu_diagnostics extends Dklu_internal
 						Ui_offset, Ux_offset, j, len) ;
 				for (k = 0 ; k < len[0] ; k++)
 				{
-					temp = ABS (Ux [Ux_offset[0] + k]) ;
 					//ABS (temp, Ux [k]) ;
+					temp = ABS (Ux [Ux_offset[0] + k]) ;
 					if (temp > max_ui)
 					{
 						max_ui = temp ;
 					}
 				}
 				/* consider the diagonal element */
-				temp = ABS (Ukk [Ukk_offset + j]) ;
 				//ABS (temp, Ukk [j]) ;
+				temp = ABS (Ukk [Ukk_offset + j]) ;
 				if (temp > max_ui)
 				{
 					max_ui = temp ;
@@ -431,7 +430,6 @@ public class Dklu_diagnostics extends Dklu_internal
 		double[][] LUbx ;
 		double[] LU ;
 		int k, ulen, p, nk, block, nblocks, k1 ;
-		int Llen_offset = 0, Uip_offset = 0, Ulen_offset = 0 ;
 
 		/* ---------------------------------------------------------------------- */
 		/* check inputs */
@@ -473,11 +471,11 @@ public class Dklu_diagnostics extends Dklu_internal
 			if (nk > 1)
 			{
 				Llen = Numeric.Llen ;
-				Llen_offset += k1 ;
+				int Llen_offset = k1 ;
 				Uip  = Numeric.Uip ;
-				Uip_offset += k1 ;
+				int Uip_offset = k1 ;
 				Ulen = Numeric.Ulen ;
-				Ulen_offset += k1 ;
+				int Ulen_offset = k1 ;
 				LU = LUbx [block] ;
 				int[] Ui_offset = new int[1] ;
 				for (k = 0 ; k < nk ; k++)

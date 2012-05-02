@@ -343,16 +343,16 @@ public class Dklu_analyze extends Dklu_internal
 		{
 			/* invalid ordering */
 			Common.status = KLU_INVALID ;
-//			klu_free_symbolic (Symbolic, Common) ;
+			//klu_free_symbolic (Symbolic, Common) ;
 			Symbolic = null;
 			return (null) ;
 		}
 
 		/* AMD memory management routines */
-//		amd_malloc  = Common.malloc_memory ;
-//		amd_free    = Common.free_memory ;
-//		amd_calloc  = Common.calloc_memory ;
-//		amd_realloc = Common.realloc_memory ;
+		//amd_malloc  = Common.malloc_memory ;
+		//amd_free    = Common.free_memory ;
+		//amd_calloc  = Common.calloc_memory ;
+		//amd_realloc = Common.realloc_memory ;
 
 		/* ---------------------------------------------------------------------- */
 		/* allocate workspace for BTF permutation */
@@ -362,11 +362,11 @@ public class Dklu_analyze extends Dklu_internal
 		Qbtf = klu_malloc_int (n, Common) ;
 		if (Common.status < KLU_OK)
 		{
-//			KLU_free (Pbtf, n, sizeof (int), Common) ;
+			//KLU_free (Pbtf, n, sizeof (int), Common) ;
 			Pbtf = null;
-//			KLU_free (Qbtf, n, sizeof (int), Common) ;
+			//KLU_free (Qbtf, n, sizeof (int), Common) ;
 			Qbtf = null;
-//			Dklu_free_symbolic.klu_free_symbolic (Symbolic, Common) ;
+			//klu_free_symbolic (Symbolic, Common) ;
 			Symbolic = null;
 			return (null) ;
 		}
@@ -408,7 +408,7 @@ public class Dklu_analyze extends Dklu_internal
 			Common.structural_rank = Symbolic.structural_rank ;
 			Common.work += work[0] ;
 
-			//KLU_free (Work, 5*n, sizeof (int), Common) ;
+			//klu_free (Work, 5*n, sizeof (int), Common) ;
 
 			/* unflip Qbtf if the matrix does not have full structural rank */
 			if (Symbolic.structural_rank < n)
@@ -474,12 +474,12 @@ public class Dklu_analyze extends Dklu_internal
 		/* free all workspace */
 		/* ---------------------------------------------------------------------- */
 
-		//Dklu_memory.klu_free (Pblk, maxblock, sizeof (int), Common) ;
-		//Dklu_memory.klu_free (Cp, maxblock+1, sizeof (int), Common) ;
-		//Dklu_memory.klu_free (Ci, MAX (Cilen, nz+1), sizeof (int), Common) ;
-		//Dklu_memory.klu_free (Pinv, n, sizeof (int), Common) ;
-		//Dklu_memory.klu_free (Pbtf, n, sizeof (int), Common) ;
-		//Dklu_memory.klu_free (Qbtf, n, sizeof (int), Common) ;
+		//klu_free (Pblk, maxblock, sizeof (int), Common) ;
+		//klu_free (Cp, maxblock+1, sizeof (int), Common) ;
+		//klu_free (Ci, MAX (Cilen, nz+1), sizeof (int), Common) ;
+		//klu_free (Pinv, n, sizeof (int), Common) ;
+		//klu_free (Pbtf, n, sizeof (int), Common) ;
+		//klu_free (Qbtf, n, sizeof (int), Common) ;
 		Pblk = Cp = Ci = Pinv = Pbtf = Qbtf = null;
 
 		/* ---------------------------------------------------------------------- */

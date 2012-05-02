@@ -96,9 +96,7 @@ public class Dklu_factor extends Dklu_internal
 		Rs = Numeric.Rs ;
 		Pinv = Numeric.Pinv ;
 		X = Numeric.Xwork ;              /* X is of size n */
-//		X = new double [n] ;
 		Iwork = Numeric.Iwork ;		/* 5*maxblock for KLU_factor */
-//		Iwork = new int [5 * Symbolic.maxblock] ;
 		//Pblock = Iwork + 5*((int) Symbolic.maxblock) ;  /* 1*maxblock for Pblock */
 		Pblock = new int [Symbolic.maxblock] ;
 		Common.nrealloc = 0 ;
@@ -234,8 +232,8 @@ public class Dklu_factor extends Dklu_internal
 							ASSERT (newrow == k1) ;
 							PRINTF ("singleton block %d ", block) ;
 							PRINT_ENTRY (Ax[p]) ;
-							//SCALE_DIV_ASSIGN (s, Ax [p], Rs [oldrow]) ;
 							s = Ax [p] / Rs [oldrow] ;
+							//SCALE_DIV_ASSIGN (s, Ax [p], Rs [oldrow]) ;
 						}
 					}
 				}
@@ -294,24 +292,24 @@ public class Dklu_factor extends Dklu_internal
 				}
 
 				PRINTF ("\n----------------------- L %d:\n", block) ;
-				ASSERT (klu_valid_LU (nk, TRUE, Lip, k1, Llen, k1, LUbx [block])) ;
+				if (!NDEBUG) ASSERT (klu_valid_LU (nk, TRUE, Lip, k1, Llen, k1, LUbx [block])) ;
 				PRINTF ("\n----------------------- U %d:\n", block) ;
-				ASSERT (klu_valid_LU (nk, FALSE, Uip, k1, Ulen, k1, LUbx [block])) ;
+				if (!NDEBUG) ASSERT (klu_valid_LU (nk, FALSE, Uip, k1, Ulen, k1, LUbx [block])) ;
 
 				/* -------------------------------------------------------------- */
 				/* get statistics */
 				/* -------------------------------------------------------------- */
 
-//				lnz += lnz_block ;
-//				unz += unz_block ;
-//				max_lnz_block = MAX (max_lnz_block, lnz_block) ;
-//				max_unz_block = MAX (max_unz_block, unz_block) ;
-//
-//				if (Lnz [block] == EMPTY)
-//				{
-//					/* revise estimate for subsequent factorization */
-//					Lnz [block] = MAX (lnz_block, unz_block) ;
-//				}
+				lnz += lnz_block[0] ;
+				unz += unz_block[0] ;
+				max_lnz_block = MAX (max_lnz_block, lnz_block[0]) ;
+				max_unz_block = MAX (max_unz_block, unz_block[0]) ;
+
+				if (Lnz [block] == EMPTY)
+				{
+					/* revise estimate for subsequent factorization */
+					Lnz [block] = MAX (lnz_block[0], unz_block[0]) ;
+				}
 
 				/* -------------------------------------------------------------- */
 				/* combine the klu row ordering with the symbolic pre-ordering */
@@ -332,7 +330,7 @@ public class Dklu_factor extends Dklu_internal
 		}
 		ASSERT (nzoff == Offp [n]) ;
 		PRINTF ("\n------------------- Off diagonal entries:\n") ;
-		ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
+		if (!NDEBUG) ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 
 		Numeric.lnz = lnz ;
 		Numeric.unz = unz ;
@@ -362,8 +360,8 @@ public class Dklu_factor extends Dklu_internal
 		{
 			for (k = 0 ; k < n ; k++)
 			{
-				X [k] = Rs [Pnum [k]] ;
 				//REAL (X [k]) = Rs [Pnum [k]] ;
+				X [k] = Rs [Pnum [k]] ;
 			}
 			for (k = 0 ; k < n ; k++)
 			{
@@ -372,7 +370,7 @@ public class Dklu_factor extends Dklu_internal
 		}
 
 		PRINTF ("\n------------------- Off diagonal entries, old:\n") ;
-		ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
+		if (!NDEBUG) ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 
 		/* apply the pivot row permutations to the off-diagonal entries */
 		for (p = 0 ; p < nzoff ; p++)
@@ -382,7 +380,7 @@ public class Dklu_factor extends Dklu_internal
 		}
 
 		PRINTF ("\n------------------- Off diagonal entries, new:\n") ;
-		ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
+		if (!NDEBUG) ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 
 		if (!NDEBUG)
 		{
@@ -412,13 +410,13 @@ public class Dklu_factor extends Dklu_internal
 					int Llen_offset = k1 ;
 					LU = (double[]) Numeric.LUbx [block] ;
 					PRINTF ("\n---- L block %d\n", block);
-					ASSERT (klu_valid_LU (nk, TRUE, Lip, Lip_offset, Llen, Llen_offset, LU)) ;
+					if (!NDEBUG) ASSERT (klu_valid_LU (nk, TRUE, Lip, Lip_offset, Llen, Llen_offset, LU)) ;
 					Uip = Numeric.Uip ;
 					int Uip_offset = k1 ;
 					Ulen = Numeric.Ulen ;
 					int Ulen_offset = k1 ;
 					PRINTF ("\n---- U block %d\n", block) ;
-					ASSERT (klu_valid_LU (nk, FALSE, Uip, Uip_offset, Ulen, Ulen_offset, LU)) ;
+					if (!NDEBUG) ASSERT (klu_valid_LU (nk, FALSE, Uip, Uip_offset, Ulen, Ulen_offset, LU)) ;
 				}
 			}
 		}
@@ -485,7 +483,7 @@ public class Dklu_factor extends Dklu_internal
 		n1 = n + 1 ;
 		nzoff1 = nzoff + 1 ;
 
-		//Numeric = Dklu_memory.klu_malloc (sizeof (KLU_numeric), 1, Common) ;
+		//Numeric = klu_malloc (sizeof (KLU_numeric), 1, Common) ;
 		try
 		{
 			Numeric = new KLU_numeric();

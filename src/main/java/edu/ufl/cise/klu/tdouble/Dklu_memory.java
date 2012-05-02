@@ -149,7 +149,8 @@ public class Dklu_memory extends Dklu_internal {
 	{
 		double[] pnew ;
 		int snew ;
-//		int sold ;
+		@SuppressWarnings("unused")
+		int sold ;
 
 		if (Common == null)
 		{
@@ -170,13 +171,13 @@ public class Dklu_memory extends Dklu_internal {
 			/* The object exists, and is changing to some other nonzero size. */
 			/* call realloc, or its equivalent */
 			snew = MAX (1, nnew) ;
-//			sold = MAX (1, nold) ;
+			sold = MAX (1, nold) ;
 			try
 			{
 				pnew = new double[snew] ;
 				Runtime runtime = Runtime.getRuntime();
 				Common.memusage = runtime.totalMemory() - runtime.freeMemory();
-//				Common.memusage += (snew - sold) ;
+				//Common.memusage += (snew - sold) ;
 				Common.mempeak = MAX (Common.mempeak, Common.memusage) ;
 				p = pnew ;
 			}

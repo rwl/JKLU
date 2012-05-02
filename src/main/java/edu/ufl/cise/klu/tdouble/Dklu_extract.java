@@ -68,8 +68,6 @@ public class Dklu_extract extends Dklu_internal
 		double[] LU ;
 		double[] Lx2, Ux2, Ukk ;
 		int i, k, block, nblocks, n, nz, k1, k2, nk, kk, p ;
-		int Lip_offset = 0, Llen_offset = 0, Ukk_offset = 0 ;
-		int Uip_offset = 0, Ulen_offset = 0 ;
 		int[] len = new int[1] ;
 		int[] Li2_offset = new int[1] ;
 		int[] Lx2_offset = new int[1] ;
@@ -175,9 +173,9 @@ public class Dklu_extract extends Dklu_internal
 					/* non-singleton block */
 					LU = Numeric.LUbx [block] ;
 					Lip = Numeric.Lip ;
-					Lip_offset += k1 ;
+					int Lip_offset = k1 ;
 					Llen = Numeric.Llen ;
-					Llen_offset += k1 ;
+					int Llen_offset = k1 ;
 					for (kk = 0 ; kk < nk ; kk++)
 					{
 						Lp [k1+kk] = nz ;
@@ -214,7 +212,7 @@ public class Dklu_extract extends Dklu_internal
 				k2 = Symbolic.R [block+1] ;
 				nk = k2 - k1 ;
 				Ukk = Numeric.Udiag ;
-				Ukk_offset += k1 ;
+				int Ukk_offset = k1 ;
 				if (nk == 1)
 				{
 					/* singleton block */
@@ -228,9 +226,9 @@ public class Dklu_extract extends Dklu_internal
 					/* non-singleton block */
 					LU = Numeric.LUbx [block] ;
 					Uip = Numeric.Uip ;
-					Uip_offset += k1 ;
+					int Uip_offset = k1 ;
 					Ulen = Numeric.Ulen ;
-					Ulen_offset += k1 ;
+					int Ulen_offset = k1 ;
 					for (kk = 0 ; kk < nk ; kk++)
 					{
 						Up [k1+kk] = nz ;

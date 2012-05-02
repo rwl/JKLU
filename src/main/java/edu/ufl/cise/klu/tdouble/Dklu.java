@@ -168,21 +168,21 @@ public class Dklu extends Dklu_internal {
 		p_LU [block] = null ;
 
 		/* these computations are safe from int overflow */
-//		W = Work ;
-//		Pinv = W ;      //W += n ;
-//		int Pinv_offset = n ;
+		//W = Work ;
+		//Pinv = W ;      //W += n ;
+		//int Pinv_offset = n ;
 		Pinv = new int[n] ;
-//		Stack = W ;     //W += n ;
-//		int Stack_offset = 2*n ;
+		//Stack = W ;     //W += n ;
+		//int Stack_offset = 2*n ;
 		Stack = new int[n] ;
-//		Flag = W ;      //W += n ;
-//		int Flag_offset = 3*n ;
+		//Flag = W ;      //W += n ;
+		//int Flag_offset = 3*n ;
 		Flag = new int[n] ;
-//		Lpend = W ;     //W += n ;
-//		int Lpend_offset = 4*n ;
+		//Lpend = W ;     //W += n ;
+		//int Lpend_offset = 4*n ;
 		Lpend = new int[n] ;
-//		Ap_pos = W ;    //W += n ;
-//		int Ap_pos_offset = 5*n ;
+		//Ap_pos = W ;    //W += n ;
+		//int Ap_pos_offset = 5*n ;
 		Ap_pos = new int[n] ;
 
 		//dunits = DUNITS (Integer, lsize) + DUNITS (Double, lsize) +

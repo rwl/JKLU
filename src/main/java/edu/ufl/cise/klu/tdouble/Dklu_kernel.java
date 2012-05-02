@@ -460,8 +460,8 @@ public class Dklu_kernel extends Dklu_internal {
 		}
 		else if (pdiag != EMPTY)
 		{
-			xabs = ABS (Lx [Lx_offset[0] + pdiag]) ;
 			//ABS (xabs, Lx [pdiag]) ;
+			xabs = ABS (Lx [Lx_offset[0] + pdiag]) ;
 			if (xabs >= tol * abs_pivot)
 			{
 				/* the diagonal is large enough */
@@ -543,7 +543,7 @@ public class Dklu_kernel extends Dklu_internal {
 			j = (int) Ui [Ui_offset[0] + p] ;
 			ASSERT (j < k) ;
 			PRINTF ("%d is pruned: %d. Lpend[j] %d Lip[j+1] %d\n",
-				j, Lpend [j] != EMPTY, Lpend [j], Lip [Lip_offset + j+1]) ;
+				j, Lpend [j] != EMPTY ? 1 : 0, Lpend [j], Lip [Lip_offset + j+1]) ;
 			if (Lpend [j] == EMPTY)
 			{
 				/* scan column j of L for the pivot row */
@@ -890,7 +890,7 @@ public class Dklu_kernel extends Dklu_internal {
 
 			/* we now have a valid pivot row, even if the column has NaN's or
 			 * has no entries on or below the diagonal at all. */
-			PRINTF ("\nk %d : Pivot row %d : ", k, pivrow) ;
+			PRINTF ("\nk %d : Pivot row %d : ", k, pivrow[0]) ;
 			PRINT_ENTRY (pivot[0]) ;
 			ASSERT (pivrow[0] >= 0 && pivrow[0] < n) ;
 			ASSERT (Pinv [pivrow[0]] < 0) ;

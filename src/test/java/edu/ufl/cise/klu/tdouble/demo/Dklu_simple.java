@@ -17,7 +17,7 @@ public class Dklu_simple extends TestCase {
 
 	private static int n = 5 ;
 	private static int [ ] Ap = {0, 2, 5, 9, 10, 12} ;
-	private static int [ ]    Ai = { 0,  1,  0,   2,  4,  1,  2,  3,   4,  2,  1,  4} ;
+	private static int [ ] Ai = {0, 1, 0, 2, 4, 1, 2, 3, 4, 2, 1, 4} ;
 	private static double [ ] Ax = {2., 3., 3., -1., 4., 4., -3., 1., 2., 2., 6., 1.} ;
 	private static double [ ] b = {8., 45., -3., 3., 19.} ;
 

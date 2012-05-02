@@ -400,15 +400,15 @@ public class Dklu_refactor extends Dklu_internal {
 							if (newrow < 0 && poff < nzoff)
 							{
 								/* entry in off-diagonal part */
-								Offx [poff] = Az [p] / Rs [oldrow] ;
 								//SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]);
+								Offx [poff] = Az [p] / Rs [oldrow] ;
 								poff++ ;
 							}
 							else
 							{
 								/* (newrow,k) is an entry in the block */
-								X [newrow] = Az [p] / Rs [oldrow] ;
 								//SCALE_DIV_ASSIGN (X [newrow], Az [p], Rs [oldrow]) ;
+								X [newrow] = Az [p] / Rs [oldrow] ;
 							}
 						}
 
@@ -418,7 +418,6 @@ public class Dklu_refactor extends Dklu_internal {
 
 						Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 								Ui_offset, Ux_offset, k, ulen) ;
-//						GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, ulen) ;
 						for (up = 0 ; up < ulen[0] ; up++)
 						{
 							j = (int) Ui [Ui_offset[0] + up] ;
@@ -458,7 +457,6 @@ public class Dklu_refactor extends Dklu_internal {
 						/* gather and divide by pivot to get kth column of L */
 						Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 								Li_offset, Lx_offset, k, llen) ;
-//						GET_POINTER (LU, Lip, Llen, Li, Lx, k, llen) ;
 						for (p = 0 ; p < llen[0] ; p++)
 						{
 							i = (int) Li [Li_offset[0] + p] ;
@@ -494,7 +492,7 @@ public class Dklu_refactor extends Dklu_internal {
 			ASSERT (Offp [n] == poff) ;
 			ASSERT (Symbolic.nzoff == poff) ;
 			PRINTF (("\n------------------- Off diagonal entries, new:\n")) ;
-			ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
+			if (!NDEBUG) ASSERT (klu_valid (n, Offp, Offi, Offx)) ;
 			if (Common.status == KLU_OK)
 			{
 				PRINTF ("\n ########### KLU_BTF_REFACTOR done, nblocks %d\n",
@@ -520,13 +518,13 @@ public class Dklu_refactor extends Dklu_internal {
 						int Llen_offset = k1 ;
 						LU = (double[]) Numeric.LUbx [block] ;
 						PRINTF ("\n---- L block %d\n", block) ;
-						ASSERT (klu_valid_LU (nk, TRUE, Lip, Lip_offset, Llen, Llen_offset, LU)) ;
+						if (!NDEBUG) ASSERT (klu_valid_LU (nk, TRUE, Lip, Lip_offset, Llen, Llen_offset, LU)) ;
 						Uip = Numeric.Uip ;
 						int Uip_offset = k1 ;
 						Ulen = Numeric.Ulen ;
 						int Ulen_offset = k1 ;
 						PRINTF ("\n---- U block %d\n", block) ;
-						ASSERT (klu_valid_LU (nk, FALSE, Uip, Uip_offset, Ulen, Ulen_offset, LU)) ;
+						if (!NDEBUG) ASSERT (klu_valid_LU (nk, FALSE, Uip, Uip_offset, Ulen, Ulen_offset, LU)) ;
 					}
 				}
 			}
