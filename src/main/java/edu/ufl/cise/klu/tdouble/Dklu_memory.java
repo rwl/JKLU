@@ -149,7 +149,6 @@ public class Dklu_memory extends Dklu_internal {
 	{
 		double[] pnew ;
 		int snew ;
-		@SuppressWarnings("unused")
 		int sold ;
 
 		if (Common == null)
@@ -175,6 +174,7 @@ public class Dklu_memory extends Dklu_internal {
 			try
 			{
 				pnew = new double[snew] ;
+				System.arraycopy(p, 0, pnew, 0, MIN (snew, sold)) ;
 				Runtime runtime = Runtime.getRuntime();
 				Common.memusage = runtime.totalMemory() - runtime.freeMemory();
 				//Common.memusage += (snew - sold) ;

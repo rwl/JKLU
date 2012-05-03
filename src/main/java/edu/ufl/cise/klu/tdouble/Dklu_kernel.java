@@ -820,7 +820,7 @@ public class Dklu_kernel extends Dklu_internal {
 				for (p = 0 ; p < Llen [Llen_offset + k] ; p++)
 				{
 					PRINTF ("pattern of X in L: %d : %d pivot row: %d\n",
-						p, Li [Li_offset[0] + p], Pinv [(int) Li [Li_offset[0] + p]]) ;
+						p, (int) Li [Li_offset[0] + p], Pinv [(int) Li [Li_offset[0] + p]]) ;
 					ASSERT (Flag [(int) Li [Li_offset[0] + p]] == k) ;
 				}
 				p = 0 ;
@@ -856,7 +856,7 @@ public class Dklu_kernel extends Dklu_internal {
 				Li_offset[0] = Lip [Lip_offset + k] ;
 				for (p = 0 ; p < Llen [Llen_offset + k] ; p++)
 				{
-					PRINTF ("X for L %d : ", Li [Li_offset[0] + p]) ;
+					PRINTF ("X for L %d : ", (int) Li [Li_offset[0] + p]) ;
 					PRINT_ENTRY (X [(int) Li [Li_offset[0] + p]]) ;
 				}
 			}
@@ -966,7 +966,7 @@ public class Dklu_kernel extends Dklu_internal {
 						Ui_offset, Ux_offset, k, len) ;
 				for (p = 0 ; p < len[0] ; p++)
 				{
-					PRINTF ("Column %d of U: %d : ", k, Ui [Ui_offset[0] + p]) ;
+					PRINTF ("Column %d of U: %d : ", k, (int) Ui [Ui_offset[0] + p]) ;
 					PRINT_ENTRY (Ux [Ux_offset[0] + p]) ;
 				}
 
@@ -974,7 +974,7 @@ public class Dklu_kernel extends Dklu_internal {
 						Li_offset, Lx_offset, k, len) ;
 				for (p = 0 ; p < len[0] ; p++)
 				{
-					PRINTF ("Column %d of L: %d : ", k, Li [Li_offset[0] + p]) ;
+					PRINTF ("Column %d of L: %d : ", k, (int) Li [Li_offset[0] + p]) ;
 					PRINT_ENTRY (Lx [Lx_offset[0] + p]) ;
 				}
 			}
