@@ -1,4 +1,4 @@
-package edu.ufl.cise.klu.tdouble.demo;
+package edu.ufl.cise.klu.test;
 
 import junit.framework.TestCase;
 import edu.ufl.cise.klu.common.KLU_common;

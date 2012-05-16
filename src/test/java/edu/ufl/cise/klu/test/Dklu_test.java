@@ -1,4 +1,4 @@
-package edu.ufl.cise.klu.tdouble.demo;
+package edu.ufl.cise.klu.test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,36 +23,36 @@ import static edu.ufl.cise.klu.tdouble.Dklu_solve.klu_solve;
 /**
  * Read in a matrix and solve a linear system.
  */
-public class Dklu_demo extends Dcs_test {
+public class Dklu_test extends Dcs_test {
 
 	private static final String DIR = "matrix";
 
-	private static final String C1 = "1c";
-
 	private static final String ARROW = "arrow";
-
-	private static final String ARROW_C = "arrowc";
-
-	private static final String C_TINA = "ctina";
-
-	private static final String GD99_CC = "GD99_cc";
 
 	private static final String IMPCOL_A = "impcol_a";
 
-	private static final String ONE = "one";
-
-	private static final String ONE_C = "onec";
-
-	private static final String TWO = "two";
-
-	private static final String W156 = "w156";
-
 	private static final String WEST0156 = "west0156";
+
+//	private static final String C1 = "1c";
+//
+//	private static final String ARROW_C = "arrowc";
+//
+//	private static final String C_TINA = "ctina";
+//
+//	private static final String GD99_CC = "GD99_cc";
+//
+//	private static final String ONE = "one";
+//
+//	private static final String ONE_C = "onec";
+//
+//	private static final String TWO = "two";
+//
+//	private static final String W156 = "w156";
 
 	protected static InputStream get_stream(String name) {
 		try
 		{
-			return Dklu_demo.class.getResource(DIR + "/" + name).openStream() ;
+			return Dklu_test.class.getResource(DIR + "/" + name).openStream() ;
 		}
 		catch (IOException e)
 		{
@@ -106,7 +106,7 @@ public class Dklu_demo extends Dcs_test {
 	 * @return 1 if successful, 0 otherwise
 	 */
 	public static int klu_backslash(int n, int[] Ap, int[] Ai, double[] Ax,
-			int isreal, double[] B, double[] X, double[] R, int[] lunz,
+			boolean isreal, double[] B, double[] X, double[] R, int[] lunz,
 			double[] rnorm, KLU_common Common)
 	{
 		double anorm = 0, asum;
@@ -124,7 +124,7 @@ public class Dklu_demo extends Dcs_test {
 		Symbolic = klu_analyze (n, Ap, Ai, Common);
 		if (Symbolic == null) return(0);
 
-		if (isreal != 0)
+		if (isreal)
 		{
 
 			/* ------------------------------------------------------------------ */
@@ -276,13 +276,10 @@ public class Dklu_demo extends Dcs_test {
 	 * Given a sparse matrix A, set up a right-hand-side and solve X = A\b.
 	 */
 	public static void klu_demo(int n, int[] Ap, int[] Ai, double[] Ax,
-			int isreal)
+			boolean isreal, int[] lunz, double[] rnorm, KLU_common Common)
 	{
-		KLU_common Common = new KLU_common();
-		double[] B, X, R;
 		int i;
-		int[] lunz = new int[1];
-		double[] rnorm = new double[1];
+		double[] B, X, R;
 
 		System.out.printf("KLU: %s, version: %d.%d.%d\n",
 				KLU_version.KLU_DATE, KLU_version.KLU_MAIN_VERSION,
@@ -298,7 +295,7 @@ public class Dklu_demo extends Dcs_test {
 		/* create a right-hand-side */
 		/* ---------------------------------------------------------------------- */
 
-		if (isreal != 0)
+		if (isreal)
 		{
 			/* B = 1 +(1:n)/n */
 			B = new double[n];
@@ -348,48 +345,89 @@ public class Dklu_demo extends Dcs_test {
 		/* free the problem */
 		/* ---------------------------------------------------------------------- */
 
-		if (isreal != 0)
-		{
-			B = null;
-			X = null;
-			R = null;
-		}
-		else
-		{
-			B = null;
-			X = null;
-			R = null;
-		}
+		B = null;
+		X = null;
+		R = null;
+
 		System.out.printf("peak memory usage: %g bytes\n\n",(double)(Common.mempeak));
 	}
 
 	/**
 	 * n 207 nnz(A) 572 nnz(L+U+F) 615 resid 6.98492e-10
 	 * recip growth 0.00957447 condest 4.35093e+07 rcond 4.5277e-05 flops 259
-	 * peak memory usage: 34276 bytes
 	 */
 	public void test_impcol_a() {
 //		Dklu_version.NPRINT = false ;
 //		Dklu_internal.NDEBUG = false ;
 
+		KLU_common Common = new KLU_common();
+		int[] lunz = new int[1];
+		double[] rnorm = new double[1];
+
 		InputStream in = get_stream (IMPCOL_A) ;
 		Dproblem prob = get_problem (in, 0, 1) ;
 		Dcs A = prob.A ;
-		klu_demo (A.m, A.p, A.i, A.x, 1) ;
+		klu_demo (A.m, A.p, A.i, A.x, true, lunz, rnorm, Common) ;
+
+		assertEquals(207, A.m) ;
+		assertEquals(207, A.n) ;
+		assertEquals(572, A.p[A.m]) ;
+		assertEquals(615, lunz[0]) ;
+		assertEquals(6.98492e-10, rnorm[0], 1e-14) ;
+		assertEquals(0.00957447, Common.rgrowth, 1e-06) ;
+		assertEquals(4.35093e+07, Common.condest, 1e+06) ;  // FIXME: improve assertion accuracy
+		assertEquals(4.5277e-05, Common.rcond, 1e-08) ;
+		assertEquals(259, Common.flops, 1e-03) ;
 	}
 
+	/**
+	 * n 100 nnz(A) 298 nnz(L+U+F) 298 resid 1.77636e-15
+	 * recip growth 0.0204082 condest 303 rcond 0.0204082 flops 297
+	 */
 	public void test_arrow() {
+		KLU_common Common = new KLU_common() ;
+		int[] lunz = new int[1] ;
+		double[] rnorm = new double[1] ;
+
 		InputStream in = get_stream (ARROW) ;
 		Dproblem prob = get_problem (in, 0, 1) ;
 		Dcs A = prob.A ;
-		klu_demo (A.m, A.p, A.i, A.x, 1) ;
+		klu_demo (A.m, A.p, A.i, A.x, true, lunz, rnorm, Common) ;
+
+		assertEquals(100, A.m) ;
+		assertEquals(100, A.n) ;
+		assertEquals(298, A.p[A.m]) ;
+		assertEquals(298, lunz[0]) ;
+		assertEquals(1.77636e-15, rnorm[0], 1e-18) ;
+		assertEquals(0.0204082, Common.rgrowth, 1e-06) ;
+		assertEquals(303, Common.condest, 1e-03) ;
+		assertEquals(0.0204082, Common.rcond, 1e-06) ;
+		assertEquals(297, Common.flops, 1e-03) ;
 	}
 
+	/**
+	 * n 156 nnz(A) 371 nnz(L+U+F) 406 resid 1.04858e+06
+	 * recip growth 0.0306751 condest 1.64225e+31 rcond 9.48528e-08 flops 188
+	 */
 	public void test_west0156() {
+		KLU_common Common = new KLU_common();
+		int[] lunz = new int[1];
+		double[] rnorm = new double[1];
+
 		InputStream in = get_stream (WEST0156) ;
 		Dproblem prob = get_problem (in, 0, 1) ;
 		Dcs A = prob.A ;
-		klu_demo (A.m, A.p, A.i, A.x, 1) ;
+		klu_demo (A.m, A.p, A.i, A.x, true, lunz, rnorm, Common) ;
+
+		assertEquals(156, A.m) ;
+		assertEquals(156, A.n) ;
+		assertEquals(371, A.p[A.m]) ;
+		assertEquals(406, lunz[0]) ;
+		assertEquals(1.04858e+06, rnorm[0], 1e+02) ;
+		assertEquals(0.0306751, Common.rgrowth, 1e-06) ;
+		assertEquals(1.64225e+31, Common.condest, 1e+26) ;
+		assertEquals(9.48528e-08, Common.rcond, 1e-12) ;
+		assertEquals(188, Common.flops, 1e-03) ;
 	}
 
 }
