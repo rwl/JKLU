@@ -1,13 +1,16 @@
 package edu.ufl.cise.klu.tdouble.demo;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+
+import edu.emory.mathcs.csparsej.tdouble.Dcs_common.Dcs;
+import edu.emory.mathcs.csparsej.tdouble.test.Dcs_test;
 
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
 import edu.ufl.cise.klu.common.KLU_version;
+
 import static edu.ufl.cise.klu.tdouble.Dklu_analyze.klu_analyze;
 import static edu.ufl.cise.klu.tdouble.Dklu_defaults.klu_defaults;
 import static edu.ufl.cise.klu.tdouble.Dklu_diagnostics.klu_rgrowth;
@@ -16,14 +19,46 @@ import static edu.ufl.cise.klu.tdouble.Dklu_diagnostics.klu_rcond;
 import static edu.ufl.cise.klu.tdouble.Dklu_diagnostics.klu_flops;
 import static edu.ufl.cise.klu.tdouble.Dklu_factor.klu_factor;
 import static edu.ufl.cise.klu.tdouble.Dklu_solve.klu_solve;
-import edu.ufl.cise.klu.tdouble.io.MatrixInfo;
-import edu.ufl.cise.klu.tdouble.io.MatrixSize;
-import edu.ufl.cise.klu.tdouble.io.MatrixVectorReader;
 
 /**
- * Read in a Matrix Market matrix(using CHOLMOD) and solve a linear system.
+ * Read in a matrix and solve a linear system.
  */
-public class Dklu_demo {
+public class Dklu_demo extends Dcs_test {
+
+	private static final String DIR = "matrix";
+
+	private static final String C1 = "1c";
+
+	private static final String ARROW = "arrow";
+
+	private static final String ARROW_C = "arrowc";
+
+	private static final String C_TINA = "ctina";
+
+	private static final String GD99_CC = "GD99_cc";
+
+	private static final String IMPCOL_A = "impcol_a";
+
+	private static final String ONE = "one";
+
+	private static final String ONE_C = "onec";
+
+	private static final String TWO = "two";
+
+	private static final String W156 = "w156";
+
+	private static final String WEST0156 = "west0156";
+
+	protected static InputStream get_stream(String name) {
+		try
+		{
+			return Dklu_demo.class.getResource(DIR + "/" + name).openStream() ;
+		}
+		catch (IOException e)
+		{
+			return (null) ;
+		}
+	}
 
 	private static void REAL (double[] X, int i, double v)
 	{
@@ -86,7 +121,7 @@ public class Dklu_demo {
 		/* symbolic ordering and analysis */
 		/* ---------------------------------------------------------------------- */
 
-		Symbolic = klu_analyze(n, Ap, Ai, Common);
+		Symbolic = klu_analyze (n, Ap, Ai, Common);
 		if (Symbolic == null) return(0);
 
 		if (isreal != 0)
@@ -96,10 +131,10 @@ public class Dklu_demo {
 			/* factorization */
 			/* ------------------------------------------------------------------ */
 
-			Numeric = klu_factor(Ap, Ai, Ax, Symbolic, Common);
+			Numeric = klu_factor (Ap, Ai, Ax, Symbolic, Common);
 			if (Numeric == null)
 			{
-				//Dklu_free_symbolic.klu_free_symbolic(Symbolic, Common);
+				//klu_free_symbolic(Symbolic, Common);
 				return(0);
 			}
 
@@ -107,10 +142,10 @@ public class Dklu_demo {
 			/* statistics(not required to solve Ax=b) */
 			/* ------------------------------------------------------------------ */
 
-			klu_rgrowth(Ap, Ai, Ax, Symbolic, Numeric, Common);
-			klu_condest(Ap, Ax, Symbolic, Numeric, Common);
-			klu_rcond(Symbolic, Numeric, Common);
-			klu_flops(Symbolic, Numeric, Common);
+			klu_rgrowth (Ap, Ai, Ax, Symbolic, Numeric, Common);
+			klu_condest (Ap, Ax, Symbolic, Numeric, Common);
+			klu_rcond (Symbolic, Numeric, Common);
+			klu_flops (Symbolic, Numeric, Common);
 			lunz[0] = Numeric.lnz + Numeric.unz - n +
 				(Numeric.Offp != null ? Numeric.Offp [n] : 0);
 
@@ -122,7 +157,7 @@ public class Dklu_demo {
 			{
 				X [i] = B [i];
 			}
-			klu_solve(Symbolic, Numeric, n, 1, X, 0, Common);
+			klu_solve (Symbolic, Numeric, n, 1, X, 0, Common);
 
 			/* ------------------------------------------------------------------ */
 			/* compute residual, rnorm = norm(b-Ax,1) / norm(A,1) */
@@ -165,10 +200,10 @@ public class Dklu_demo {
 			/* statistics(not required to solve Ax=b) */
 			/* ------------------------------------------------------------------ */
 
-//			Numeric = klu_z_factor(Ap, Ai, Ax, Symbolic, Common);
+//			Numeric = klu_z_factor (Ap, Ai, Ax, Symbolic, Common);
 //			if (Numeric == null)
 //			{
-//				klu_free_symbolic(Symbolic, Common);
+//				klu_free_symbolic (Symbolic, Common);
 //				return(0);
 //			}
 //
@@ -176,10 +211,10 @@ public class Dklu_demo {
 //			/* statistics */
 //			/* ------------------------------------------------------------------ */
 //
-//			klu_z_rgrowth(Ap, Ai, Ax, Symbolic, Numeric, Common);
-//			klu_z_condest(Ap, Ax, Symbolic, Numeric, Common);
-//			klu_z_rcond(Symbolic, Numeric, Common);
-//			klu_z_flops(Symbolic, Numeric, Common);
+//			klu_z_rgrowth (Ap, Ai, Ax, Symbolic, Numeric, Common);
+//			klu_z_condest (Ap, Ax, Symbolic, Numeric, Common);
+//			klu_z_rcond (Symbolic, Numeric, Common);
+//			klu_z_flops (Symbolic, Numeric, Common);
 //			lunz = Numeric.lnz + Numeric.unz - n +
 //				(Numeric.Offp != null ? Numeric.Offp [n] : 0);
 //
@@ -191,7 +226,7 @@ public class Dklu_demo {
 //			{
 //				X [i] = B [i];
 //			}
-//			klu_z_solve(Symbolic, Numeric, n, 1, X, Common);
+//			klu_z_solve (Symbolic, Numeric, n, 1, X, Common);
 //
 //			/* ------------------------------------------------------------------ */
 //			/* compute residual, rnorm = norm(b-Ax,1) / norm(A,1) */
@@ -224,14 +259,14 @@ public class Dklu_demo {
 //			/* free numeric factorization */
 //			/* ------------------------------------------------------------------ */
 //
-//			klu_z_free_numeric(&Numeric, Common);
+//			klu_z_free_numeric (&Numeric, Common);
 		}
 
 		/* ---------------------------------------------------------------------- */
 		/* free symbolic analysis, and residual */
 		/* ---------------------------------------------------------------------- */
 
-		//klu_free_symbolic(Symbolic, Common);
+		//klu_free_symbolic (Symbolic, Common);
 		Symbolic = null;
 
 		return (1);
@@ -257,7 +292,7 @@ public class Dklu_demo {
 		/* set defaults */
 		/* ---------------------------------------------------------------------- */
 
-		klu_defaults(Common);
+		klu_defaults (Common);
 
 		/* ---------------------------------------------------------------------- */
 		/* create a right-hand-side */
@@ -297,7 +332,7 @@ public class Dklu_demo {
 		/* X = A\b using KLU and print statistics */
 		/* ---------------------------------------------------------------------- */
 
-		if (klu_backslash(n, Ap, Ai, Ax, isreal, B, X, R, lunz, rnorm, Common) == 0)
+		if (klu_backslash (n, Ap, Ai, Ax, isreal, B, X, R, lunz, rnorm, Common) == 0)
 		{
 			System.out.printf("KLU failed\n");
 		}
@@ -305,7 +340,7 @@ public class Dklu_demo {
 		{
 			System.out.printf("n %d nnz(A) %d nnz(L+U+F) %d resid %g\n" +
 				"recip growth %g condest %g rcond %g flops %g\n",
-				n, Ap [n], lunz[0], rnorm, Common.rgrowth, Common.condest,
+				n, Ap [n], lunz[0], rnorm[0], Common.rgrowth, Common.condest,
 				Common.rcond, Common.flops);
 		}
 
@@ -325,67 +360,36 @@ public class Dklu_demo {
 			X = null;
 			R = null;
 		}
-//		System.out.printf("peak memory usage: %g bytes\n\n",(double)(Common.mempeak));
+		System.out.printf("peak memory usage: %g bytes\n\n",(double)(Common.mempeak));
 	}
 
 	/**
-	 * Read in a sparse matrix in Matrix Market format using CHOLMOD, and then
-	 * solve Ax=b with KLU.  Note that CHOLMOD is only used to read the matrix.
+	 * n 207 nnz(A) 572 nnz(L+U+F) 615 resid 6.98492e-10
+	 * recip growth 0.00957447 condest 4.35093e+07 rcond 4.5277e-05 flops 259
+	 * peak memory usage: 34276 bytes
 	 */
-	public static void main(String[] args) {
+	public void test_impcol_a() {
+//		Dklu_version.NPRINT = false ;
+//		Dklu_internal.NDEBUG = false ;
 
-		FileReader fileReader;
-		MatrixVectorReader reader;
-		MatrixInfo info;
-		MatrixSize size;
+		InputStream in = get_stream (IMPCOL_A) ;
+		Dproblem prob = get_problem (in, 0, 1) ;
+		Dcs A = prob.A ;
+		klu_demo (A.m, A.p, A.i, A.x, 1) ;
+	}
 
-		try {
-			fileReader = new FileReader(args[0]);
-			reader = new MatrixVectorReader(fileReader);
+	public void test_arrow() {
+		InputStream in = get_stream (ARROW) ;
+		Dproblem prob = get_problem (in, 0, 1) ;
+		Dcs A = prob.A ;
+		klu_demo (A.m, A.p, A.i, A.x, 1) ;
+	}
 
-			info = reader.readMatrixInfo();
-			size = reader.readMatrixSize(info);
-
-			if (size.numRows() != size.numColumns() || !info.isGeneral()
-				||(!(info.isReal() || info.isComplex()))
-				|| !info.isCoordinate())
-			{
-				System.out.printf("invalid matrix\n");
-			}
-			else
-			{
-				int nnz = size.numEntries();
-				int[] i = new int[nnz];
-				int[] p = new int[nnz];
-				double[] x;
-
-				if (info.isComplex()) {
-					double[] xR = new double[nnz];
-					double[] xI = new double[nnz];
-
-					reader.readCoordinate(i, p, xR, xI);
-
-					x = new double[2 * nnz];
-					for (int j = 0; j < nnz; j++) {
-						REAL(x, j, xR[j]);
-						IMAG(x, j, xI[j]);
-					}
-				}
-				else
-				{
-					x = new double[nnz];
-					reader.readCoordinate(i, p, x);
-				}
-
-
-				klu_demo(size.numRows(), p, i, x, info.isReal() ? 1 : 0);
-			}
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void test_west0156() {
+		InputStream in = get_stream (WEST0156) ;
+		Dproblem prob = get_problem (in, 0, 1) ;
+		Dcs A = prob.A ;
+		klu_demo (A.m, A.p, A.i, A.x, 1) ;
 	}
 
 }

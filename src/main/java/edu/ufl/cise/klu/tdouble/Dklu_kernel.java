@@ -548,7 +548,7 @@ public class Dklu_kernel extends Dklu_internal {
 			{
 				/* scan column j of L for the pivot row */
 				Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
-						Li_offset, Lx_offset, k, llen) ;
+						Li_offset, Lx_offset, j, llen) ;
 				for (p2 = 0 ; p2 < llen[0] ; p2++)
 				{
 					if (pivrow == Li [Li_offset[0] + p2])
@@ -561,8 +561,8 @@ public class Dklu_kernel extends Dklu_internal {
 								int p3 ;
 								for (p3 = 0 ; p3 < Llen [Llen_offset + j] ; p3++)
 								{
-									PRINTF ("before: %i  pivotal: %d\n", Li [Li_offset[0] + p3],
-												Pinv [(int) Li [Li_offset[0] + p3]] >= 0) ;
+									PRINTF ("before: %d  pivotal: %d\n", (int) Li [Li_offset[0] + p3],
+											Pinv [(int) Li [Li_offset[0] + p3]] >= 0 ? 1 : 0) ;
 								}
 							}
 						}
@@ -605,8 +605,8 @@ public class Dklu_kernel extends Dklu_internal {
 							for (p3 = 0 ; p3 < Llen [Llen_offset + j] ; p3++)
 							{
 								if (p3 == Lpend [j]) PRINTF (("----\n")) ;
-								PRINTF ("after: %i  pivotal: %d\n", Li [Li_offset[0] + p3],
-											Pinv [(int) Li [Li_offset[0] + p3]] >= 0) ;
+								PRINTF ("after: %d  pivotal: %d\n", (int) Li [Li_offset[0] + p3],
+											Pinv [(int) Li [Li_offset[0] + p3]] >= 0 ? 1 : 0) ;
 							}
 						}
 
@@ -944,7 +944,7 @@ public class Dklu_kernel extends Dklu_internal {
 				/* an off-diagonal pivot has been chosen */
 				Common.noffdiag++ ;
 				PRINTF (">>>>>>>>>>>>>>>>> pivrow %d k %d off-diagonal\n",
-							pivrow, k) ;
+							pivrow[0], k) ;
 				if (Pinv [diagrow] < 0)
 				{
 					/* the former diagonal row index, diagrow, has not yet been
@@ -998,7 +998,7 @@ public class Dklu_kernel extends Dklu_internal {
 		{
 			Li = LU ;
 			Li_offset[0] = Lip [Lip_offset + p] ;
-			for (i = 0 ; i < Llen [p] ; i++)
+			for (i = 0 ; i < Llen [Llen_offset + p] ; i++)
 			{
 				Li [Li_offset[0] + i] = Pinv [(int) Li [Li_offset[0] + i]] ;
 			}
