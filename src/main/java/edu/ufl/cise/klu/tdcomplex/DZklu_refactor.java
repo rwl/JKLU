@@ -27,6 +27,7 @@ package edu.ufl.cise.klu.tdcomplex;
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
+import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
 
 import static edu.ufl.cise.klu.tdcomplex.DZklu_memory.klu_z_malloc_dbl;
 import static edu.ufl.cise.klu.tdcomplex.DZklu_scale.klu_z_scale;
@@ -51,11 +52,11 @@ public class DZklu_refactor extends DZklu_internal {
 	 * @param Common
 	 * @return true if successful, false otherwise
 	 */
-	public static int klu_z_refactor(int[] Ap, int[] Ai, double[] Ax,
+	public static int klu_z_refactor(int[] Ap, int[] Ai, DZklua Ax,
 			KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common  Common)
 	{
-		double ukk, ujk, s ;
-		double[] Offx, Lx, Ux, X, Az, Udiag ;
+		double[] ukk, ujk, s ;
+		DZklua Offx, Lx, Ux, X, Az, Udiag ;
 		double[] Rs ;
 		int[] Q, R, Pnum, Offp, Offi, Pinv, Lip, Uip, Llen, Ulen ;
 		/*int[]*/double[] Ui, Li ;
@@ -90,7 +91,7 @@ public class DZklu_refactor extends DZklu_internal {
 		Common.numerical_rank = EMPTY ;
 		Common.singular_col = EMPTY ;
 
-		Az = (double[]) Ax ;
+		Az = (DZklua) Ax ;
 
 		/* ---------------------------------------------------------------------- */
 		/* get the contents of the Symbolic object */
@@ -109,7 +110,7 @@ public class DZklu_refactor extends DZklu_internal {
 		Pnum = Numeric.Pnum ;
 		Offp = Numeric.Offp ;
 		Offi = Numeric.Offi ;
-		Offx = Numeric.Offx ;
+		Offx = new DZklua(Numeric.Offx) ;
 
 		LUbx = Numeric.LUbx ;
 
@@ -137,9 +138,9 @@ public class DZklu_refactor extends DZklu_internal {
 		Rs = Numeric.Rs ;
 
 		Pinv = Numeric.Pinv ;
-		X = Numeric.Xwork ;
+		X = new DZklua(Numeric.Xwork) ;
 		Common.nrealloc = 0 ;
-		Udiag = Numeric.Udiag ;
+		Udiag = new DZklua(Numeric.Udiag) ;
 		nzoff = Symbolic.nzoff ;
 
 		/* ---------------------------------------------------------------------- */
@@ -199,23 +200,23 @@ public class DZklu_refactor extends DZklu_internal {
 
 					oldcol = Q [k1] ;
 					pend = Ap [oldcol+1] ;
-					s = 0 ; //CLEAR (s) ;
+					CLEAR (s) ;
 					for (p = Ap [oldcol] ; p < pend ; p++)
 					{
 						newrow = Pinv [Ai [p]] - k1 ;
 						if (newrow < 0 && poff < nzoff)
 						{
 							/* entry in off-diagonal block */
-							Offx [poff] = Az [p] ;
+							Offx.set(poff, Az.get(p)) ;
 							poff++ ;
 						}
 						else
 						{
 							/* singleton */
-							s = Az [p] ;
+							s = Az.get(p) ;
 						}
 					}
-					Udiag [k1] = s ;
+					Udiag.set(k1, s) ;
 
 				}
 				else
@@ -250,13 +251,13 @@ public class DZklu_refactor extends DZklu_internal {
 							if (newrow < 0 && poff < nzoff)
 							{
 								/* entry in off-diagonal block */
-								Offx [poff] = Az [p] ;
+								Offx.set(poff, Az.get(p)) ;
 								poff++ ;
 							}
 							else
 							{
 								/* (newrow,k) is an entry in the block */
-								X [newrow] = Az [p] ;
+								X.set(newrow, Az.get(p)) ;
 							}
 						}
 
@@ -269,16 +270,16 @@ public class DZklu_refactor extends DZklu_internal {
 						for (up = 0 ; up < ulen[0] ; up++)
 						{
 							j = (int) Ui [Ui_offset[0] + up] ;
-							ujk = X [j] ;
+							ujk = X.get(j) ;
 							/* X [j] = 0 ; */
 							CLEAR (X, j) ;
-							Ux [Ux_offset[0] + up] = ujk ;
+							Ux.set(Ux_offset[0] + up, ujk) ;
 							Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 									Li_offset, Lx_offset, j, llen) ;
 							for (p = 0 ; p < llen[0] ; p++)
 							{
-								//MULT_SUB (X [Li [p]], Lx [p], ujk) ;
-								X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * ujk ;
+								MULT_SUB (X, Li [Li_offset[0] + p], Lx.get(Lx_offset[0] + p), ujk) ;
+//								X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * ujk ;
 							}
 						}
 						/* get the diagonal entry of U */

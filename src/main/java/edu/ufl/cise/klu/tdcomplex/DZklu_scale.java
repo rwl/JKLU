@@ -172,10 +172,10 @@ public class DZklu_scale extends DZklu_internal {
 				/* matrix is singular */
 				PRINTF ("Rs [%d] = %g\n", row, Rs [row]) ;
 
-				if (Rs [row] == 0.0)
+				if (IS_ZERO (Rs [row]))
 				{
 					PRINTF ("Row %d of A is all zero\n", row) ;
-					Rs [row] = 1.0 ;
+					Rs [row] = 1 ;
 				}
 			}
 		}

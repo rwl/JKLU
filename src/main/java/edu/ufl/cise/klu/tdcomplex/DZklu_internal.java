@@ -82,6 +82,11 @@ public abstract class DZklu_internal extends DZklu_version {
 		return a > b ?  a : b ;
 	}
 
+	// (((Rs [row]) > (a)) ?  (Rs [row]) : (a))
+	protected static double[] MAX(double[] a, double[] b) {
+
+	}
+
 	/* FLIP is a "negation about -1", and is used to mark an integer i that is
 	 * normally non-negative.  FLIP (EMPTY) is EMPTY.  FLIP of a number > EMPTY
 	 * is negative, and FLIP of a number < EMTPY is positive.  FLIP (FLIP (i)) = i

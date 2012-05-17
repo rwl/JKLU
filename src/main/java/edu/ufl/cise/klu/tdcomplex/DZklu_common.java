@@ -52,6 +52,14 @@ public class DZklu_common {
 			return x [(2 * idx) + 1] ;
 		}
 
+		public void real(final int idx, double re) {
+			x [2 * idx] = re ;
+		}
+
+		public void imag(final int idx, double im) {
+			x [(2 * idx) + 1] = im ;
+		}
+
 		/**
 		 *
 		 * @param idx

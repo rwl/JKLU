@@ -25,6 +25,7 @@
 package edu.ufl.cise.klu.tdcomplex;
 
 import edu.ufl.cise.klu.common.KLU_common;
+import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
 
 import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
 import static edu.ufl.cise.klu.tdouble.Dklu_kernel.klu_kernel;
@@ -114,13 +115,13 @@ public class DZklu extends DZklu_internal {
 	 * @return
 	 */
 	public static int klu_z_kernel_factor(int n, int[] Ap, int[] Ai,
-			double[] Ax, int[] Q, double Lsize,
+			DZklua Ax, int[] Q, double Lsize,
 			double[][] p_LU, int block,
-			double[] Udiag, int Udiag_offset, int[] Llen, int Llen_offset,
+			DZklua Udiag, int Udiag_offset, int[] Llen, int Llen_offset,
 			int[] Ulen, int Ulen_offset, int[] Lip, int Lip_offset,
 			int[] Uip, int Uip_offset, int P[], int[] lnz, int[] unz,
-			double[] X, int[] Work, int k1, int[] PSinv, double[] Rs,
-			int[] Offp, int[] Offi, double[] Offx, KLU_common Common)
+			DZklua X, int[] Work, int k1, int[] PSinv, double[] Rs,
+			int[] Offp, int[] Offi, DZklua Offx, KLU_common Common)
 	{
 		double maxlnz, dunits ;
 		double[][] LU = new double[1][] ;

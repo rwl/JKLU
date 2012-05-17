@@ -57,11 +57,11 @@ public class DZklu_factor extends DZklu_internal
 			final KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common Common)
 	{
 		double lsize ;
-		DZklua Lnz, Rs ;
+		double[] Lnz, Rs ;
 		int[] P, Q, R, Pnum, Offp, Offi, Pblock, Pinv, Iwork,
 			Lip, Uip, Llen, Ulen ;
 		DZklua Offx, X, Udiag ;
-		double[] s ;
+		double[] s = CZERO ;
 		double[][] LUbx ;
 		int k1, k2, nk, k, block, oldcol, pend, oldrow, n, lnz, unz, p, newrow,
 			nblocks, poff, nzoff, scale, max_lnz_block,
@@ -78,7 +78,7 @@ public class DZklu_factor extends DZklu_internal
 		P = Symbolic.P ;
 		Q = Symbolic.Q ;
 		R = Symbolic.R ;
-		Lnz = new DZklua(Symbolic.Lnz) ;
+		Lnz = Symbolic.Lnz ;
 		nblocks = Symbolic.nblocks ;
 		nzoff = Symbolic.nzoff ;
 
@@ -94,7 +94,7 @@ public class DZklu_factor extends DZklu_internal
 		LUbx = Numeric.LUbx ;
 		Udiag = new DZklua(Numeric.Udiag) ;
 
-		Rs = new DZklua(Numeric.Rs) ;
+		Rs = Numeric.Rs ;
 		Pinv = Numeric.Pinv ;
 		X = new DZklua(Numeric.Xwork) ;              /* X is of size n */
 		Iwork = Numeric.Iwork ;		/* 5*maxblock for KLU_factor */
@@ -185,8 +185,7 @@ public class DZklu_factor extends DZklu_internal
 				poff = Offp [k1] ;
 				oldcol = Q [k1] ;
 				pend = Ap [oldcol+1] ;
-				//CLEAR (s) ;
-				s = 0.0;
+				CLEAR (s) ;
 
 				if (scale <= 0)
 				{
@@ -224,22 +223,22 @@ public class DZklu_factor extends DZklu_internal
 						if (newrow < k1)
 						{
 							Offi [poff] = oldrow ;
-							//SCALE_DIV_ASSIGN (Offx [poff], Ax [p], Rs [oldrow]) ;
-							Offx [poff] = Ax [p] / Rs [oldrow] ;
+							SCALE_DIV_ASSIGN (Offx, poff, Ax.get(p), Rs [oldrow]) ;
+//							Offx [poff] = Ax [p] / Rs [oldrow] ;
 							poff++ ;
 						}
 						else
 						{
 							ASSERT (newrow == k1) ;
 							PRINTF ("singleton block %d ", block) ;
-							PRINT_ENTRY (Ax[p]) ;
-							s = Ax [p] / Rs [oldrow] ;
-							//SCALE_DIV_ASSIGN (s, Ax [p], Rs [oldrow]) ;
+							PRINT_ENTRY (Ax.get(p)) ;
+//							s = Ax [p] / Rs [oldrow] ;
+							s = SCALE_DIV_ASSIGN (Ax.get(p), Rs [oldrow]) ;
 						}
 					}
 				}
 
-				Udiag [k1] = s ;
+				Udiag.set(k1, s) ;
 
 				if (IS_ZERO (s))
 				{
@@ -362,11 +361,11 @@ public class DZklu_factor extends DZklu_internal
 			for (k = 0 ; k < n ; k++)
 			{
 				//REAL (X [k]) = Rs [Pnum [k]] ;
-				X [k] = Rs [Pnum [k]] ;
+				X.real(k, Rs [Pnum [k]]) ;
 			}
 			for (k = 0 ; k < n ; k++)
 			{
-				Rs [k] = X [k] ; //REAL (X [k]) ;
+				Rs [k] = X.real(k) ; //REAL (X [k]) ;
 			}
 		}
 
@@ -387,8 +386,8 @@ public class DZklu_factor extends DZklu_internal
 		{
 			PRINTF ("\n ############# KLU_BTF_FACTOR done, nblocks %d\n",
 					nblocks);
-			double ss ;
-			Udiag = Numeric.Udiag ;
+			double[] ss ;
+			Udiag = new DZklua(Numeric.Udiag) ;
 			for (block = 0 ; block < nblocks && Common.status == KLU_OK ; block++)
 			{
 				k1 = R [block] ;
@@ -399,7 +398,7 @@ public class DZklu_factor extends DZklu_internal
 				{
 					PRINTF ("singleton  ") ;
 					/* ENTRY_PRINT (singleton [block]) ; */
-					ss = Udiag [k1] ;
+					ss = Udiag.get(k1) ;
 					PRINT_ENTRY (ss) ;
 				}
 				else

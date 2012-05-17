@@ -24,6 +24,8 @@
 
 package edu.ufl.cise.klu.tdcomplex;
 
+import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
+
 public abstract class DZklu_version {
 
 	public static final int KLU_OK = 0;
@@ -40,6 +42,9 @@ public abstract class DZklu_version {
 	protected static final int INT_MAX = 0x7fffffff ;
 
 	protected static final String INT_ID = "%d" ;
+
+	public static final double[] CZERO = new double[] {0.0, 0.0} ;
+	public static final double[] CONE = new double[] {1.0, 0.0} ;
 
 //	protected static int BYTES (Object type, double n)
 //	{
@@ -202,6 +207,28 @@ public abstract class DZklu_version {
 		return SCALAR_IS_ZERO (a) ;
 	}
 
+	protected static boolean IS_ZERO (double[] a)
+	{
+		return SCALAR_IS_ZERO (a [0]) && SCALAR_IS_ZERO (a [1]) ;
+	}
+
+	public static final double [] CPLUS(double [] x, double [] y)
+	{
+		return new double [] {x [0] + y [0], x [1] + y [1]} ;
+	}
+
+	public static final double [] CPLUS(double [] x, double real)
+	{
+		return new double [] {x [0] + real, x [1]} ;
+	}
+
+	/**
+	 * a[idx] += b
+	 */
+	protected static void ACCUM(DZklua a, int idx, double b) {
+		a.set(idx, CPLUS(a.get(idx), b)) ;
+	}
+
 	/**
 	 * @return True if a != 0
 	 */
@@ -222,10 +249,15 @@ public abstract class DZklu_version {
 	/**
 	 * a = c/s
 	 */
-//	protected static double SCALE_DIV_ASSIGN (double c, double s)
-//	{
-//		return c / s ;
-//	}
+	protected static double[] SCALE_DIV_ASSIGN (double[] b, double s)
+	{
+		return b / s ;
+	}
+
+	protected static void SCALE_DIV_ASSIGN (DZklua c, int idx, double[] b, double s)
+	{
+		c.set(idx, b / s) ;
+	}
 
 	/**
 	 * c *= s
@@ -279,6 +311,12 @@ public abstract class DZklu_version {
 	 * c -= a*b
 	 */
 	protected static double MULT_SUB (double c, double a, double b)
+	{
+		c -= a * b ;
+		return c ;
+	}
+
+	protected static double MULT_SUB (DZklua c, int idx, double[] a, double[] b)
 	{
 		c -= a * b ;
 		return c ;
@@ -347,9 +385,20 @@ public abstract class DZklu_version {
 		return Math.abs (a) ;
 	}
 
+	protected static void CLEAR(DZklua A, int i)
+	{
+		A.set(i, CZERO) ;
+	}
+
 	protected static void CLEAR(double[] A, int i)
 	{
 		A [i] = 0.0 ;
+	}
+
+	protected static void CLEAR(double[] a)
+	{
+		a [0] = 0.0 ;
+		a [1] = 0.0 ;
 	}
 
 	/* for flop counts */

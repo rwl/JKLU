@@ -24,6 +24,8 @@
 
 package edu.ufl.cise.klu.tdcomplex;
 
+import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
+
 /**
  * Debug routines for klu.  Only used when NDEBUG is not defined at
  * compile-time.
@@ -46,7 +48,7 @@ public class DZklu_dump extends DZklu_internal
 	 *
 	 * Not user-callable.  Only used when debugging.
 	 */
-	protected static int klu_z_valid(int n, int[] Ap, int[] Ai, double[] Ax)
+	protected static int klu_z_valid(int n, int[] Ap, int[] Ai, DZklua Ax)
 	{
 		int nz, j, p1, p2, i, p ;
 		PRINTF ("\ncolumn oriented matrix, n = %d\n", n) ;
