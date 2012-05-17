@@ -55,7 +55,7 @@ public class DZklu_refactor extends DZklu_internal {
 	public static int klu_z_refactor(int[] Ap, int[] Ai, DZklua Ax,
 			KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common  Common)
 	{
-		double[] ukk, ujk, s ;
+		double[] ukk, ujk, s = CZERO ;
 		DZklua Offx, Lx, Ux, X, Az, Udiag ;
 		double[] Rs ;
 		int[] Q, R, Pnum, Offp, Offi, Pinv, Lip, Uip, Llen, Ulen ;
@@ -265,8 +265,9 @@ public class DZklu_refactor extends DZklu_internal {
 						/* compute kth column of U, and update kth column of A */
 						/* ------------------------------------------------------ */
 
-						Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+						Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 								Ui_offset, Ux_offset, k, ulen) ;
+						Ux = new DZklua(LU) ;
 						for (up = 0 ; up < ulen[0] ; up++)
 						{
 							j = (int) Ui [Ui_offset[0] + up] ;
@@ -274,16 +275,17 @@ public class DZklu_refactor extends DZklu_internal {
 							/* X [j] = 0 ; */
 							CLEAR (X, j) ;
 							Ux.set(Ux_offset[0] + up, ujk) ;
-							Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+							Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 									Li_offset, Lx_offset, j, llen) ;
+							Lx = new DZklua(LU) ;
 							for (p = 0 ; p < llen[0] ; p++)
 							{
-								MULT_SUB (X, Li [Li_offset[0] + p], Lx.get(Lx_offset[0] + p), ujk) ;
+								MULT_SUB (X, (int) Li [Li_offset[0] + p], Lx.get(Lx_offset[0] + p), ujk) ;
 //								X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * ujk ;
 							}
 						}
 						/* get the diagonal entry of U */
-						ukk = X [k] ;
+						ukk = X.get(k) ;
 						/* X [k] = 0 ; */
 						CLEAR (X, k) ;
 						/* singular case */
@@ -302,15 +304,16 @@ public class DZklu_refactor extends DZklu_internal {
 								return (FALSE) ;
 							}
 						}
-						Udiag [k+k1] = ukk ;
+						Udiag.set(k+k1, ukk) ;
 						/* gather and divide by pivot to get kth column of L */
-						Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+						Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 								Li_offset, Lx_offset, k, llen) ;
+						Lx = new DZklua(LU) ;
 						for (p = 0 ; p < llen[0] ; p++)
 						{
 							i = (int) Li [Li_offset[0] + p] ;
-							//DIV (Lx [p], X [i], ukk) ;
-							Lx [Lx_offset[0] + p] = X [i] / ukk ;
+							DIV (Lx, Lx_offset[0] + p, X.get(i), ukk) ;
+//							Lx [Lx_offset[0] + p] = X [i] / ukk ;
 							CLEAR (X, i) ;
 						}
 
@@ -346,7 +349,7 @@ public class DZklu_refactor extends DZklu_internal {
 
 					oldcol = Q [k1] ;
 					pend = Ap [oldcol+1] ;
-					s = 0 ; //CLEAR (s) ;
+					CLEAR (s) ;
 					for (p = Ap [oldcol] ; p < pend ; p++)
 					{
 						oldrow = Ai [p] ;
@@ -354,18 +357,18 @@ public class DZklu_refactor extends DZklu_internal {
 						if (newrow < 0 && poff < nzoff)
 						{
 							/* entry in off-diagonal block */
-							Offx [poff] = Az [p] / Rs [oldrow] ;
-							//SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]) ;
+//							Offx [poff] = Az [p] / Rs [oldrow] ;
+							SCALE_DIV_ASSIGN (Offx, poff, Az.get(p), Rs [oldrow]) ;
 							poff++ ;
 						}
 						else
 						{
 							/* singleton */
-							s = Az [p] / Rs [oldrow] ;
-							//SCALE_DIV_ASSIGN (s, Az [p], Rs [oldrow]) ;
+//							s = Az [p] / Rs [oldrow] ;
+							s = SCALE_DIV_ASSIGN (Az.get(p), Rs [oldrow]) ;
 						}
 					}
-					Udiag [k1] = s ;
+					Udiag.set(k1, s) ;
 
 				}
 				else
@@ -401,15 +404,15 @@ public class DZklu_refactor extends DZklu_internal {
 							if (newrow < 0 && poff < nzoff)
 							{
 								/* entry in off-diagonal part */
-								//SCALE_DIV_ASSIGN (Offx [poff], Az [p], Rs [oldrow]);
-								Offx [poff] = Az [p] / Rs [oldrow] ;
+								SCALE_DIV_ASSIGN (Offx, poff, Az.get(p), Rs [oldrow]);
+//								Offx [poff] = Az [p] / Rs [oldrow] ;
 								poff++ ;
 							}
 							else
 							{
 								/* (newrow,k) is an entry in the block */
-								//SCALE_DIV_ASSIGN (X [newrow], Az [p], Rs [oldrow]) ;
-								X [newrow] = Az [p] / Rs [oldrow] ;
+								SCALE_DIV_ASSIGN (X, newrow, Az.get(p), Rs [oldrow]) ;
+//								X [newrow] = Az [p] / Rs [oldrow] ;
 							}
 						}
 
@@ -417,25 +420,27 @@ public class DZklu_refactor extends DZklu_internal {
 						/* compute kth column of U, and update kth column of A */
 						/* ------------------------------------------------------ */
 
-						Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+						Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 								Ui_offset, Ux_offset, k, ulen) ;
+						Ux = new DZklua(LU) ;
 						for (up = 0 ; up < ulen[0] ; up++)
 						{
 							j = (int) Ui [Ui_offset[0] + up] ;
-							ujk = X [j] ;
+							ujk = X.get(j) ;
 							/* X [j] = 0 ; */
 							CLEAR (X, j) ;
-							Ux [Ux_offset[0] + up] = ujk ;
-							Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+							Ux.set(Ux_offset[0] + up, ujk) ;
+							Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 									Li_offset, Lx_offset, j, llen) ;
+							Lx = new DZklua(LU) ;
 							for (p = 0 ; p < llen[0] ; p++)
 							{
-								//MULT_SUB (X [Li [p]], Lx [p], ujk) ;
-								X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * ujk ;
+								MULT_SUB (X, (int) Li [Li_offset[0] + p], Lx.get(p), ujk) ;
+//								X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * ujk ;
 							}
 						}
 						/* get the diagonal entry of U */
-						ukk = X [k] ;
+						ukk = X.get(k) ;
 						/* X [k] = 0 ; */
 						CLEAR (X, k) ;
 						/* singular case */
@@ -454,15 +459,16 @@ public class DZklu_refactor extends DZklu_internal {
 								return (FALSE) ;
 							}
 						}
-						Udiag [k+k1] = ukk ;
+						Udiag.set(k+k1, ukk) ;
 						/* gather and divide by pivot to get kth column of L */
-						Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+						Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 								Li_offset, Lx_offset, k, llen) ;
+						Lx = new DZklua(LU) ;
 						for (p = 0 ; p < llen[0] ; p++)
 						{
 							i = (int) Li [Li_offset[0] + p] ;
-							//DIV (Lx [p], X [i], ukk) ;
-							Lx [Lx_offset[0] + p] = X [i] / ukk ;
+							DIV (Lx, Lx_offset[0] + p, X.get(i), ukk) ;
+//							Lx [Lx_offset[0] + p] = X [i] / ukk ;
 							CLEAR (X, i) ;
 						}
 					}
@@ -478,12 +484,12 @@ public class DZklu_refactor extends DZklu_internal {
 		{
 			for (k = 0 ; k < n ; k++)
 			{
-				X [k] = Rs [Pnum [k]] ;
+				X.real(k, Rs [Pnum [k]]) ;
 				//REAL (X [k]) = Rs [Pnum [k]] ;
 			}
 			for (k = 0 ; k < n ; k++)
 			{
-				Rs [k] = X [k] ;
+				Rs [k] = X.real(k) ;
 				//Rs [k] = REAL (X [k]) ;
 			}
 		}
@@ -509,7 +515,7 @@ public class DZklu_refactor extends DZklu_internal {
 					if (nk == 1)
 					{
 						PRINTF ("singleton  ") ;
-						PRINT_ENTRY (Udiag [k1]) ;
+						PRINT_ENTRY (Udiag.get(k1)) ;
 					}
 					else
 					{

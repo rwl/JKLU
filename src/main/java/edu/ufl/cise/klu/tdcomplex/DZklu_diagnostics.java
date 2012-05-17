@@ -27,6 +27,7 @@ package edu.ufl.cise.klu.tdcomplex;
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
+import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
 
 import static edu.ufl.cise.klu.tdcomplex.DZklu_tsolve.klu_z_tsolve;
 import static edu.ufl.cise.klu.tdcomplex.DZklu_solve.klu_z_solve;
@@ -52,15 +53,15 @@ public class DZklu_diagnostics extends DZklu_internal
 	 * @param Common
 	 * @return TRUE if successful, FALSE otherwise
 	 */
-	public static int klu_z_rgrowth(int[] Ap, int[] Ai, double[] Ax,
+	public static int klu_z_rgrowth(int[] Ap, int[] Ai, DZklua Ax,
 			KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common Common)
 	{
 		double temp, max_ai, max_ui, min_block_rgrowth ;
-		double aik ;
+		double[] aik ;
 		int[] Q, Pinv ;
 		int[] Ulen, Uip ;
 		double[] LU ;
-		double[] Aentry, Ux, Ukk ;
+		DZklua Aentry, Ux, Ukk ;
 		double[] Rs ;
 		int i, newrow, oldrow, k1, k2, nk, j, oldcol, k, pend ;
 		int[] len = new int[1] ;
@@ -95,7 +96,7 @@ public class DZklu_diagnostics extends DZklu_internal
 		/* compute the reciprocal pivot growth */
 		/* ---------------------------------------------------------------------- */
 
-		Aentry = (double[]) Ax ;
+		Aentry = (DZklua) Ax ;
 		Pinv = Numeric.Pinv ;
 		Rs = Numeric.Rs ;
 		Q = Symbolic.Q ;
@@ -115,7 +116,7 @@ public class DZklu_diagnostics extends DZklu_internal
 			int Uip_offset = k1 ;
 			Ulen = Numeric.Ulen ;
 			int Ulen_offset = k1 ;
-			Ukk = Numeric.Udiag ;
+			Ukk = new DZklua(Numeric.Udiag) ;
 			int Ukk_offset = k1 ;
 			min_block_rgrowth = 1 ;
 			for (j = 0 ; j < nk ; j++)
@@ -135,12 +136,12 @@ public class DZklu_diagnostics extends DZklu_internal
 					ASSERT (newrow < k2) ;
 					if (Rs != null)
 					{
-						//SCALE_DIV_ASSIGN (aik, Aentry [k], Rs [newrow]) ;
-						aik = Aentry [k] / Rs [newrow] ;
+						aik = SCALE_DIV_ASSIGN (Aentry.get(k), Rs [newrow]) ;
+//						aik = Aentry [k] / Rs [newrow] ;
 					}
 					else
 					{
-						aik = Aentry [k] ;
+						aik = Aentry.get(k) ;
 					}
 					//ABS (temp, aik) ;
 					temp = ABS ( aik ) ;
@@ -150,12 +151,13 @@ public class DZklu_diagnostics extends DZklu_internal
 					}
 				}
 
-				Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+				GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 						Ui_offset, Ux_offset, j, len) ;
+				Ux = new DZklua(LU) ;
 				for (k = 0 ; k < len[0] ; k++)
 				{
 					//ABS (temp, Ux [k]) ;
-					temp = ABS (Ux [Ux_offset[0] + k]) ;
+					temp = ABS (Ux.get(Ux_offset[0] + k)) ;
 					if (temp > max_ui)
 					{
 						max_ui = temp ;
@@ -163,7 +165,7 @@ public class DZklu_diagnostics extends DZklu_internal
 				}
 				/* consider the diagonal element */
 				//ABS (temp, Ukk [j]) ;
-				temp = ABS (Ukk [Ukk_offset + j]) ;
+				temp = ABS (Ukk.get(Ukk_offset + j)) ;
 				if (temp > max_ui)
 				{
 					max_ui = temp ;
@@ -203,13 +205,12 @@ public class DZklu_diagnostics extends DZklu_internal
 	 * @param Common
 	 * @return TRUE if successful, FALSE otherwise
 	 */
-	public static int klu_z_condest(int[] Ap, double[] Ax, KLU_symbolic Symbolic,
+	public static int klu_z_condest(int[] Ap, DZklua Ax, KLU_symbolic Symbolic,
 			KLU_numeric Numeric, KLU_common Common)
 	{
 		double xj, Xmax, csum, anorm, ainv_norm, est_old, est_new, abs_value ;
-		double[] Udiag, Aentry, X, S ;
+		DZklua Udiag, Aentry, X, S ;
 		int i, j, jmax, jnew, pend, n ;
-		int unchanged ;
 
 		/* ---------------------------------------------------------------------- */
 		/* check inputs */
@@ -239,7 +240,7 @@ public class DZklu_diagnostics extends DZklu_internal
 		/* ---------------------------------------------------------------------- */
 
 		n = Symbolic.n ;
-		Udiag = Numeric.Udiag ;
+		Udiag = new DZklua(Numeric.Udiag) ;
 
 		/* ---------------------------------------------------------------------- */
 		/* check if diagonal of U has a zero on it */
@@ -248,7 +249,7 @@ public class DZklu_diagnostics extends DZklu_internal
 		for (i = 0 ; i < n ; i++)
 		{
 			//ABS (abs_value, Udiag [i]) ;
-			abs_value = ABS (Udiag [i]) ;
+			abs_value = ABS (Udiag.get(i)) ;
 			if (SCALAR_IS_ZERO (abs_value))
 			{
 				Common.condest = 1 / abs_value ;
@@ -262,7 +263,7 @@ public class DZklu_diagnostics extends DZklu_internal
 		/* ---------------------------------------------------------------------- */
 
 		anorm =  0.0 ;
-		Aentry = (double[]) Ax ;
+		Aentry = (DZklua) Ax ;
 		for (i = 0 ; i < n ; i++)
 		{
 			pend = Ap [i + 1] ;
@@ -270,7 +271,7 @@ public class DZklu_diagnostics extends DZklu_internal
 			for (j = Ap [i] ; j < pend ; j++)
 			{
 				//ABS (abs_value, Aentry [j]) ;
-				abs_value = ABS (Aentry [j]) ;
+				abs_value = ABS (Aentry.get(j)) ;
 				csum += abs_value ;
 			}
 			if (csum > anorm)
@@ -284,7 +285,7 @@ public class DZklu_diagnostics extends DZklu_internal
 		/* ---------------------------------------------------------------------- */
 
 		/* get workspace (size 2*n double's) */
-		X = Numeric.Xwork ;            /* size n space used in KLU_solve, tsolve */
+		X = new DZklua(Numeric.Xwork) ;            /* size n space used in KLU_solve, tsolve */
 		//X += n ;                       /* X is size n */
 		int X_offset = n ;
 		//S = X + n ;                    /* S is size n */
@@ -296,7 +297,7 @@ public class DZklu_diagnostics extends DZklu_internal
 			CLEAR (S, S_offset + i) ;
 			CLEAR (X, X_offset + i) ;
 			//REAL (X [i]) = 1.0 / ((double) n) ;
-			X [X_offset + i] = 1.0 / ((double) n);
+			X.real(X_offset + i, 1.0 / ((double) n)) ;
 		}
 		jmax = 0 ;
 
@@ -311,10 +312,10 @@ public class DZklu_diagnostics extends DZklu_internal
 					CLEAR (X, X_offset + j) ;
 				}
 				//REAL (X [jmax]) = 1 ;
-				X [X_offset + jmax] = 1 ;
+				X.real(X_offset + jmax, 1) ;
 			}
 
-			klu_z_solve (Symbolic, Numeric, n, 1, (double[]) X, X_offset, Common) ;
+			klu_z_solve (Symbolic, Numeric, n, 1, (DZklua) X, X_offset, Common) ;
 			est_old = ainv_norm ;
 			ainv_norm = 0.0 ;
 
@@ -322,34 +323,31 @@ public class DZklu_diagnostics extends DZklu_internal
 			{
 				/* ainv_norm += ABS (X [j]) ;*/
 				//ABS (abs_value, X [j]) ;
-				abs_value = ABS (X [X_offset + j]) ;
+				abs_value = ABS (X.get(X_offset + j)) ;
 				ainv_norm += abs_value ;
 			}
 
-			unchanged = TRUE ;
-
 			for (j = 0 ; j < n ; j++)
-			{
-				double s = (X [X_offset + j] >= 0) ? 1 : -1 ;
-				if (s != S [S_offset + j])  // s != REAL (S [j])
+		        {
+				if (IS_NONZERO (X.get(j)))
 				{
-					S [S_offset + j] = s ;
-					unchanged = FALSE ;
+					abs_value = ABS (X.get(j)) ;
+					SCALE_DIV_ASSIGN (S, j, X.get(j), abs_value) ;
 				}
-			}
+				else
+				{
+					CLEAR (S, j) ;
+					S.real(j, 1) ;
+				}
+		        }
 
-			if (i > 0 && (ainv_norm <= est_old || unchanged == 1))
-			{
-				break ;
-			}
-
-			for (j = 0 ; j < n ; j++)
-			{
-				X [j] = S [S_offset + j] ;
-			}
+		        if (i > 0 && ainv_norm <= est_old)
+		        {
+		            break ;
+		        }
 
 			/* do a transpose solve */
-			klu_z_tsolve (Symbolic, Numeric, n, 1, X, X_offset, Common) ;
+			klu_z_tsolve (Symbolic, Numeric, n, 1, X, X_offset, 1, Common) ;
 
 			/* jnew = the position of the largest entry in X */
 			jnew = 0 ;
@@ -357,7 +355,7 @@ public class DZklu_diagnostics extends DZklu_internal
 			for (j = 0 ; j < n ; j++)
 			{
 				//ABS (xj, X [j]) ;
-				xj = ABS (X [X_offset + j]) ;
+				xj = ABS (X.get(X_offset + j)) ;
 				if (xj > Xmax)
 				{
 					Xmax = xj ;
@@ -383,23 +381,23 @@ public class DZklu_diagnostics extends DZklu_internal
 			if (j % 2 != 0)
 			{
 				//REAL (X [j]) = 1 + ((double) j) / ((double) (n-1)) ;
-				X [X_offset + j] = 1 + ((double) j) / ((double) (n-1)) ;
+				X.real(X_offset + j, 1 + ((double) j) / ((double) (n-1))) ;
 			}
 			else
 			{
 				//REAL (X [j]) = -1 - ((double) j) / ((double) (n-1)) ;
-				X [X_offset + j] = -1 - ((double) j) / ((double) (n-1)) ;
+				X.real(X_offset + j, -1 - ((double) j) / ((double) (n-1))) ;
 			}
 		}
 
-		klu_z_solve (Symbolic, Numeric, n, 1, (double[]) X, X_offset, Common) ;
+		klu_z_solve (Symbolic, Numeric, n, 1, (DZklua) X, X_offset, Common) ;
 
 		est_new = 0.0 ;
 		for (j = 0 ; j < n ; j++)
 		{
 			/* est_new += ABS (X [j]) ;*/
 			//ABS (abs_value, X [j]) ;
-			abs_value = ABS (X [X_offset + j]) ;
+			abs_value = ABS (X.get(X_offset + j)) ;
 			est_new += abs_value ;
 		}
 		est_new = 2 * est_new / (3 * n) ;
@@ -510,7 +508,7 @@ public class DZklu_diagnostics extends DZklu_internal
 			KLU_common Common)
 	{
 		double ukk, umin = 0, umax = 0 ;
-		double[] Udiag ;
+		DZklua Udiag ;
 		int j, n ;
 
 		/* ---------------------------------------------------------------------- */
@@ -539,12 +537,12 @@ public class DZklu_diagnostics extends DZklu_internal
 		/* ---------------------------------------------------------------------- */
 
 		n = Symbolic.n ;
-		Udiag = Numeric.Udiag ;
+		Udiag = new DZklua(Numeric.Udiag) ;
 		for (j = 0 ; j < n ; j++)
 		{
 			/* get the magnitude of the pivot */
 			//ABS (ukk, Udiag [j]) ;
-			ukk = ABS (Udiag [j]) ;
+			ukk = ABS (Udiag.get(j)) ;
 			if (SCALAR_IS_NAN (ukk) || SCALAR_IS_ZERO (ukk))
 			{
 				/* if NaN, or zero, the rcond is zero */

@@ -27,8 +27,8 @@ package edu.ufl.cise.klu.tdcomplex;
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
 
-import static edu.ufl.cise.klu.tdouble.Dklu_memory.klu_malloc_dbl;
-import static edu.ufl.cise.klu.tdouble.Dklu_kernel.klu_kernel;
+import static edu.ufl.cise.klu.tdcomplex.DZklu_memory.klu_z_malloc_dbl;
+import static edu.ufl.cise.klu.tdcomplex.DZklu_kernel.klu_z_kernel;
 
 /**
  * KLU: factorizes P*A into L*U, using the Gilbert-Peierls algorithm[1], with
@@ -191,7 +191,7 @@ public class DZklu extends DZklu_internal {
 		dunits = lsize + lsize + usize + usize ;
 		lusize = (int) dunits ;
 		ok = INT_OVERFLOW (dunits) ? FALSE : TRUE ;
-		LU [0] = ok != 0 ? klu_malloc_dbl (lusize, Common) : null ;
+		LU [0] = ok != 0 ? klu_z_malloc_dbl (lusize, Common) : null ;
 		if (LU [0] == null)
 		{
 			/* out of memory, or problem too large */
@@ -205,7 +205,7 @@ public class DZklu extends DZklu_internal {
 		/* ---------------------------------------------------------------------- */
 
 		/* with pruning, and non-recursive depth-first-search */
-		lusize = klu_kernel (n, Ap, Ai, Ax, Q, lusize,
+		lusize = klu_z_kernel (n, Ap, Ai, Ax, Q, lusize,
 				Pinv, P, LU, Udiag, Udiag_offset, Llen, Llen_offset,
 				Ulen, Ulen_offset, Lip, Lip_offset, Uip, Uip_offset,
 				lnz, unz, X, Stack, Flag, Ap_pos, Lpend,
@@ -241,12 +241,12 @@ public class DZklu extends DZklu_internal {
 	 */
 	public static void klu_z_lsolve(int n, int[] Lip, int Lip_offset,
 			int[] Llen, int Llen_offset, double[] LU, int nrhs,
-			double[] X, int X_offset)
+			DZklua X, int X_offset)
 	{
-		double[] x = new double[4] ;
-		double lik ;
+		double[][] x = new double[4][] ;
+		double[] lik ;
 		/*int[]*/double[] Li ;
-		double[] Lx ;
+		DZklua Lx ;
 		int k, p, i ;
 		int[] len = new int[1] ;
 		int[] Li_offset = new int[1] ;
@@ -258,13 +258,14 @@ public class DZklu extends DZklu_internal {
 			case 1:
 				for (k = 0 ; k < n ; k++)
 				{
-					x [0] = X [X_offset + k] ;
-					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					x [0] = X.get(X_offset + k) ;
+					Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					Lx = new DZklua(LU) ;
 					/* unit diagonal of L is not stored*/
 					for (p = 0 ; p < len[0] ; p++)
 					{
-						//MULT_SUB (X [Li [p]], Lx [p], x [0]) ;
-						X [X_offset + (int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * x [0] ;
+						MULT_SUB (X, X_offset + (int) Li [Li_offset[0] + p], Lx.get(Lx_offset[0] + p), x [0]) ;
+//						X [X_offset + (int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * x [0] ;
 					}
 				}
 				break ;
@@ -273,17 +274,18 @@ public class DZklu extends DZklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					x [0] = X [X_offset + 2*k    ] ;
-					x [1] = X [X_offset + 2*k + 1] ;
-					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					x [0] = X.get(X_offset + 2*k    ) ;
+					x [1] = X.get(X_offset + 2*k + 1) ;
+					Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					Lx = new DZklua(LU) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Li [Li_offset[0] + p] ;
-						lik = Lx [Lx_offset[0] + p] ;
-						//MULT_SUB (X [2*i], lik, x [0]) ;
-						X [X_offset + 2*i] -= lik * x [0] ;
-						//MULT_SUB (X [2*i + 1], lik, x [1]) ;
-						X [X_offset + 2*i + 1] -= lik * x [1] ;
+						lik = Lx.get(Lx_offset[0] + p) ;
+						MULT_SUB (X, X_offset + 2*i, lik, x [0]) ;
+//						X [X_offset + 2*i] -= lik * x [0] ;
+						MULT_SUB (X, X_offset + 2*i + 1, lik, x [1]) ;
+//						X [X_offset + 2*i + 1] -= lik * x [1] ;
 					}
 				}
 				break ;
@@ -292,20 +294,21 @@ public class DZklu extends DZklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					x [0] = X [X_offset + 3*k    ] ;
-					x [1] = X [X_offset + 3*k + 1] ;
-					x [2] = X [X_offset + 3*k + 2] ;
-					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					x [0] = X.get(X_offset + 3*k    ) ;
+					x [1] = X.get(X_offset + 3*k + 1) ;
+					x [2] = X.get(X_offset + 3*k + 2) ;
+					Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					Lx = new DZklua(LU) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Li [Li_offset[0] + p] ;
-						lik = Lx [Lx_offset[0] + p] ;
-						//MULT_SUB (X [3*i], lik, x [0]) ;
-						X [X_offset + 3*i] -= lik * x [0] ;
-						//MULT_SUB (X [3*i + 1], lik, x [1]) ;
-						X [X_offset + 3*i + 1] -= lik * x [1] ;
-						//MULT_SUB (X [3*i + 2], lik, x [2]) ;
-						X [X_offset + 3*i + 2] -= lik * x [2] ;
+						lik = Lx.get(Lx_offset[0] + p) ;
+						MULT_SUB (X, X_offset + 3*i, lik, x [0]) ;
+//						X [X_offset + 3*i] -= lik * x [0] ;
+						MULT_SUB (X, X_offset + 3*i + 1, lik, x [1]) ;
+//						X [X_offset + 3*i + 1] -= lik * x [1] ;
+						MULT_SUB (X, X_offset + 3*i + 2, lik, x [2]) ;
+//						X [X_offset + 3*i + 2] -= lik * x [2] ;
 					}
 				}
 				break ;
@@ -314,23 +317,24 @@ public class DZklu extends DZklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					x [0] = X [X_offset + 4*k    ] ;
-					x [1] = X [X_offset + 4*k + 1] ;
-					x [2] = X [X_offset + 4*k + 2] ;
-					x [3] = X [X_offset + 4*k + 3] ;
-					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					x [0] = X.get(X_offset + 4*k    ) ;
+					x [1] = X.get(X_offset + 4*k + 1) ;
+					x [2] = X.get(X_offset + 4*k + 2) ;
+					x [3] = X.get(X_offset + 4*k + 3) ;
+					Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					Lx = new DZklua(LU) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Li [Li_offset[0] + p] ;
-						lik = Lx [Lx_offset[0] + p] ;
-						//MULT_SUB (X [4*i], lik, x [0]) ;
-						X [X_offset + 4*i] -= lik * x [0] ;
-						//MULT_SUB (X [4*i + 1], lik, x [1]) ;
-						X [X_offset + 4*i + 1] -= lik * x [1] ;
-						//MULT_SUB (X [4*i + 2], lik, x [2]) ;
-						X [X_offset + 4*i + 2] -= lik * x [2] ;
-						//MULT_SUB (X [4*i + 3], lik, x [3]) ;
-						X [X_offset + 4*i + 3] -= lik * x [3] ;
+						lik = Lx.get(Lx_offset[0] + p) ;
+						MULT_SUB (X, X_offset + 4*i, lik, x [0]) ;
+//						X [X_offset + 4*i] -= lik * x [0] ;
+						MULT_SUB (X, X_offset + 4*i + 1, lik, x [1]) ;
+//						X [X_offset + 4*i + 1] -= lik * x [1] ;
+						MULT_SUB (X, X_offset + 4*i + 2, lik, x [2]) ;
+//						X [X_offset + 4*i + 2] -= lik * x [2] ;
+						MULT_SUB (X, X_offset + 4*i + 3, lik, x [3]) ;
+//						X [X_offset + 4*i + 3] -= lik * x [3] ;
 					}
 				}
 				break ;
@@ -354,13 +358,13 @@ public class DZklu extends DZklu_internal {
 	 */
 	public static void klu_z_usolve(int n, int[] Uip, int Uip_offset,
 			int[] Ulen, int Ulen_offset, double[] LU,
-			double[] Udiag, int Udiag_offset, int nrhs,
-			double[] X, int X_offset)
+			DZklua Udiag, int Udiag_offset, int nrhs,
+			DZklua X, int X_offset)
 	{
-		double[] x = new double[4] ;
-		double uik, ukk ;
+		double[][] x = new double[4][] ;
+		double[] uik, ukk ;
 		/*int[]*/double[] Ui ;
-		double[] Ux ;
+		DZklua Ux ;
 		int k, p, i ;
 		int[] len = new int[1] ;
 		int[] Ui_offset = new int[1] ;
@@ -373,15 +377,16 @@ public class DZklu extends DZklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+					Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 							Ui_offset, Ux_offset, k, len) ;
-					//DIV (x [0], X [k], Udiag [k]) ;
-					x [0] = X [X_offset + k] / Udiag [Udiag_offset + k] ;
-					X [X_offset + k] = x [0] ;
+					Ux = new DZklua(LU) ;
+					x [0] = DIV (X.get(X_offset + k), Udiag.get(Udiag_offset + k)) ;
+//					x [0] = X [X_offset + k] / Udiag [Udiag_offset + k] ;
+					X.set(X_offset + k, x [0]) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
-						//MULT_SUB (X [Ui [p]], Ux [p], x [0]) ;
-						X [X_offset + (int) Ui [Ui_offset[0] + p]] -= Ux [Ux_offset[0] + p] * x [0] ;
+						MULT_SUB (X, X_offset + (int) Ui [Ui_offset[0] + p], Ux.get(Ux_offset[0] + p), x [0]) ;
+//						X [X_offset + (int) Ui [Ui_offset[0] + p]] -= Ux [Ux_offset[0] + p] * x [0] ;
 
 					}
 				}
@@ -392,24 +397,25 @@ public class DZklu extends DZklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+					Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 							Ui_offset, Ux_offset, k, len) ;
-					ukk = Udiag [Udiag_offset + k] ;
-					//DIV (x [0], X [2*k], ukk) ;
-					x [0] = X [X_offset + 2*k    ] / ukk ;
-					//DIV (x [1], X [2*k + 1], ukk) ;
-					x [1] = X [X_offset + 2*k + 1] / ukk ;
+					Ux = new DZklua(LU) ;
+					ukk = Udiag.get(Udiag_offset + k) ;
+					x [0] = DIV (X.get(X_offset + 2*k), ukk) ;
+//					x [0] = X [X_offset + 2*k    ] / ukk ;
+					x [1] = DIV (X.get(X_offset + 2*k + 1), ukk) ;
+//					x [1] = X [X_offset + 2*k + 1] / ukk ;
 
-					X [X_offset + 2*k    ] = x [0] ;
-					X [X_offset + 2*k + 1] = x [1] ;
+					X.set(X_offset + 2*k    , x [0]) ;
+					X.set(X_offset + 2*k + 1, x [1]) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Ui [Ui_offset[0] + p] ;
-						uik = Ux [Ux_offset[0] + p] ;
-						//MULT_SUB (X [2*i], uik, x [0]) ;
-						X [X_offset + 2*i    ] -= uik * x [0] ;
-						//MULT_SUB (X [2*i + 1], uik, x [1]) ;
-						X [X_offset + 2*i + 1] -= uik * x [1] ;
+						uik = Ux.get(Ux_offset[0] + p) ;
+						MULT_SUB (X, X_offset + 2*i, uik, x [0]) ;
+//						X [X_offset + 2*i    ] -= uik * x [0] ;
+						MULT_SUB (X, X_offset + 2*i + 1, uik, x [1]) ;
+//						X [X_offset + 2*i + 1] -= uik * x [1] ;
 					}
 				}
 
@@ -419,30 +425,31 @@ public class DZklu extends DZklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+					Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 							Ui_offset, Ux_offset, k, len) ;
-					ukk = Udiag [Udiag_offset + k] ;
+					Ux = new DZklua(LU) ;
+					ukk = Udiag.get(Udiag_offset + k) ;
 
-					//DIV (x [0], X [3*k], ukk) ;
-					x [0] = X [X_offset + 3*k] / ukk ;
-					//DIV (x [1], X [3*k + 1], ukk) ;
-					x [1] = X [X_offset + 3*k + 1] / ukk ;
-					//DIV (x [2], X [3*k + 2], ukk) ;
-					x [2] = X [X_offset + 3*k + 2] / ukk ;
+					x [0] = DIV (X.get(X_offset + 3*k), ukk) ;
+//					x [0] = X [X_offset + 3*k] / ukk ;
+					x [1] = DIV (X.get(X_offset + 3*k + 1), ukk) ;
+//					x [1] = X [X_offset + 3*k + 1] / ukk ;
+					x [2] = DIV (X.get(X_offset + 3*k + 2), ukk) ;
+//					x [2] = X [X_offset + 3*k + 2] / ukk ;
 
-					X [3*k    ] = x [0] ;
-					X [3*k + 1] = x [1] ;
-					X [3*k + 2] = x [2] ;
+					X.set(3*k    , x [0]) ;
+					X.set(3*k + 1, x [1]) ;
+					X.set(3*k + 2, x [2]) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Ui [Ui_offset[0] + p] ;
-						uik = Ux [Ux_offset[0] + p] ;
-						//MULT_SUB (X [3*i], uik, x [0]) ;
-						X [X_offset + 3*i] -= uik * x [0] ;
-						//MULT_SUB (X [3*i + 1], uik, x [1]) ;
-						X [X_offset + 3*i + 1] -= uik * x [1] ;
-						//MULT_SUB (X [3*i + 2], uik, x [2]) ;
-						X [X_offset + 3*i + 2] -= uik * x [2] ;
+						uik = Ux.get(Ux_offset[0] + p) ;
+						MULT_SUB (X, X_offset + 3*i, uik, x [0]) ;
+//						X [X_offset + 3*i] -= uik * x [0] ;
+						MULT_SUB (X, X_offset + 3*i + 1, uik, x [1]) ;
+//						X [X_offset + 3*i + 1] -= uik * x [1] ;
+						MULT_SUB (X, X_offset + 3*i + 2, uik, x [2]) ;
+//						X [X_offset + 3*i + 2] -= uik * x [2] ;
 					}
 				}
 
@@ -452,36 +459,37 @@ public class DZklu extends DZklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+					Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 							Ui_offset, Ux_offset, k, len) ;
-					ukk = Udiag [Udiag_offset + k] ;
+					Ux = new DZklua(LU) ;
+					ukk = Udiag.get(Udiag_offset + k) ;
 
-					//DIV (x [0], X [4*k], ukk) ;
-					x [0] = X [X_offset + 4*k] / ukk ;
-					//DIV (x [1], X [4*k + 1], ukk) ;
-					x [1] = X [X_offset + 4*k + 1] / ukk ;
-					//DIV (x [2], X [4*k + 2], ukk) ;
-					x [2] = X [X_offset + 4*k + 2] / ukk ;
-					//DIV (x [3], X [4*k + 3], ukk) ;
-					x [3] = X [X_offset + 4*k + 3] / ukk ;
+					x [0] = DIV (X.get(X_offset + 4*k), ukk) ;
+//					x [0] = X [X_offset + 4*k] / ukk ;
+					x [1] = DIV (X.get(X_offset + 4*k + 1), ukk) ;
+//					x [1] = X [X_offset + 4*k + 1] / ukk ;
+					x [2] = DIV (X.get(X_offset + 4*k + 2), ukk) ;
+//					x [2] = X [X_offset + 4*k + 2] / ukk ;
+					x [3] = DIV (X.get(X_offset + 4*k + 3), ukk) ;
+//					x [3] = X [X_offset + 4*k + 3] / ukk ;
 
-					X [X_offset + 4*k    ] = x [0] ;
-					X [X_offset + 4*k + 1] = x [1] ;
-					X [X_offset + 4*k + 2] = x [2] ;
-					X [X_offset + 4*k + 3] = x [3] ;
+					X.set(X_offset + 4*k    , x [0]) ;
+					X.set(X_offset + 4*k + 1, x [1]) ;
+					X.set(X_offset + 4*k + 2, x [2]) ;
+					X.set(X_offset + 4*k + 3, x [3]) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Ui [Ui_offset[0] + p] ;
-						uik = Ux [Ux_offset[0] + p] ;
+						uik = Ux.get(Ux_offset[0] + p) ;
 
-						//MULT_SUB (X [4*i], uik, x [0]) ;
-						X [X_offset + 4*i] -= uik * x [0] ;
-						//MULT_SUB (X [4*i + 1], uik, x [1]) ;
-						X [X_offset + 4*i + 1] -= uik * x [1] ;
-						//MULT_SUB (X [4*i + 2], uik, x [2]) ;
-						X [X_offset + 4*i + 2] -= uik * x [2] ;
-						//MULT_SUB (X [4*i + 3], uik, x [3]) ;
-						X [X_offset + 4*i + 3] -= uik * x [3] ;
+						MULT_SUB (X, X_offset + 4*i, uik, x [0]) ;
+//						X [X_offset + 4*i] -= uik * x [0] ;
+						MULT_SUB (X, X_offset + 4*i + 1, uik, x [1]) ;
+//						X [X_offset + 4*i + 1] -= uik * x [1] ;
+						MULT_SUB (X, X_offset + 4*i + 2, uik, x [2]) ;
+//						X [X_offset + 4*i + 2] -= uik * x [2] ;
+						MULT_SUB (X, X_offset + 4*i + 3, uik, x [3]) ;
+//						X [X_offset + 4*i + 3] -= uik * x [3] ;
 					}
 				}
 
@@ -504,12 +512,12 @@ public class DZklu extends DZklu_internal {
 	 * @param X right-hand-side on input, solution to L'x=b on output
 	 */
 	public static void klu_z_ltsolve(int n, int[] Lip, int Lip_offset, int[] Llen, int Llen_offset,
-			double[] LU, int nrhs, double[] X, int X_offset)
+			double[] LU, int nrhs, DZklua X, int X_offset)
 	{
-		double[] x = new double[4] ;
-		double lik ;
+		double[][] x = new double[4][] ;
+		double[] lik ;
 		/*int[]*/double[] Li ;
-		double[] Lx ;
+		DZklua Lx ;
 		int k, p, i ;
 		int[] len = new int[1] ;
 		int[] Li_offset = new int [1] ;
@@ -522,16 +530,17 @@ public class DZklu extends DZklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
-					x [0] = X [X_offset + k] ;
+					Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					Lx = new DZklua(LU) ;
+					x [0] = X.get(X_offset + k) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						{
-							//MULT_SUB (x [0], Lx [p], X [Li [p]]) ;
-							x [0] -= Lx [Lx_offset[0] + p] * X [X_offset + (int) Li [Li_offset[0] + p]] ;
+							x [0] = MULT_SUB (x [0], Lx.get(Lx_offset[0] + p), X.get(X_offset + (int) Li [Li_offset[0] + p])) ;
+//							x [0] -= Lx [Lx_offset[0] + p] * X [X_offset + (int) Li [Li_offset[0] + p]] ;
 						}
 					}
-					X [X_offset + k] = x [0] ;
+					X.set(X_offset + k, x [0]) ;
 				}
 				break ;
 
@@ -539,22 +548,23 @@ public class DZklu extends DZklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x [0] = X [X_offset + 2*k    ] ;
-					x [1] = X [X_offset + 2*k + 1] ;
-					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					x [0] = X.get(X_offset + 2*k    ) ;
+					x [1] = X.get(X_offset + 2*k + 1) ;
+					Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					Lx = new DZklua(LU) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Li [Li_offset[0] + p] ;
 						{
-							lik = Lx [Lx_offset[0] + p] ;
+							lik = Lx.get(Lx_offset[0] + p) ;
 						}
-						//MULT_SUB (x [0], lik, X [2*i]) ;
-						x [0] -= lik * X [X_offset + 2*i] ;
-						//MULT_SUB (x [1], lik, X [2*i + 1]) ;
-						x [1] -= lik * X [X_offset + 2*i + 1] ;
+						x [0] = MULT_SUB (x [0], lik, X.get(X_offset + 2*i)) ;
+//						x [0] -= lik * X [X_offset + 2*i] ;
+						x [1] = MULT_SUB (x [1], lik, X.get(X_offset + 2*i + 1)) ;
+//						x [1] -= lik * X [X_offset + 2*i + 1] ;
 					}
-					X [X_offset + 2*k    ] = x [0] ;
-					X [X_offset + 2*k + 1] = x [1] ;
+					X.set(X_offset + 2*k    , x [0]) ;
+					X.set(X_offset + 2*k + 1, x [1]) ;
 				}
 				break ;
 
@@ -562,26 +572,27 @@ public class DZklu extends DZklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x [0] = X [X_offset + 3*k    ] ;
-					x [1] = X [X_offset + 3*k + 1] ;
-					x [2] = X [X_offset + 3*k + 2] ;
-					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					x [0] = X.get(X_offset + 3*k    ) ;
+					x [1] = X.get(X_offset + 3*k + 1) ;
+					x [2] = X.get(X_offset + 3*k + 2) ;
+					Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					Lx = new DZklua(LU) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Li [Li_offset[0] + p] ;
 						{
-							lik = Lx [Lx_offset[0] + p] ;
+							lik = Lx.get(Lx_offset[0] + p) ;
 						}
-						//MULT_SUB (x [0], lik, X [3*i]) ;
-						x [0] -= lik * X [X_offset + 3*i] ;
-						//MULT_SUB (x [1], lik, X [3*i + 1]) ;
-						x [1] -= lik * X [X_offset + 3*i + 1] ;
-						//MULT_SUB (x [2], lik, X [3*i + 2]) ;
-						x [2] -= lik * X [X_offset + 3*i + 2] ;
+						x [0] = MULT_SUB (x [0], lik, X.get(X_offset + 3*i)) ;
+//						x [0] -= lik * X [X_offset + 3*i] ;
+						x [1] = MULT_SUB (x [1], lik, X.get(X_offset + 3*i + 1)) ;
+//						x [1] -= lik * X [X_offset + 3*i + 1] ;
+						x [2] = MULT_SUB (x [2], lik, X.get(X_offset + 3*i + 2)) ;
+//						x [2] -= lik * X [X_offset + 3*i + 2] ;
 					}
-					X [X_offset + 3*k    ] = x [0] ;
-					X [X_offset + 3*k + 1] = x [1] ;
-					X [X_offset + 3*k + 2] = x [2] ;
+					X.set(X_offset + 3*k    , x [0]) ;
+					X.set(X_offset + 3*k + 1, x [1]) ;
+					X.set(X_offset + 3*k + 2, x [2]) ;
 				}
 				break ;
 
@@ -589,30 +600,31 @@ public class DZklu extends DZklu_internal {
 
 				for (k = n-1 ; k >= 0 ; k--)
 				{
-					x [0] = X [X_offset + 4*k    ] ;
-					x [1] = X [X_offset + 4*k + 1] ;
-					x [2] = X [X_offset + 4*k + 2] ;
-					x [3] = X [X_offset + 4*k + 3] ;
-					Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					x [0] = X.get(X_offset + 4*k    ) ;
+					x [1] = X.get(X_offset + 4*k + 1) ;
+					x [2] = X.get(X_offset + 4*k + 2) ;
+					x [3] = X.get(X_offset + 4*k + 3) ;
+					Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset, Li_offset, Lx_offset, k, len) ;
+					Lx = new DZklua(LU) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Li [Li_offset[0] + p] ;
 						{
-							lik = Lx [Lx_offset[0] + p] ;
+							lik = Lx.get(Lx_offset[0] + p) ;
 						}
-						//MULT_SUB (x [0], lik, X [4*i]) ;
-						x [0] -= lik * X [X_offset + 4*i] ;
-						//MULT_SUB (x [1], lik, X [4*i + 1]) ;
-						x [1] -= lik * X [X_offset + 4*i + 1] ;
-						//MULT_SUB (x [2], lik, X [4*i + 2]) ;
-						x [2] -= lik * X [X_offset + 4*i + 2] ;
-						//MULT_SUB (x [3], lik, X [4*i + 3]) ;
-						x [3] -= lik * X [X_offset + 4*i + 3] ;
+						x [0] = MULT_SUB (x [0], lik, X.get(X_offset + 4*i)) ;
+//						x [0] -= lik * X [X_offset + 4*i] ;
+						x [1] = MULT_SUB (x [1], lik, X.get(X_offset + 4*i + 1)) ;
+//						x [1] -= lik * X [X_offset + 4*i + 1] ;
+						x [2] = MULT_SUB (x [2], lik, X.get(X_offset + 4*i + 2)) ;
+//						x [2] -= lik * X [X_offset + 4*i + 2] ;
+						x [3] = MULT_SUB (x [3], lik, X.get(X_offset + 4*i + 3)) ;
+//						x [3] -= lik * X [X_offset + 4*i + 3] ;
 					}
-					X [X_offset + 4*k    ] = x [0] ;
-					X [X_offset + 4*k + 1] = x [1] ;
-					X [X_offset + 4*k + 2] = x [2] ;
-					X [X_offset + 4*k + 3] = x [3] ;
+					X.set(X_offset + 4*k    , x [0]) ;
+					X.set(X_offset + 4*k + 1, x [1]) ;
+					X.set(X_offset + 4*k + 2, x [2]) ;
+					X.set(X_offset + 4*k + 3, x [3]) ;
 				}
 				break ;
 		}
@@ -634,14 +646,14 @@ public class DZklu extends DZklu_internal {
 	 */
 	public static void klu_z_utsolve(int n, int[] Uip, int Uip_offset,
 			int[] Ulen, int Ulen_offset, double[] LU,
-			double[] Udiag, int Udiag_offset, int nrhs,
-			double[] X, int X_offset)
+			DZklua Udiag, int Udiag_offset, int nrhs,
+			DZklua X, int X_offset)
 	{
-		double[] x = new double[4] ;
-		double uik, ukk ;
+		double[][] x = new double[4][] ;
+		double[] uik, ukk ;
 		int k, p, i ;
 		/*int[]*/double[] Ui ;
-		double[] Ux ;
+		DZklua Ux ;
 		int[] len = new int[1] ;
 		int[] Ui_offset = new int [1] ;
 		int[] Ux_offset = new int [1] ;
@@ -653,20 +665,21 @@ public class DZklu extends DZklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
-					x [0] = X [X_offset + k] ;
+					Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
+					Ux = new DZklua(LU) ;
+					x [0] = X.get(X_offset + k) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						{
-							//MULT_SUB (x [0], Ux [p], X [Ui [p]]) ;
-							x [0] -= Ux [Ux_offset[0] + p] * X [X_offset + (int) Ui [Ui_offset[0] + p]] ;
+							x [0] = MULT_SUB (x [0], Ux.get(Ux_offset[0] + p), X.get((int) Ui [Ui_offset[0] + p])) ;
+//							x [0] -= Ux [Ux_offset[0] + p] * X [X_offset + (int) Ui [Ui_offset[0] + p]] ;
 						}
 					}
 					{
-						ukk = Udiag [k] ;
+						ukk = Udiag.get(k) ;
 					}
-					//DIV (X [k], x [0], ukk) ;
-					X [X_offset + k] = x [0] / ukk ;
+					DIV (X, X_offset + k, x [0], ukk) ;
+//					X [X_offset + k] = x [0] / ukk ;
 				}
 				break ;
 
@@ -674,27 +687,28 @@ public class DZklu extends DZklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
-					x [0] = X [X_offset + 2*k    ] ;
-					x [1] = X [X_offset + 2*k + 1] ;
+					Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
+					Ux = new DZklua(LU) ;
+					x [0] = X.get(X_offset + 2*k    ) ;
+					x [1] = X.get(X_offset + 2*k + 1) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Ui [Ui_offset[0] + p] ;
 						{
-							uik = Ux [Ux_offset[0] + p] ;
+							uik = Ux.get(Ux_offset[0] + p) ;
 						}
-						//MULT_SUB (x [0], uik, X [2*i]) ;
-						x [0] -= uik * X [X_offset + 2*i] ;
-						//MULT_SUB (x [1], uik, X [2*i + 1]) ;
-						x [1] -= uik * X [X_offset + 2*i + 1] ;
+						x [0] = MULT_SUB (x [0], uik, X.get(X_offset + 2*i)) ;
+//						x [0] -= uik * X [X_offset + 2*i] ;
+						x [1] = MULT_SUB (x [1], uik, X.get(X_offset + 2*i + 1)) ;
+//						x [1] -= uik * X [X_offset + 2*i + 1] ;
 					}
 					{
-						ukk = Udiag [k] ;
+						ukk = Udiag.get(k) ;
 					}
-					//DIV (X [2*k], x [0], ukk) ;
-					X [X_offset + 2*k] = x [0] / ukk ;
-					//DIV (X [2*k + 1], x [1], ukk) ;
-					X [X_offset + 2*k + 1] = x [1] / ukk ;
+					DIV (X, X_offset + 2*k, x [0], ukk) ;
+//					X [X_offset + 2*k] = x [0] / ukk ;
+					DIV (X, X_offset + 2*k + 1, x [1], ukk) ;
+//					X [X_offset + 2*k + 1] = x [1] / ukk ;
 				}
 				break ;
 
@@ -702,32 +716,33 @@ public class DZklu extends DZklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
-					x [0] = X [X_offset + 3*k    ] ;
-					x [1] = X [X_offset + 3*k + 1] ;
-					x [2] = X [X_offset + 3*k + 2] ;
+					Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
+					Ux = new DZklua(LU) ;
+					x [0] = X.get(X_offset + 3*k    ) ;
+					x [1] = X.get(X_offset + 3*k + 1) ;
+					x [2] = X.get(X_offset + 3*k + 2) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Ui [Ui_offset[0] + p] ;
 						{
-							uik = Ux [Ux_offset[0] + p] ;
+							uik = Ux.get(Ux_offset[0] + p) ;
 						}
-						//MULT_SUB (x [0], uik, X [3*i]) ;
-						x [0] -= uik * X [X_offset + 3*i] ;
-						//MULT_SUB (x [1], uik, X [3*i + 1]) ;
-						x [1] -= uik * X [X_offset + 3*i + 1] ;
-						//MULT_SUB (x [2], uik, X [3*i + 2]) ;
-						x [2] -= uik * X [X_offset + 3*i + 2] ;
+						x [0] = MULT_SUB (x [0], uik, X.get(X_offset + 3*i)) ;
+//						x [0] -= uik * X [X_offset + 3*i] ;
+						x [1] = MULT_SUB (x [1], uik, X.get(X_offset + 3*i + 1)) ;
+//						x [1] -= uik * X [X_offset + 3*i + 1] ;
+						x [2] = MULT_SUB (x [2], uik, X.get(X_offset + 3*i + 2)) ;
+//						x [2] -= uik * X [X_offset + 3*i + 2] ;
 					}
 					{
-						ukk = Udiag [k] ;
+						ukk = Udiag.get(k) ;
 					}
-					//DIV (X [3*k], x [0], ukk) ;
-					X [X_offset + 3*k] = x [0] / ukk ;
-					//DIV (X [3*k + 1], x [1], ukk) ;
-					X [X_offset + 3*k + 1] = x [1] / ukk ;
-					//DIV (X [3*k + 2], x [2], ukk) ;
-					X [X_offset + 3*k + 2] = x [2] / ukk ;
+					DIV (X, X_offset + 3*k, x [0], ukk) ;
+//					X [X_offset + 3*k] = x [0] / ukk ;
+					DIV (X, X_offset + 3*k + 1, x [1], ukk) ;
+//					X [X_offset + 3*k + 1] = x [1] / ukk ;
+					DIV (X, X_offset + 3*k + 2, x [2], ukk) ;
+//					X [X_offset + 3*k + 2] = x [2] / ukk ;
 				}
 				break ;
 
@@ -735,37 +750,38 @@ public class DZklu extends DZklu_internal {
 
 				for (k = 0 ; k < n ; k++)
 				{
-					Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
-					x [0] = X [X_offset + 4*k    ] ;
-					x [1] = X [X_offset + 4*k + 1] ;
-					x [2] = X [X_offset + 4*k + 2] ;
-					x [3] = X [X_offset + 4*k + 3] ;
+					Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui_offset, Ux_offset, k, len) ;
+					Ux = new DZklua(LU) ;
+					x [0] = X.get(X_offset + 4*k    ) ;
+					x [1] = X.get(X_offset + 4*k + 1) ;
+					x [2] = X.get(X_offset + 4*k + 2) ;
+					x [3] = X.get(X_offset + 4*k + 3) ;
 					for (p = 0 ; p < len[0] ; p++)
 					{
 						i = (int) Ui [Ui_offset[0] + p] ;
 						{
-							uik = Ux [Ux_offset[0] + p] ;
+							uik = Ux.get(Ux_offset[0] + p) ;
 						}
-						//MULT_SUB (x [0], uik, X [4*i]) ;
-						x [0] -= uik * X [X_offset + 4*i] ;
-						//MULT_SUB (x [1], uik, X [4*i + 1]) ;
-						x [1] -= uik * X [X_offset + 4*i + 1] ;
-						//MULT_SUB (x [2], uik, X [4*i + 2]) ;
-						x [2] -= uik * X [X_offset + 4*i + 2] ;
-						//MULT_SUB (x [3], uik, X [4*i + 3]) ;
-						x [3] -= uik * X [X_offset + 4*i + 3] ;
+						x [0] = MULT_SUB (x [0], uik, X.get(X_offset + 4*i)) ;
+//						x [0] -= uik * X [X_offset + 4*i] ;
+						x [1] = MULT_SUB (x [1], uik, X.get(X_offset + 4*i + 1)) ;
+//						x [1] -= uik * X [X_offset + 4*i + 1] ;
+						x [2] = MULT_SUB (x [2], uik, X.get(X_offset + 4*i + 2)) ;
+//						x [2] -= uik * X [X_offset + 4*i + 2] ;
+						x [3] = MULT_SUB (x [3], uik, X.get(X_offset + 4*i + 3)) ;
+//						x [3] -= uik * X [X_offset + 4*i + 3] ;
 					}
 					{
-						ukk = Udiag [k] ;
+						ukk = Udiag.get(k) ;
 					}
-					//DIV (X [4*k], x [0], ukk) ;
-					X [X_offset + 4*k] = x [0] / ukk ;
-					//DIV (X [4*k + 1], x [1], ukk) ;
-					X [X_offset + 4*k + 1] = x [1] / ukk ;
-					//DIV (X [4*k + 2], x [2], ukk) ;
-					X [X_offset + 4*k + 2] = x [2] / ukk ;
-					//DIV (X [4*k + 3], x [3], ukk) ;
-					X [X_offset + 4*k + 3] = x [3] / ukk ;
+					DIV (X, X_offset + 4*k, x [0], ukk) ;
+//					X [X_offset + 4*k] = x [0] / ukk ;
+					DIV (X, X_offset + 4*k + 1, x [1], ukk) ;
+//					X [X_offset + 4*k + 1] = x [1] / ukk ;
+					DIV (X, X_offset + 4*k + 2, x [2], ukk) ;
+//					X [X_offset + 4*k + 2] = x [2] / ukk ;
+					DIV (X, X_offset + 4*k + 3, x [3], ukk) ;
+//					X [X_offset + 4*k + 3] = x [3] / ukk ;
 				}
 				break ;
 		}

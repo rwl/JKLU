@@ -25,6 +25,7 @@
 package edu.ufl.cise.klu.tdcomplex;
 
 import edu.ufl.cise.klu.common.KLU_common;
+import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
 
 import static edu.ufl.cise.klu.tdcomplex.DZklu_memory.klu_z_realloc_dbl;
 
@@ -226,11 +227,11 @@ public class DZklu_kernel extends DZklu_internal {
 	 * @param Offi
 	 * @param Offx
 	 */
-	public static void construct_column(int k, int[] Ap, int[] Ai, double[] Ax,
-			int[] Q, double[] X, int k1, int[] PSinv, double[] Rs, int scale,
-			int[] Offp, int[] Offi, double[] Offx)
+	public static void construct_column(int k, int[] Ap, int[] Ai, DZklua Ax,
+			int[] Q, DZklua X, int k1, int[] PSinv, double[] Rs, int scale,
+			int[] Offp, int[] Offi, DZklua Offx)
 	{
-		double aik ;
+		double[] aik ;
 		int i, p, pend, oldcol, kglobal, poff, oldrow ;
 
 		/* ---------------------------------------------------------------------- */
@@ -249,18 +250,18 @@ public class DZklu_kernel extends DZklu_internal {
 			{
 				oldrow = Ai [p] ;
 				i = PSinv [oldrow] - k1 ;
-				aik = Ax [p] ;
+				aik = Ax.get(p) ;
 				if (i < 0)
 				{
 					/* this is an entry in the off-diagonal part */
 					Offi [poff] = oldrow ;
-					Offx [poff] = aik ;
+					Offx.set(poff, aik) ;
 					poff++ ;
 				}
 				else
 				{
 					/* (i,k) is an entry in the block.  scatter into X */
-					X [i] = aik ;
+					X.set(i, aik) ;
 				}
 			}
 		}
@@ -271,19 +272,19 @@ public class DZklu_kernel extends DZklu_internal {
 			{
 				oldrow = Ai [p] ;
 				i = PSinv [oldrow] - k1 ;
-				aik = Ax [p] ;
+				aik = Ax.get(p) ;
 				aik = SCALE_DIV (aik, Rs [oldrow]) ;
 				if (i < 0)
 				{
 					/* this is an entry in the off-diagonal part */
 					Offi [poff] = oldrow ;
-					Offx [poff] = aik ;
+					Offx.set(poff, aik) ;
 					poff++ ;
 				}
 				else
 				{
 					/* (i,k) is an entry in the block.  scatter into X */
-					X [i] = aik ;
+					X.set(i, aik) ;
 				}
 			}
 		}
@@ -310,10 +311,10 @@ public class DZklu_kernel extends DZklu_internal {
 	 */
 	public static void lsolve_numeric(int[] Pinv, double[] LU, int[] Stack,
 			int[] Lip, int Lip_offset, int top, int n,
-			int[] Llen, int Llen_offset, double[] X)
+			int[] Llen, int Llen_offset, DZklua X)
 	{
-		double xj;
-		double[] Lx;
+		double[] xj;
+		DZklua Lx;
 		/*int[]*/double[] Li;
 		int p, s, j, jnew ;
 		int[] len = new int[1] ;
@@ -327,14 +328,15 @@ public class DZklu_kernel extends DZklu_internal {
 			j = Stack [s] ;
 			jnew = Pinv [j] ;
 			ASSERT (jnew >= 0) ;
-			xj = X [j] ;
-			Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+			xj = X.get(j) ;
+			Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 					Li_offset, Lx_offset, jnew, len) ;
+			Lx = new DZklua(LU) ;
 			ASSERT (Lip [Lip_offset + jnew] <= Lip [Lip_offset + jnew+1]) ;
 			for (p = 0 ; p < len[0] ; p++)
 			{
-				//MULT_SUB (X [Li [p]], Lx [p], xj) ;
-				X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * xj ;
+				MULT_SUB (X, (int) Li [Li_offset[0] + p], Lx.get(Lx_offset[0] + p), xj) ;
+//				X [(int) Li [Li_offset[0] + p]] -= Lx [Lx_offset[0] + p] * xj ;
 			}
 		}
 	}
@@ -359,14 +361,14 @@ public class DZklu_kernel extends DZklu_internal {
 	 * @param Common
 	 * @return
 	 */
-	public static int lpivot(int diagrow, int[] p_pivrow, double[] p_pivot,
-			double[] p_abs_pivot, double tol, double[] X, double[] LU,
+	public static int lpivot(int diagrow, int[] p_pivrow, double[][] p_pivot,
+			double[] p_abs_pivot, double tol, DZklua X, double[] LU,
 			int[] Lip, int Lip_offset, int[] Llen, int Llen_offset,
 			int k, int n, int[] Pinv , int[] p_firstrow,
 			KLU_common Common)
 	{
-		double x, pivot ;
-		double[] Lx ;
+		double[] x, pivot = CZERO ;
+		DZklua Lx ;
 		double abs_pivot, xabs ;
 		int p, i, ppivrow, pdiag, pivrow, last_row_index, firstrow ;
 		/*int[]*/double[] Li ;
@@ -394,7 +396,7 @@ public class DZklu_kernel extends DZklu_internal {
 				}
 			}
 			ASSERT (pivrow >= 0 && pivrow < n) ;
-			pivot = 0.0 ; //CLEAR (pivot) ;
+			CLEAR (pivot) ;
 			p_pivrow[0] = pivrow ;
 			p_pivot[0] = pivot ;
 			p_abs_pivot[0] = 0 ;
@@ -406,24 +408,26 @@ public class DZklu_kernel extends DZklu_internal {
 		ppivrow = EMPTY ;
 		abs_pivot = EMPTY ;
 		i = Llen [Llen_offset + k] - 1 ;
-		Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+		Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 				Li_offset, Lx_offset, k, len) ;
+		Lx = new DZklua(LU) ;
 		last_row_index = (int) Li [Li_offset[0] + i] ;
 
 		/* decrement the length by 1 */
 		Llen [Llen_offset + k] = i ;
-		Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+		Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 				Li_offset, Lx_offset, k, len) ;
+		Lx = new DZklua(LU) ;
 
 		/* look in Li [0 ..Llen [k] - 1 ] for a pivot row */
 		for (p = 0 ; p < len[0] ; p++)
 		{
 			/* gather the entry from X and store in L */
 			i = (int) Li [Li_offset[0] + p] ;
-			x = X [i] ;
+			x = X.get(i) ;
 			CLEAR (X, i) ;
 
-			Lx [Lx_offset[0] + p] = x ;
+			Lx.set(Lx_offset[0] + p, x) ;
 			//ABS (xabs, x) ;
 			xabs = ABS (x) ;
 
@@ -442,7 +446,7 @@ public class DZklu_kernel extends DZklu_internal {
 		}
 
 		//ABS (xabs, X [last_row_index]) ;
-		xabs = ABS (X [last_row_index]) ;
+		xabs = ABS (X.get(last_row_index)) ;
 		if (xabs > abs_pivot)
 		{
 			abs_pivot = xabs ;
@@ -461,7 +465,7 @@ public class DZklu_kernel extends DZklu_internal {
 		else if (pdiag != EMPTY)
 		{
 			//ABS (xabs, Lx [pdiag]) ;
-			xabs = ABS (Lx [Lx_offset[0] + pdiag]) ;
+			xabs = ABS (Lx.get(Lx_offset[0] + pdiag)) ;
 			if (xabs >= tol * abs_pivot)
 			{
 				/* the diagonal is large enough */
@@ -473,15 +477,15 @@ public class DZklu_kernel extends DZklu_internal {
 		if (ppivrow != EMPTY)
 		{
 			pivrow = (int) Li [Li_offset[0] + ppivrow] ;
-			pivot  = Lx [Lx_offset[0] + ppivrow] ;
+			pivot  = Lx.get(Lx_offset[0] + ppivrow) ;
 			/* overwrite the ppivrow values with last index values */
 			Li [Li_offset[0] + ppivrow] = last_row_index ;
-			Lx [Lx_offset[0] + ppivrow] = X [last_row_index] ;
+			Lx.set(Lx_offset[0] + ppivrow, X.get(last_row_index)) ;
 		}
 		else
 		{
 			pivrow = last_row_index ;
-			pivot = X [last_row_index] ;
+			pivot = X.get(last_row_index) ;
 		}
 		CLEAR (X, last_row_index) ;
 
@@ -499,8 +503,8 @@ public class DZklu_kernel extends DZklu_internal {
 		/* divide L by the pivot value */
 		for (p = 0 ; p < Llen [Llen_offset + k] ; p++)
 		{
-			//DIV (Lx [p], Lx [p], pivot) ;
-			Lx [Lx_offset[0] + p] /= pivot ;
+			DIV (Lx, p, Lx.get(p), pivot) ;
+//			Lx [Lx_offset[0] + p] /= pivot ;
 		}
 
 		return (TRUE) ;
@@ -651,19 +655,19 @@ public class DZklu_kernel extends DZklu_internal {
 	 * @param Common
 	 * @return final size of LU on output
 	 */
-	public static int klu_z_kernel(int n, int[] Ap, int[] Ai, double[] Ax,
+	public static int klu_z_kernel(int n, int[] Ap, int[] Ai, DZklua Ax,
 			int[] Q, int lusize, int[] Pinv, int[] P, double[][] p_LU,
-			double[] Udiag, int Udiag_offset, int[] Llen, int Llen_offset,
+			DZklua Udiag, int Udiag_offset, int[] Llen, int Llen_offset,
 			int[] Ulen, int Ulen_offset, int[] Lip, int Lip_offset,
 			int[] Uip, int Uip_offset,
-			int[] lnz, int[] unz, double[] X, int[] Stack, int[] Flag,
+			int[] lnz, int[] unz, DZklua X, int[] Stack, int[] Flag,
 			int[] Ap_pos, int[] Lpend, int k1, int[] PSinv, double[] Rs,
-			int[] Offp, int[] Offi, double[] Offx, KLU_common Common)
+			int[] Offp, int[] Offi, DZklua Offx, KLU_common Common)
 	{
-		double[] pivot = new double[1] ;
+		double[][] pivot = new double[1][] ;
 		double[] abs_pivot = new double[1] ;
 		double xsize, nunits, tol, memgrow ;
-		double[] Ux ;
+		DZklua Ux ;
 		/*int[]*/double[] Li, Ui ;
 		double[] LU ;          /* LU factors (pattern and values) */
 		int k, p, i, j, kbar, diagrow, lup, top, scale;
@@ -676,7 +680,7 @@ public class DZklu_kernel extends DZklu_internal {
 		int[] Li_offset = new int [1] ;
 		int[] Lx_offset = new int [1] ;
 
-		double[] Lx;  // only used when debugging
+		DZklua Lx;  // only used when debugging
 
 		ASSERT (Common != null) ;
 		scale = Common.scale ;
@@ -684,7 +688,7 @@ public class DZklu_kernel extends DZklu_internal {
 		memgrow = Common.memgrow ;
 		lnz[0] = 0 ;
 		unz[0] = 0 ;
-		pivot[0] = 0.0 ;  //CLEAR (pivot) ;
+		pivot[0] = CZERO ;  //CLEAR (pivot) ;
 
 		/* ---------------------------------------------------------------------- */
 		/* get initial Li, Lx, Ui, and Ux */
@@ -797,7 +801,7 @@ public class DZklu_kernel extends DZklu_internal {
 				{
 					ASSERT (Flag [i] < k) ;
 					/* ASSERT (X [i] == 0) ; */
-					ASSERT (IS_ZERO (X [i])) ;
+					ASSERT (IS_ZERO (X.get(i))) ;
 				}
 			}
 
@@ -850,14 +854,14 @@ public class DZklu_kernel extends DZklu_internal {
 				for (p = top ; p < n ; p++)
 				{
 					PRINTF ("X for U %d : ",  Stack [p]) ;
-					PRINT_ENTRY (X [Stack [p]]) ;
+					PRINT_ENTRY (X.get(Stack [p])) ;
 				}
 				Li = LU ;
 				Li_offset[0] = Lip [Lip_offset + k] ;
 				for (p = 0 ; p < Llen [Llen_offset + k] ; p++)
 				{
 					PRINTF ("X for L %d : ", (int) Li [Li_offset[0] + p]) ;
-					PRINT_ENTRY (X [(int) Li [Li_offset[0] + p]]) ;
+					PRINT_ENTRY (X.get((int) Li [Li_offset[0] + p])) ;
 				}
 			}
 
@@ -912,16 +916,17 @@ public class DZklu_kernel extends DZklu_internal {
 			Ulen [Ulen_offset + k] = n - top ;
 
 			/* extract Stack [top..n-1] to Ui and the values to Ux and clear X */
-			Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+			Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 					Ui_offset, Ux_offset, k, len) ;
+			Ux = new DZklua(LU) ;
 
 			for (p = top, i = 0 ; p < n ; p++, i++)
 			{
 				j = Stack [p] ;
 				Ui [Ui_offset[0] + i] = Pinv [j] ;
-				Ux [Ux_offset[0] + i] = X [j] ;
-				//CLEAR (X [j]) ;
-				X [j] = 0.0 ;
+				Ux.set(Ux_offset[0] + i, X.get(j)) ;
+				CLEAR (X, j) ;
+//				X [j] = 0.0 ;
 			}
 
 			/* position the lu index at the starting point for next column */
@@ -930,7 +935,7 @@ public class DZklu_kernel extends DZklu_internal {
 			lup += Ulen [Ulen_offset + k] + Ulen [Ulen_offset + k] ;
 
 			/* U(k,k) = pivot */
-			Udiag [Udiag_offset + k] = pivot[0] ;
+			Udiag.set(Udiag_offset + k, pivot[0]) ;
 
 			/* ------------------------------------------------------------------ */
 			/* log the pivot permutation */
@@ -961,21 +966,23 @@ public class DZklu_kernel extends DZklu_internal {
 
 			if (!NDEBUG)
 			{
-				for (i = 0 ; i < n ; i++) { ASSERT (IS_ZERO (X [i])) ;}
-				Ui = Ux = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
+				for (i = 0 ; i < n ; i++) { ASSERT (IS_ZERO (X.get(i))) ;}
+				Ui = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset,
 						Ui_offset, Ux_offset, k, len) ;
+				Ux = new DZklua(LU) ;
 				for (p = 0 ; p < len[0] ; p++)
 				{
 					PRINTF ("Column %d of U: %d : ", k, (int) Ui [Ui_offset[0] + p]) ;
-					PRINT_ENTRY (Ux [Ux_offset[0] + p]) ;
+					PRINT_ENTRY (Ux.get(Ux_offset[0] + p)) ;
 				}
 
-				Li = Lx = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
+				Li = GET_POINTER (LU, Lip, Lip_offset, Llen, Llen_offset,
 						Li_offset, Lx_offset, k, len) ;
+				Lx = new DZklua(LU) ;
 				for (p = 0 ; p < len[0] ; p++)
 				{
 					PRINTF ("Column %d of L: %d : ", k, (int) Li [Li_offset[0] + p]) ;
-					PRINT_ENTRY (Lx [Lx_offset[0] + p]) ;
+					PRINT_ENTRY (Lx.get(Lx_offset[0] + p)) ;
 				}
 			}
 
@@ -1015,7 +1022,7 @@ public class DZklu_kernel extends DZklu_internal {
 				ASSERT (Pinv [i] >= 0 && Pinv [i] < n) ;
 				ASSERT (P [i] >= 0 && P [i] < n) ;
 				ASSERT (P [Pinv [i]] == i) ;
-				ASSERT (IS_ZERO (X [i])) ;
+				ASSERT (IS_ZERO (X.get(i))) ;
 			}
 		}
 

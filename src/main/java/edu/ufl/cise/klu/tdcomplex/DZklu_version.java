@@ -237,10 +237,21 @@ public abstract class DZklu_version {
 		return SCALAR_IS_NONZERO (a) ;
 	}
 
+	protected static boolean IS_NONZERO (double[] a)
+	{
+		return SCALAR_IS_NONZERO (a) ;
+	}
+
 	/**
 	 * c /= s
 	 */
 	protected static double SCALE_DIV (double c, double s)
+	{
+		c /= s ;
+		return c ;
+	}
+
+	protected static double[] SCALE_DIV (double[] c, double s)
 	{
 		c /= s ;
 		return c ;
@@ -307,6 +318,14 @@ public abstract class DZklu_version {
 //		c = a * b ;
 //	}
 
+	protected static void DIV (DZklua a, int idx, double[] b, double[] c) {
+		a.set(idx, CDIV(b, c));
+	}
+
+	protected static double[] DIV (double[] b, double[] c) {
+		a.set(idx, CDIV(b, c));
+	}
+
 	/**
 	 * c -= a*b
 	 */
@@ -317,6 +336,12 @@ public abstract class DZklu_version {
 	}
 
 	protected static double MULT_SUB (DZklua c, int idx, double[] a, double[] b)
+	{
+		c -= a * b ;
+		return c ;
+	}
+
+	protected static double[] MULT_SUB (double[] c, double[] a, double[] b)
 	{
 		c -= a * b ;
 		return c ;

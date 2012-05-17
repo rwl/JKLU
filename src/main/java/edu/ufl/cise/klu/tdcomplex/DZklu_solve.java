@@ -27,6 +27,7 @@ package edu.ufl.cise.klu.tdcomplex;
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
+import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
 
 import static edu.ufl.cise.klu.tdcomplex.DZklu_dump.klu_z_valid;
 import static edu.ufl.cise.klu.tdcomplex.DZklu.klu_z_lsolve;
@@ -53,12 +54,13 @@ public class DZklu_solve extends DZklu_internal {
 	 * @return
 	 */
 	public static int klu_z_solve(KLU_symbolic Symbolic, KLU_numeric Numeric,
-			int d, int nrhs, double[] B, int B_offset, KLU_common Common)
+			int d, int nrhs, DZklua B, int B_offset, KLU_common Common)
 	{
-		double offik, s ;
-		double[] x = new double[4] ;
+		double[] offik, s ;
+		double[][] x = new double[4][] ;
 		double rs ;
-		double[] Offx, X, Bz, Udiag, Rs ;
+		double[] Rs ;
+		DZklua Offx, X, Bz, Udiag ;
 		int[] Q, R, Pnum, Offp, Offi, Lip, Uip, Llen, Ulen ;
 		double[][] LUbx ;
 		int k1, k2, nk, k, block, pend, n, p, nblocks, chunk, nr, i ;
@@ -97,17 +99,17 @@ public class DZklu_solve extends DZklu_internal {
 		Pnum = Numeric.Pnum ;
 		Offp = Numeric.Offp ;
 		Offi = Numeric.Offi ;
-		Offx = Numeric.Offx ;
+		Offx = new DZklua(Numeric.Offx) ;
 
 		Lip  = Numeric.Lip ;
 		Llen = Numeric.Llen ;
 		Uip  = Numeric.Uip ;
 		Ulen = Numeric.Ulen ;
 		LUbx = Numeric.LUbx ;
-		Udiag = Numeric.Udiag ;
+		Udiag = new DZklua(Numeric.Udiag) ;
 
 		Rs = Numeric.Rs ;
-		X = Numeric.Xwork ;
+		X = new DZklua(Numeric.Xwork) ;
 
 		if (!NDEBUG) ASSERT (klu_z_valid (n, Offp, Offi, Offx)) ;
 
@@ -139,7 +141,7 @@ public class DZklu_solve extends DZklu_internal {
 
 						for (k = 0 ; k < n ; k++)
 						{
-							X [k] = Bz [B_offset + Pnum [k]] ;
+							X.set(k, Bz.get(B_offset + Pnum [k])) ;
 						}
 						break ;
 
@@ -148,8 +150,8 @@ public class DZklu_solve extends DZklu_internal {
 						for (k = 0 ; k < n ; k++)
 						{
 							i = Pnum [k] ;
-							X [2*k    ] = Bz [B_offset + i] ;
-							X [2*k + 1] = Bz [B_offset + i + d] ;
+							X.set(2*k    , Bz.get(B_offset + i)) ;
+							X.set(2*k + 1, Bz.get(B_offset + i + d)) ;
 						}
 						break ;
 
@@ -158,9 +160,9 @@ public class DZklu_solve extends DZklu_internal {
 						for (k = 0 ; k < n ; k++)
 						{
 							i = Pnum [k] ;
-							X [3*k    ] = Bz [B_offset + i      ] ;
-							X [3*k + 1] = Bz [B_offset + i + d  ] ;
-							X [3*k + 2] = Bz [B_offset + i + d*2] ;
+							X.set(3*k    , Bz.get(B_offset + i      )) ;
+							X.set(3*k + 1, Bz.get(B_offset + i + d  )) ;
+							X.set(3*k + 2, Bz.get(B_offset + i + d*2)) ;
 						}
 						break ;
 
@@ -169,10 +171,10 @@ public class DZklu_solve extends DZklu_internal {
 						for (k = 0 ; k < n ; k++)
 						{
 							i = Pnum [k] ;
-							X [4*k    ] = Bz [B_offset + i      ] ;
-							X [4*k + 1] = Bz [B_offset + i + d  ] ;
-							X [4*k + 2] = Bz [B_offset + i + d*2] ;
-							X [4*k + 3] = Bz [B_offset + i + d*3] ;
+							X.set(4*k    , Bz.get(B_offset + i      )) ;
+							X.set(4*k + 1, Bz.get(B_offset + i + d  )) ;
+							X.set(4*k + 2, Bz.get(B_offset + i + d*2)) ;
+							X.set(4*k + 3, Bz.get(B_offset + i + d*3)) ;
 						}
 						break ;
 				}
@@ -188,8 +190,8 @@ public class DZklu_solve extends DZklu_internal {
 
 						for (k = 0 ; k < n ; k++)
 						{
-							//SCALE_DIV_ASSIGN (X [k], Bz  [Pnum [k]], Rs [k]) ;
-							X [k] = Bz  [B_offset + Pnum [k]] / Rs [k] ;
+							SCALE_DIV_ASSIGN (X, k, Bz.get(B_offset + Pnum [k]), Rs [k]) ;
+//							X [k] = Bz  [B_offset + Pnum [k]] / Rs [k] ;
 						}
 						break ;
 
@@ -199,10 +201,10 @@ public class DZklu_solve extends DZklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							//SCALE_DIV_ASSIGN (X [2*k], Bz [i], rs) ;
-							X [2*k] =  Bz [B_offset + i] / rs ;
-							//SCALE_DIV_ASSIGN (X [2*k + 1], Bz [i + d], rs) ;
-							X [2*k + 1] = Bz [B_offset + i + d] / rs ;
+							SCALE_DIV_ASSIGN (X, 2*k, Bz.get(B_offset + i), rs) ;
+//							X [2*k] =  Bz [B_offset + i] / rs ;
+							SCALE_DIV_ASSIGN (X, 2*k + 1, Bz.get(B_offset + i + d), rs) ;
+//							X [2*k + 1] = Bz [B_offset + i + d] / rs ;
 						}
 						break ;
 
@@ -212,12 +214,12 @@ public class DZklu_solve extends DZklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							//SCALE_DIV_ASSIGN (X [3*k], Bz [i], rs) ;
-							X [3*k] = Bz [B_offset + i] / rs ;
-							//SCALE_DIV_ASSIGN (X [3*k + 1], Bz [i + d], rs) ;
-							X [3*k + 1] = Bz [B_offset + i + d] / rs ;
-							//SCALE_DIV_ASSIGN (X [3*k + 2], Bz [i + d*2], rs) ;
-							X [3*k + 2] = Bz [B_offset + i + d*2] / rs ;
+							SCALE_DIV_ASSIGN (X, 3*k, Bz.get(B_offset + i), rs) ;
+//							X [3*k] = Bz [B_offset + i] / rs ;
+							SCALE_DIV_ASSIGN (X, 3*k + 1, Bz.get(B_offset + i + d), rs) ;
+//							X [3*k + 1] = Bz [B_offset + i + d] / rs ;
+							SCALE_DIV_ASSIGN (X, 3*k + 2, Bz.get(B_offset + i + d*2), rs) ;
+//							X [3*k + 2] = Bz [B_offset + i + d*2] / rs ;
 						}
 						break ;
 
@@ -227,14 +229,14 @@ public class DZklu_solve extends DZklu_internal {
 						{
 							i = Pnum [k] ;
 							rs = Rs [k] ;
-							//SCALE_DIV_ASSIGN (X [4*k], Bz [i], rs) ;
-							X [4*k] = Bz [B_offset + i] / rs ;
-							//SCALE_DIV_ASSIGN (X [4*k + 1], Bz [i + d], rs) ;
-							X [4*k + 1] = Bz [B_offset + i + d] / rs ;
-							//SCALE_DIV_ASSIGN (X [4*k + 2], Bz [i + d*2], rs) ;
-							X [4*k + 2] = Bz [B_offset + i + d*2] / rs ;
-							//SCALE_DIV_ASSIGN (X [4*k + 3], Bz [i + d*3], rs) ;
-							X [4*k + 3] = Bz [B_offset + i + d*3] / rs ;
+							SCALE_DIV_ASSIGN (X, 4*k, Bz.get(B_offset + i), rs) ;
+//							X [4*k] = Bz [B_offset + i] / rs ;
+							SCALE_DIV_ASSIGN (X, 4*k + 1, Bz.get(B_offset + i + d), rs) ;
+//							X [4*k + 1] = Bz [B_offset + i + d] / rs ;
+							SCALE_DIV_ASSIGN (X, 4*k + 2, Bz.get(B_offset + i + d*2), rs) ;
+//							X [4*k + 2] = Bz [B_offset + i + d*2] / rs ;
+							SCALE_DIV_ASSIGN (X, 4*k + 3, Bz.get(B_offset + i + d*3), rs) ;
+//							X [4*k + 3] = Bz [B_offset + i + d*3] / rs ;
 						}
 						break ;
 				}
@@ -259,40 +261,40 @@ public class DZklu_solve extends DZklu_internal {
 				/* solve the block system */
 				if (nk == 1)
 				{
-					s = Udiag [k1] ;
+					s = Udiag.get(k1) ;
 					switch (nr)
 					{
 
 						case 1:
-							//DIV (X [k1], X [k1], s) ;
-							X [k1] = X [k1] / s ;
+							DIV (X, k1, X.get(k1), s) ;
+//							X [k1] = X [k1] / s ;
 							break ;
 
 						case 2:
-							//DIV (X [2*k1], X [2*k1], s) ;
-							X [2*k1] = X [2*k1] / s ;
-							//DIV (X [2*k1 + 1], X [2*k1 + 1], s) ;
-							X [2*k1 + 1] = X [2*k1 + 1] / s ;
+							DIV (X, 2*k1, X.get(2*k1), s) ;
+//							X [2*k1] = X [2*k1] / s ;
+							DIV (X, 2*k1 + 1, X.get(2*k1 + 1), s) ;
+//							X [2*k1 + 1] = X [2*k1 + 1] / s ;
 							break ;
 
 						case 3:
-							//DIV (X [3*k1], X [3*k1], s) ;
-							X [3*k1] = X [3*k1] / s ;
-							//DIV (X [3*k1 + 1], X [3*k1 + 1], s) ;
-							X [3*k1 + 1] = X [3*k1 + 1] / s ;
-							//DIV (X [3*k1 + 2], X [3*k1 + 2], s) ;
-							X [3*k1 + 2] = X [3*k1 + 2] / s ;
+							DIV (X, 3*k1, X.get(3*k1), s) ;
+//							X [3*k1] = X [3*k1] / s ;
+							DIV (X, 3*k1 + 1, X.get(3*k1 + 1), s) ;
+//							X [3*k1 + 1] = X [3*k1 + 1] / s ;
+							DIV (X, 3*k1 + 2, X.get(3*k1 + 2), s) ;
+//							X [3*k1 + 2] = X [3*k1 + 2] / s ;
 							break ;
 
 						case 4:
-							//DIV (X [4*k1], X [4*k1], s) ;
-							X [4*k1] = X [4*k1] / s ;
-							//DIV (X [4*k1 + 1], X [4*k1 + 1], s) ;
-							X [4*k1 + 1] = X [4*k1 + 1] / s ;
-							//DIV (X [4*k1 + 2], X [4*k1 + 2], s) ;
-							X [4*k1 + 2] = X [4*k1 + 2] / s ;
-							//DIV (X [4*k1 + 3], X [4*k1 + 3], s) ;
-							X [4*k1 + 3] = X [4*k1 + 3] / s ;
+							DIV (X, 4*k1, X.get(4*k1), s) ;
+//							X [4*k1] = X [4*k1] / s ;
+							DIV (X, 4*k1 + 1, X.get(4*k1 + 1), s) ;
+//							X [4*k1 + 1] = X [4*k1 + 1] / s ;
+							DIV (X, 4*k1 + 2, X.get(4*k1 + 2), s) ;
+//							X [4*k1 + 2] = X [4*k1 + 2] / s ;
+							DIV (X, 4*k1 + 3, X.get(4*k1 + 3), s) ;
+//							X [4*k1 + 3] = X [4*k1 + 3] / s ;
 							break ;
 
 					}
@@ -319,11 +321,11 @@ public class DZklu_solve extends DZklu_internal {
 							for (k = k1 ; k < k2 ; k++)
 							{
 								pend = Offp [k+1] ;
-								x [0] = X [k] ;
+								x [0] = X.get(k) ;
 								for (p = Offp [k] ; p < pend ; p++)
 								{
-									//MULT_SUB (X [Offi [p]], Offx [p], x [0]) ;
-									X [Offi [p]] -= Offx [p] * x [0] ;
+									MULT_SUB (X, Offi [p], Offx.get(p), x [0]) ;
+//									X [Offi [p]] -= Offx [p] * x [0] ;
 								}
 							}
 							break ;
@@ -333,16 +335,16 @@ public class DZklu_solve extends DZklu_internal {
 							for (k = k1 ; k < k2 ; k++)
 							{
 								pend = Offp [k+1] ;
-								x [0] = X [2*k    ] ;
-								x [1] = X [2*k + 1] ;
+								x [0] = X.get(2*k    ) ;
+								x [1] = X.get(2*k + 1) ;
 								for (p = Offp [k] ; p < pend ; p++)
 								{
 									i = Offi [p] ;
-									offik = Offx [p] ;
-									//MULT_SUB (X [2*i], offik, x [0]) ;
-									X [2*i] -= offik * x [0] ;
-									//MULT_SUB (X [2*i + 1], offik, x [1]) ;
-									X [2*i + 1] -= offik * x [1] ;
+									offik = Offx.get(p) ;
+									MULT_SUB (X, 2*i, offik, x [0]) ;
+//									X [2*i] -= offik * x [0] ;
+									MULT_SUB (X, 2*i + 1, offik, x [1]) ;
+//									X [2*i + 1] -= offik * x [1] ;
 								}
 							}
 							break ;
@@ -352,19 +354,19 @@ public class DZklu_solve extends DZklu_internal {
 							for (k = k1 ; k < k2 ; k++)
 							{
 								pend = Offp [k+1] ;
-								x [0] = X [3*k    ] ;
-								x [1] = X [3*k + 1] ;
-								x [2] = X [3*k + 2] ;
+								x [0] = X.get(3*k    ) ;
+								x [1] = X.get(3*k + 1) ;
+								x [2] = X.get(3*k + 2) ;
 								for (p = Offp [k] ; p < pend ; p++)
 								{
 									i = Offi [p] ;
-									offik = Offx [p] ;
-									//MULT_SUB (X [3*i], offik, x [0]) ;
-									X [3*i] -= offik * x [0] ;
-									//MULT_SUB (X [3*i + 1], offik, x [1]) ;
-									X [3*i + 1] -= offik * x [1] ;
-									//MULT_SUB (X [3*i + 2], offik, x [2]) ;
-									X [3*i + 2] -= offik * x [2] ;
+									offik = Offx.get(p) ;
+									MULT_SUB (X, 3*i, offik, x [0]) ;
+//									X [3*i] -= offik * x [0] ;
+									MULT_SUB (X, 3*i + 1, offik, x [1]) ;
+//									X [3*i + 1] -= offik * x [1] ;
+									MULT_SUB (X, 3*i + 2, offik, x [2]) ;
+//									X [3*i + 2] -= offik * x [2] ;
 								}
 							}
 							break ;
@@ -374,22 +376,22 @@ public class DZklu_solve extends DZklu_internal {
 							for (k = k1 ; k < k2 ; k++)
 							{
 								pend = Offp [k+1] ;
-								x [0] = X [4*k    ] ;
-								x [1] = X [4*k + 1] ;
-								x [2] = X [4*k + 2] ;
-								x [3] = X [4*k + 3] ;
+								x [0] = X.get(4*k    ) ;
+								x [1] = X.get(4*k + 1) ;
+								x [2] = X.get(4*k + 2) ;
+								x [3] = X.get(4*k + 3) ;
 								for (p = Offp [k] ; p < pend ; p++)
 								{
 									i = Offi [p] ;
-									offik = Offx [p] ;
-									//MULT_SUB (X [4*i], offik, x [0]) ;
-									X [4*i] -= offik * x [0] ;
-									//MULT_SUB (X [4*i + 1], offik, x [1]) ;
-									X [4*i + 1] -= offik * x [1] ;
-									//MULT_SUB (X [4*i + 2], offik, x [2]) ;
-									X [4*i + 2] -= offik * x [2] ;
-									//MULT_SUB (X [4*i + 3], offik, x [3]) ;
-									X [4*i + 3] -= offik * x [3] ;
+									offik = Offx.get(p) ;
+									MULT_SUB (X, 4*i, offik, x [0]) ;
+//									X [4*i] -= offik * x [0] ;
+									MULT_SUB (X, 4*i + 1, offik, x [1]) ;
+//									X [4*i + 1] -= offik * x [1] ;
+									MULT_SUB (X, 4*i + 2, offik, x [2]) ;
+//									X [4*i + 2] -= offik * x [2] ;
+									MULT_SUB (X, 4*i + 3, offik, x [3]) ;
+//									X [4*i + 3] -= offik * x [3] ;
 								}
 							}
 							break ;
@@ -408,7 +410,7 @@ public class DZklu_solve extends DZklu_internal {
 
 					for (k = 0 ; k < n ; k++)
 					{
-						Bz  [B_offset + Q [k]] = X [k] ;
+						Bz.set(B_offset + Q [k], X.get(k)) ;
 					}
 					break ;
 
@@ -417,8 +419,8 @@ public class DZklu_solve extends DZklu_internal {
 					for (k = 0 ; k < n ; k++)
 					{
 						i = Q [k] ;
-						Bz  [B_offset + i      ] = X [2*k    ] ;
-						Bz  [B_offset + i + d  ] = X [2*k + 1] ;
+						Bz.set(B_offset + i      , X.get(2*k    )) ;
+						Bz.set(B_offset + i + d  , X.get(2*k + 1)) ;
 					}
 					break ;
 
@@ -427,9 +429,9 @@ public class DZklu_solve extends DZklu_internal {
 					for (k = 0 ; k < n ; k++)
 					{
 						i = Q [k] ;
-						Bz  [B_offset + i      ] = X [3*k    ] ;
-						Bz  [B_offset + i + d  ] = X [3*k + 1] ;
-						Bz  [B_offset + i + d*2] = X [3*k + 2] ;
+						Bz.set(B_offset + i      , X.get(3*k    )) ;
+						Bz.set(B_offset + i + d  , X.get(3*k + 1)) ;
+						Bz.set(B_offset + i + d*2, X.get(3*k + 2)) ;
 					}
 					break ;
 
@@ -438,10 +440,10 @@ public class DZklu_solve extends DZklu_internal {
 					for (k = 0 ; k < n ; k++)
 					{
 						i = Q [k] ;
-						Bz  [B_offset + i      ] = X [4*k    ] ;
-						Bz  [B_offset + i + d  ] = X [4*k + 1] ;
-						Bz  [B_offset + i + d*2] = X [4*k + 2] ;
-						Bz  [B_offset + i + d*3] = X [4*k + 3] ;
+						Bz.set(B_offset + i      , X.get(4*k    )) ;
+						Bz.set(B_offset + i + d  , X.get(4*k + 1)) ;
+						Bz.set(B_offset + i + d*2, X.get(4*k + 2)) ;
+						Bz.set(B_offset + i + d*3, X.get(4*k + 3)) ;
 					}
 					break ;
 			}

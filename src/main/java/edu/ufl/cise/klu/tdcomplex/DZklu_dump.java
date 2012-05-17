@@ -87,7 +87,7 @@ public class DZklu_dump extends DZklu_internal
 				}
 				if (Ax != null)
 				{
-					PRINT_ENTRY (Ax [p]) ;
+					PRINT_ENTRY (Ax.get(p)) ;
 				}
 				PRINTF ("\n") ;
 			}
@@ -106,7 +106,7 @@ public class DZklu_dump extends DZklu_internal
 			double[] LU)
 	{
 		/*int[]*/double[] Xi ;
-		double[] Xx ;
+		DZklua Xx ;
 		int j, p1, p2, i, p ;
 		int[] len = new int[1] ;
 		int[] Xi_offset = new int[1] ;
@@ -136,8 +136,9 @@ public class DZklu_dump extends DZklu_internal
 				PRINTF ("column %d pointer bad\n", j) ;
 				return (FALSE) ;
 			}
-			Xi = Xx = GET_POINTER (LU, Xip, Xip_offset, Xlen, Xlen_offset,
+			Xi = GET_POINTER (LU, Xip, Xip_offset, Xlen, Xlen_offset,
 					Xi_offset, Xx_offset, j, len) ;
+			Xx = new DZklua(LU) ;
 			for (p = 0 ; p < len[0] ; p++)
 			{
 				i = (int) Xi [Xi_offset[0] + p] ;
@@ -150,7 +151,7 @@ public class DZklu_dump extends DZklu_internal
 				}
 				if (Xx != null)
 				{
-					PRINT_ENTRY (Xx [Xx_offset[0] + p]) ;
+					PRINT_ENTRY (Xx.get(Xx_offset[0] + p)) ;
 				}
 				PRINTF ("\n") ;
 			}
