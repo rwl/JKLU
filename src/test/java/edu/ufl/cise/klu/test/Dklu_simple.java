@@ -4,8 +4,6 @@ import junit.framework.TestCase;
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
-import edu.ufl.cise.klu.tdouble.Dklu_internal;
-import edu.ufl.cise.klu.tdouble.Dklu_version;
 
 import static edu.ufl.cise.klu.tdouble.Dklu_defaults.klu_defaults;
 import static edu.ufl.cise.klu.tdouble.Dklu_analyze.klu_analyze;
@@ -31,8 +29,8 @@ public class Dklu_simple extends TestCase {
 		KLU_numeric Numeric;
 		KLU_common Common = new KLU_common();
 
-		Dklu_version.NPRINT = false ;
-		Dklu_internal.NDEBUG = false ;
+		//Dklu_version.NPRINT = false ;
+		//Dklu_internal.NDEBUG = false ;
 
 		klu_defaults (Common);
 		Symbolic = klu_analyze (n, Ap, Ai, Common);
