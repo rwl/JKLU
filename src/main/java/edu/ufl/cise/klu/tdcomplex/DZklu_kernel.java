@@ -273,7 +273,7 @@ public class DZklu_kernel extends DZklu_internal {
 				oldrow = Ai [p] ;
 				i = PSinv [oldrow] - k1 ;
 				aik = Ax.get(p) ;
-				aik = SCALE_DIV (aik, Rs [oldrow]) ;
+				SCALE_DIV (aik, Rs [oldrow]) ;
 				if (i < 0)
 				{
 					/* this is an entry in the off-diagonal part */

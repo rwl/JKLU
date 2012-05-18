@@ -209,6 +209,11 @@ public class DZklu_tsolve extends DZklu_internal {
 							pend = Offp [k+1] ;
 							for (p = Offp [k] ; p < pend ; p++)
 							{
+								if (conj_solve != 0)
+				                                {
+									MULT_SUB_CONJ (X, k, X.get(Offi [p]), Offx.get(p)) ;
+				                                }
+				                                else
 								{
 									MULT_SUB (X, k, Offx.get(p), X.get(Offi [p])) ;
 //									X [k] -= Offx [p] * X [Offi [p]] ;
@@ -227,12 +232,17 @@ public class DZklu_tsolve extends DZklu_internal {
 							for (p = Offp [k] ; p < pend ; p++)
 							{
 								i = Offi [p] ;
+								if (conj_solve != 0)
+				                                {
+									offik = CONJ (Offx.get(p)) ;
+				                                }
+				                                else
 								{
 									offik = Offx.get(p) ;
 								}
-								x [0] = MULT_SUB (x [0], offik, X.get(2*i)) ;
+								MULT_SUB (x [0], offik, X.get(2*i)) ;
 //								x [0] -= offik * X [2*i] ;
-								x [1] = MULT_SUB (x [1], offik, X.get(2*i + 1)) ;
+								MULT_SUB (x [1], offik, X.get(2*i + 1)) ;
 //								x [1] -= offik * X [2*i + 1] ;
 							}
 							X.set(2*k    , x [0]) ;
@@ -251,14 +261,19 @@ public class DZklu_tsolve extends DZklu_internal {
 							for (p = Offp [k] ; p < pend ; p++)
 							{
 								i = Offi [p] ;
+								if (conj_solve != 0)
+				                                {
+									offik = CONJ (Offx.get(p)) ;
+				                                }
+				                                else
 								{
 									offik = Offx.get(p) ;
 								}
-								x [0] = MULT_SUB (x [0], offik, X.get(3*i)) ;
+								MULT_SUB (x [0], offik, X.get(3*i)) ;
 //								x [0] -= offik * X [3*i] ;
-								x [1] = MULT_SUB (x [1], offik, X.get(3*i + 1)) ;
+								MULT_SUB (x [1], offik, X.get(3*i + 1)) ;
 //								x [1] -= offik * X [3*i + 1] ;
-								x [2] = MULT_SUB (x [2], offik, X.get(3*i + 2)) ;
+								MULT_SUB (x [2], offik, X.get(3*i + 2)) ;
 //								x [2] -= offik * X [3*i + 2] ;
 							}
 							X.set(3*k    , x [0]) ;
@@ -279,16 +294,21 @@ public class DZklu_tsolve extends DZklu_internal {
 							for (p = Offp [k] ; p < pend ; p++)
 							{
 								i = Offi [p] ;
+								if (conj_solve != 0)
+				                                {
+									offik = CONJ(Offx.get(p)) ;
+				                                }
+				                                else
 								{
 									offik = Offx.get(p) ;
 								}
-								x [0] = MULT_SUB (x [0], offik, X.get(4*i)) ;
+								MULT_SUB (x [0], offik, X.get(4*i)) ;
 //								x [0] -= offik * X [4*i] ;
-								x [1] = MULT_SUB (x [1], offik, X.get(4*i + 1)) ;
+								MULT_SUB (x [1], offik, X.get(4*i + 1)) ;
 //								x [1] -= offik * X [4*i + 1] ;
-								x [2] = MULT_SUB (x [2], offik, X.get(4*i + 2)) ;
+								MULT_SUB (x [2], offik, X.get(4*i + 2)) ;
 //								x [2] -= offik * X [4*i + 2] ;
-								x [3] = MULT_SUB (x [3], offik, X.get(4*i + 3)) ;
+								MULT_SUB (x [3], offik, X.get(4*i + 3)) ;
 //								x [3] -= offik * X [4*i + 3] ;
 							}
 							X.set(4*k    , x [0]) ;
@@ -306,6 +326,11 @@ public class DZklu_tsolve extends DZklu_internal {
 
 				if (nk == 1)
 				{
+					if (conj_solve != 0)
+			                {
+						s = CONJ (Udiag.get(k1)) ;
+			                }
+			                else
 					{
 						s = Udiag.get(k1) ;
 					}
@@ -349,9 +374,9 @@ public class DZklu_tsolve extends DZklu_internal {
 				else
 				{
 					klu_z_utsolve (nk, Uip, k1, Ulen, k1, LUbx [block],
-							Udiag, k1, nr, X, nr*k1) ;
+							Udiag, k1, nr, conj_solve, X, nr*k1) ;
 					klu_z_ltsolve (nk, Lip, k1, Llen, k1, LUbx [block], nr,
-							X, nr*k1) ;
+							conj_solve, X, nr*k1) ;
 				}
 			}
 

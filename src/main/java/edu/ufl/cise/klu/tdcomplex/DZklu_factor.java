@@ -233,7 +233,7 @@ public class DZklu_factor extends DZklu_internal
 							PRINTF ("singleton block %d ", block) ;
 							PRINT_ENTRY (Ax.get(p)) ;
 //							s = Ax [p] / Rs [oldrow] ;
-							s = SCALE_DIV_ASSIGN (Ax.get(p), Rs [oldrow]) ;
+							SCALE_DIV_ASSIGN (s, Ax.get(p), Rs [oldrow]) ;
 						}
 					}
 				}

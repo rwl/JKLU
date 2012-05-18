@@ -57,7 +57,7 @@ public class DZklu_diagnostics extends DZklu_internal
 			KLU_symbolic Symbolic, KLU_numeric Numeric, KLU_common Common)
 	{
 		double temp, max_ai, max_ui, min_block_rgrowth ;
-		double[] aik ;
+		double[] aik = CZERO ;
 		int[] Q, Pinv ;
 		int[] Ulen, Uip ;
 		double[] LU ;
@@ -136,7 +136,7 @@ public class DZklu_diagnostics extends DZklu_internal
 					ASSERT (newrow < k2) ;
 					if (Rs != null)
 					{
-						aik = SCALE_DIV_ASSIGN (Aentry.get(k), Rs [newrow]) ;
+						SCALE_DIV_ASSIGN (aik, Aentry.get(k), Rs [newrow]) ;
 //						aik = Aentry [k] / Rs [newrow] ;
 					}
 					else
@@ -343,10 +343,10 @@ public class DZklu_diagnostics extends DZklu_internal
 
 		        if (i > 0 && ainv_norm <= est_old)
 		        {
-		            break ;
+		        	break ;
 		        }
 
-			/* do a transpose solve */
+			/* do a conjugate transpose solve */
 			klu_z_tsolve (Symbolic, Numeric, n, 1, X, X_offset, 1, Common) ;
 
 			/* jnew = the position of the largest entry in X */

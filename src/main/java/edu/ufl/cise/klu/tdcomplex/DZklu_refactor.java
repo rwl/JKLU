@@ -365,7 +365,7 @@ public class DZklu_refactor extends DZklu_internal {
 						{
 							/* singleton */
 //							s = Az [p] / Rs [oldrow] ;
-							s = SCALE_DIV_ASSIGN (Az.get(p), Rs [oldrow]) ;
+							SCALE_DIV_ASSIGN (s, Az.get(p), Rs [oldrow]) ;
 						}
 					}
 					Udiag.set(k1, s) ;

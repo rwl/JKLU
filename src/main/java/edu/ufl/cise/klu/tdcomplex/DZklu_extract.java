@@ -27,6 +27,7 @@ package edu.ufl.cise.klu.tdcomplex;
 import edu.ufl.cise.klu.common.KLU_common;
 import edu.ufl.cise.klu.common.KLU_numeric;
 import edu.ufl.cise.klu.common.KLU_symbolic;
+import edu.ufl.cise.klu.tdcomplex.DZklu_common.DZklua;
 
 /**
  * Extract KLU factorization into conventional compressed-column matrices.
@@ -45,12 +46,15 @@ public class DZklu_extract extends DZklu_internal
 	 * @param Lp size n+1
 	 * @param Li size nnz(L)
 	 * @param Lx size nnz(L)
+	 * @param Lz size nnz(L) for the complex case, ignored if real
 	 * @param Up size n+1
 	 * @param Ui size nnz(U)
 	 * @param Ux size nnz(U)
+	 * @param Uz size nnz(U) for the complex case, ignored if real
 	 * @param Fp size n+1
 	 * @param Fi size nnz(F)
 	 * @param Fx size nnz(F)
+	 * @param Fz size nnz(F) for the complex case, ignored if real
 	 * @param P row permutation, size n
 	 * @param Q column permutation, size n
 	 * @param Rs scale factors, size n
@@ -59,14 +63,15 @@ public class DZklu_extract extends DZklu_internal
 	 * @return
 	 */
 	public static int klu_z_extract(KLU_numeric Numeric, KLU_symbolic Symbolic,
-			int[] Lp, int[] Li, double[] Lx, int[] Up, int[] Ui, double[] Ux,
-			int[] Fp, int[] Fi, double[] Fx, int[] P, int[] Q, double[] Rs,
-			int[] R, KLU_common Common)
+			int[] Lp, int[] Li, double[] Lx, double[] Lz, int[] Up, int[] Ui,
+			double[] Ux, double[] Uz,
+			int[] Fp, int[] Fi, double[] Fx, double[] Fz, int[] P, int[] Q,
+			double[] Rs, int[] R, KLU_common Common)
 	{
 		int[] Lip, Llen, Uip, Ulen ;
 		/*int[]*/double[] Li2, Ui2 ;
 		double[] LU ;
-		double[] Lx2, Ux2, Ukk ;
+		DZklua Lx2, Ux2, Ukk ;
 		int i, k, block, nblocks, n, nz, k1, k2, nk, kk, p ;
 		int[] len = new int[1] ;
 		int[] Li2_offset = new int[1] ;
@@ -152,7 +157,7 @@ public class DZklu_extract extends DZklu_internal
 		/* extract each block of L */
 		/* ---------------------------------------------------------------------- */
 
-		if (Lp != null && Li != null && Lx != null)
+		if (Lp != null && Li != null && Lx != null && Lz != null)
 		{
 			nz = 0 ;
 			for (block = 0 ; block < nblocks ; block++)
@@ -166,6 +171,7 @@ public class DZklu_extract extends DZklu_internal
 					Lp [k1] = nz ;
 					Li [nz] = k1 ;
 					Lx [nz] = 1 ;
+					Lz [nz] = 0 ;
 					nz++ ;
 				}
 				else
@@ -182,14 +188,17 @@ public class DZklu_extract extends DZklu_internal
 						/* add the unit diagonal entry */
 						Li [nz] = k1 + kk ;
 						Lx [nz] = 1 ;
+						Lz [nz] = 0 ;
 						nz++ ;
-						Li2 = Lx2 = GET_POINTER (LU, Lip, Lip_offset,
+						Li2 = GET_POINTER (LU, Lip, Lip_offset,
 								Llen, Llen_offset,
 								Li2_offset, Lx2_offset, kk, len) ;
+						Lx2 = new DZklua(LU) ;
 						for (p = 0 ; p < len[0] ; p++)
 						{
 							Li [nz] = k1 + (int) Li2 [Li2_offset[0] + p] ;
-							Lx [nz] = Lx2 [Lx2_offset[0] + p] ; //REAL (Lx2 [p]) ;
+							Lx [nz] = Lx2.real(Lx2_offset[0] + p) ; //REAL (Lx2 [p]) ;
+							Lz [nz] = Lx2.imag(Lx2_offset[0] + p) ;
 							nz++ ;
 						}
 					}
@@ -211,14 +220,15 @@ public class DZklu_extract extends DZklu_internal
 				k1 = Symbolic.R [block] ;
 				k2 = Symbolic.R [block+1] ;
 				nk = k2 - k1 ;
-				Ukk = Numeric.Udiag ;
+				Ukk = new DZklua(Numeric.Udiag) ;
 				int Ukk_offset = k1 ;
 				if (nk == 1)
 				{
 					/* singleton block */
 					Up [k1] = nz ;
 					Ui [nz] = k1 ;
-					Ux [nz] = Ukk [Ukk_offset + 0] ; //REAL (Ukk [0]) ;
+					Ux [nz] = Ukk.real(Ukk_offset + 0) ; //REAL (Ukk [0]) ;
+					Uz [nz] = Ukk.imag(Ukk_offset + 0) ;
 					nz++ ;
 				}
 				else
@@ -232,16 +242,19 @@ public class DZklu_extract extends DZklu_internal
 					for (kk = 0 ; kk < nk ; kk++)
 					{
 						Up [k1+kk] = nz ;
-						Ui2 = Ux2 = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui2_offset, Ux2_offset, kk, len) ;
+						Ui2 = GET_POINTER (LU, Uip, Uip_offset, Ulen, Ulen_offset, Ui2_offset, Ux2_offset, kk, len) ;
+						Ux2 = new DZklua(LU) ;
 						for (p = 0 ; p < len[0] ; p++)
 						{
 							Ui [nz] = k1 + (int) Ui2 [Ui2_offset[0] + p] ;
-							Ux [nz] = Ux2 [Ux2_offset[0] + p] ; //REAL (Ux2 [p]) ;
+							Ux [nz] = Ux2.real(Ux2_offset[0] + p) ; //REAL (Ux2 [p]) ;
+							Uz [nz] = Ux2.imag(Ux2_offset[0] + p) ;
 							nz++ ;
 						}
 						/* add the diagonal entry */
 						Ui [nz] = k1 + kk ;
-						Ux [nz] = Ukk [Ukk_offset+ kk] ; //REAL (Ukk [kk]) ;
+						Ux [nz] = Ukk.real(Ukk_offset + kk) ; //REAL (Ukk [kk]) ;
+						Uz [nz] = Ukk.imag(Ukk_offset + kk) ;
 						nz++ ;
 					}
 				}
@@ -254,7 +267,7 @@ public class DZklu_extract extends DZklu_internal
 		/* extract the off-diagonal blocks, F */
 		/* ---------------------------------------------------------------------- */
 
-		if (Fp != null && Fi != null && Fx != null)
+		if (Fp != null && Fi != null && Fx != null && Fz != null)
 		{
 			for (k = 0 ; k <= n ; k++)
 			{
@@ -267,11 +280,12 @@ public class DZklu_extract extends DZklu_internal
 			}
 			for (k = 0 ; k < nz ; k++)
 			{
-				Fx [k] = Numeric.Offx [k] ;
-				//Fx [k] = REAL (((double[]) Numeric.Offx) [k]) ;
+				Fx [k] = REAL (Numeric.Offx, k) ;
+				Fz [k] = IMAG (Numeric.Offx, k) ;
 			}
 		}
 
 		return (TRUE) ;
 	}
+
 }

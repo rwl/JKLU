@@ -46,38 +46,12 @@ public abstract class DZklu_version {
 	public static final double[] CZERO = new double[] {0.0, 0.0} ;
 	public static final double[] CONE = new double[] {1.0, 0.0} ;
 
-//	protected static int BYTES (Object type, double n)
-//	{
-//		return sizeof (type * n) ;
-//	}
-//
-//	protected static double CEILING (double b, double u)
-//	{
-//		return (b+u-1) / u ;
-//	}
-//
-//	protected static double UNITS (Object type, double n)
-//	{
-//		return CEILING (BYTES (type, n), sizeof (double)) ;
-//	}
-//
-//	protected static double DUNITS (Object type, int n)
-//	{
-//		return Math.ceil(BYTES (type, (double) n) / sizeof (double)) ;
-//	}
-
 	protected static double[] GET_I_POINTER(double[] LU, int[] Xip,
 			int Xip_offset, int[] Xi_offset, int k)
 	{
 		Xi_offset[0] = Xip [Xip_offset + k] ;
 		return LU ;
 	}
-
-//	protected static void GET_X_POINTER(double[] LU, int[] Xip, int Xlen,
-//			double[] Xx, int k)
-//	{
-//		Xx = (double[]) (LU + Xip [k] + UNITS (Int, Xlen [k])) ;
-//	}
 
 	protected static double[] GET_POINTER(double[] LU,
 			int[] Xip, int Xip_offset,
@@ -143,53 +117,24 @@ public abstract class DZklu_version {
 	}
 
 	/* ---------------------------------------------------------------------- */
-	/* Real floating-point arithmetic */
+	/* Complex floating-point arithmetic */
 	/* ---------------------------------------------------------------------- */
 
 	/**
-	 * @return TRUE if a complex number is in split form, FALSE if in packed
-	 * form.
+	 * @return real part of c at index idx
 	 */
-	protected static int SPLIT (double s)
+	protected static double REAL (double[] c, int idx)
 	{
-		return 1 ;
+		return c [2 * idx] ;
 	}
 
 	/**
-	 * @return real part of c
+	 * @return imag part of c at index idx
 	 */
-//	protected static double REAL (double c)
-//	{
-//		return c ;
-//	}
-
-	/**
-	 * @return imag part of c
-	 */
-//	protected static double IMAG (double c)
-//	{
-//		return 0.0 ;
-//	}
-
-	/**
-	 * c = (s1) + (s2)*i
-	 */
-//	protected static void ASSIGN (Double c, double[] s1, double[] s2, int p,
-//			boolean split)
-//	{
-//		c = s1[p] ;
-//	}
-
-//	protected static void CLEAR (Double c)
-//	{
-//		c = 0.0 ;
-//	}
-
-//	protected static void CLEAR_AND_INCREMENT (Double p)
-//	{
-//		p = 0.0 ;
-//		p++ ;
-//	}
+	protected static double IMAG (double[] c, int idx)
+	{
+		return c [(2 * idx) + 1] ;
+	}
 
 	/**
 	 * @return True if a is NaN
@@ -222,197 +167,158 @@ public abstract class DZklu_version {
 		return new double [] {x [0] + real, x [1]} ;
 	}
 
-	/**
-	 * a[idx] += b
-	 */
-	protected static void ACCUM(DZklua a, int idx, double b) {
-		a.set(idx, CPLUS(a.get(idx), b)) ;
-	}
-
-	/**
-	 * @return True if a != 0
-	 */
-	protected static boolean IS_NONZERO (double a)
-	{
-		return SCALAR_IS_NONZERO (a) ;
-	}
-
 	protected static boolean IS_NONZERO (double[] a)
 	{
-		return SCALAR_IS_NONZERO (a) ;
+		return SCALAR_IS_NONZERO (a [0]) || SCALAR_IS_NONZERO (a [0]) ;
 	}
 
-	/**
-	 * c /= s
-	 */
-	protected static double SCALE_DIV (double c, double s)
+	protected static void SCALE_DIV (double[] c, double s)
 	{
-		c /= s ;
-		return c ;
-	}
-
-	protected static double[] SCALE_DIV (double[] c, double s)
-	{
-		c /= s ;
-		return c ;
+		c [0] /= s ;
+		c [1] /= s ;
 	}
 
 	/**
 	 * a = c/s
 	 */
-	protected static double[] SCALE_DIV_ASSIGN (double[] b, double s)
+	protected static void SCALE_DIV_ASSIGN (double[] a, double[] c, double s)
 	{
-		return b / s ;
+		a [0] = c [0] / s ;
+		a [1] = c [1] / s ;
 	}
 
 	protected static void SCALE_DIV_ASSIGN (DZklua c, int idx, double[] b, double s)
 	{
-		c.set(idx, b / s) ;
+		c.real(idx, b [0] / s) ;
+		c.imag(idx, b [1] / s) ;
 	}
-
-	/**
-	 * c *= s
-	 */
-//	protected static void SCALE (Double c, double s)
-//	{
-//		c *= s ;
-//	}
-
-	/**
-	 * c += a
-	 */
-//	protected static void ASSEMBLE (Double c, double a)
-//	{
-//		c += a ;
-//	}
-
-	/**
-	 * c += *p++
-	 */
-//	protected static void ASSEMBLE_AND_INCREMENT (Double c, double p)
-//	{
-//		c += p++ ;
-//	}
-
-	/**
-	 * c -= a
-	 */
-//	protected static void DECREMENT (Double c, double a)
-//	{
-//		c -= a ;
-//	}
-
-	/**
-	 * c = a*b
-	 */
-//	protected static void MULT (Double c, double a,  double b)
-//	{
-//		c = a * b ;
-//	}
-
-	/**
-	 * c = a*conjugate(b)
-	 */
-//	protected static void MULT_CONJ (Double c, double a, double b)
-//	{
-//		c = a * b ;
-//	}
 
 	protected static void DIV (DZklua a, int idx, double[] b, double[] c) {
-		a.set(idx, CDIV(b, c));
+		a.set(idx, DIV(b, c));
 	}
 
-	protected static double[] DIV (double[] b, double[] c) {
-		a.set(idx, CDIV(b, c));
-	}
-
-	/**
-	 * c -= a*b
-	 */
-	protected static double MULT_SUB (double c, double a, double b)
-	{
-		c -= a * b ;
+	/* This uses ACM Algo 116, by R. L. Smith, 1962. */
+	/* c can be the same variable as a or b. */
+	/* Ignore NaN case for double relop br>=bi. */
+	protected static double[] DIV (double[] a, double[] b) {
+		double r, den, ar, ai, br, bi ;
+		double[] c ;
+		br = b [0] ;
+		bi = b [1] ;
+		ar = a [0] ;
+		ai = a [1] ;
+		if (SCALAR_ABS (br) >= SCALAR_ABS (bi))
+		{
+			r = bi / br ;
+			den = br + r * bi ;
+			c = new double[] {
+				(ar + ai * r) / den,
+				(ai - ar * r) / den
+			} ;
+		}
+		else
+		{
+			r = br / bi ;
+			den = r * br + bi ;
+			c = new double[] {
+				(ar * r + ai) / den,
+				(ai * r - ar) / den
+			} ;
+		}
 		return c ;
 	}
 
-	protected static double MULT_SUB (DZklua c, int idx, double[] a, double[] b)
+	protected static void MULT_SUB_CONJ (DZklua c, int idx, double[] a, double[] b)
 	{
-		c -= a * b ;
-		return c ;
+		double[] z = c.get(idx) ;
+		MULT_SUB_CONJ (z, a, b) ;
+		c.set(idx, z) ;
 	}
 
-	protected static double[] MULT_SUB (double[] c, double[] a, double[] b)
+	protected static void MULT_SUB_CONJ (double[] c, double[] a, double[] b)
 	{
-		c -= a * b ;
-		return c ;
+		c [0] -= a [0] * b [0] + a [1] * b [1] ;
+		c [1] -= a [1] * b [0] - a [0] * b [1] ;
 	}
 
-//	/**
-//	 * c -= a*conjugate(b)
-//	 */
-//	protected static void MULT_SUB_CONJ (Double c, double a, double b)
-//	{
-//		c -= a * b ;
-//	}
-//
-//	/**
-//	 * c = a/b
-//	 */
-//	protected static void DIV (Double c, double a, double b)
-//	{
-//		c = a / b ;
-//	}
-//
-//	/**
-//	 * c = 1/c
-//	 */
-//	protected static void RECIPROCAL (Double c)
-//	{
-//		c = 1.0 / c ;
-//	}
-//
-//	/**
-//	 * c = a/conjugate(b)
-//	 */
-//	protected static void DIV_CONJ (Double c, double a, double b)
-//	{
-//		c = a / b ;
-//	}
-//
-//	/**
-//	 * approximate absolute value, s = |r|+|i|
-//	 */
-//	protected static void APPROX_ABS (Double s, double a)
-//	{
-//		s = SCALAR_ABS (a) ;
-//	}
-//
-//	/**
-//	 * exact absolute value, s = sqrt (a.real^2 + amag^2)
-//	 */
-//	protected static void ABS (Double s, double a)
-//	{
-//		s = SCALAR_ABS (a) ;
-//	}
+	protected static void MULT_SUB (DZklua c, int idx, double[] a, double[] b)
+	{
+		double[] z = c.get(idx) ;
+		MULT_SUB (z, a, b) ;
+		c.set(idx, z) ;
+	}
+
+	protected static void MULT_SUB (double[] c, double[] a, double[] b)
+	{
+		c [0] -= a [0] * b [0] - a [1] * b [1] ;
+		c [1] -= a [1] * b [0] + a [0] * b [1] ;
+	}
 
 	protected static void PRINT_ENTRY (double[] a)
 	{
-		PRINT_SCALAR (a) ;
-	}
+		if (SCALAR_IS_NONZERO (a [0]))
+		{
+			PRINTF (" (%g", a [0]) ;
+		}
+		else
+		{
+			PRINTF (" (0") ;
+		}
 
-//	protected static void CONJ (Double a, double x)
-//	{
-//		a = x ;
-//	}
+		if (SCALAR_IS_LTZERO (a [1]))
+		{
+			PRINTF (" - %gi)", -a [1]) ;
+		}
+		else if (SCALAR_IS_ZERO (a [1]))
+		{
+			PRINTF (" + 0i)") ;
+		}
+		else
+		{
+			PRINTF (" + %gi)", a [1]) ;
+		}
+	}
 
 	protected static double ABS (double[] a)
 	{
-		return Math.abs (a) ;
+		double r, ar, ai, s ;
+		ar = SCALAR_ABS (a [0]) ;
+		ai = SCALAR_ABS (a [1]) ;
+		if (ar >= ai)
+		{
+			if (ar + ai == ar)
+			{
+				(s) = ar ;
+			}
+			else
+		        {
+				r = ai / ar ;
+				(s) = ar * Math.sqrt (1.0 + r*r) ;
+		        }
+		}
+		else
+		{
+			if (ai + ar == ai)
+		        {
+				(s) = ai ;
+		        }
+		        else
+		        {
+		        	r = ar / ai ;
+		        	(s) = ai * Math.sqrt (1.0 + r*r) ;
+		        }
+		}
+		return (s) ;
 	}
 
 	protected static void CLEAR(DZklua A, int i)
 	{
 		A.set(i, CZERO) ;
+	}
+
+	protected static double[] CONJ(double[] a)
+	{
+		return new double[] {a [0], -a [1]} ;
 	}
 
 	protected static void CLEAR(double[] A, int i)
@@ -427,12 +333,12 @@ public abstract class DZklu_version {
 	}
 
 	/* for flop counts */
-	protected static final double MULTSUB_FLOPS   = 2.0 ;      /* c -= a*b */
-	protected static final double DIV_FLOPS       = 1.0 ;      /* c = a/b */
-	protected static final double ABS_FLOPS       = 0.0 ;      /* c = abs(a) */
-	protected static final double ASSEMBLE_FLOPS  = 1.0 ;      /* c += a */
-	protected static final double DECREMENT_FLOPS = 1.0 ;      /* c -= a */
-	protected static final double MULT_FLOPS      = 1.0 ;      /* c = a*b */
-	protected static final double SCALE_FLOPS     = 1.0 ;      /* c = a/s */
+	protected static final double MULTSUB_FLOPS   = 8.0 ;      /* c -= a*b */
+	protected static final double DIV_FLOPS       = 9.0 ;      /* c = a/b */
+	protected static final double ABS_FLOPS       = 6.0 ;      /* c = abs(a) */
+	protected static final double ASSEMBLE_FLOPS  = 2.0 ;      /* c += a */
+	protected static final double DECREMENT_FLOPS = 2.0 ;      /* c -= a */
+	protected static final double MULT_FLOPS      = 6.0 ;      /* c = a*b */
+	protected static final double SCALE_FLOPS     = 2.0 ;      /* c = a/s */
 
 }
