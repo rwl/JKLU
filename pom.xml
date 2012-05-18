@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.rwl</groupId>
   <artifactId>JKLU</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <name>JKLU</name>
   <description>A sparse LU factorization algorithm suited to circuit simulation.</description>
   <url>http://github.com/rwl/JKLU</url>
@@ -19,7 +19,7 @@
     <url>git@github.com:rwl/JKLU.git</url>
     <connection>scm:git:git@github.com:rwl/JKLU.git</connection>
     <developerConnection>scm:git:git@github.com:rwl/JKLU.git</developerConnection>
-    <tag>JKLU-1.0.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <issueManagement>
